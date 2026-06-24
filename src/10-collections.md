@@ -4,7 +4,7 @@ Arrays and tuples (from [the language delta](01-language-delta.md)) are fixed-si
 
 ## `Vec<T>`: the growable array
 
-A `Vec<T>` is exactly the data structure you would build in C++ as `std::vector<T>`: a heap allocation plus bookkeeping. Concretely, a `Vec<T>` value is three words on the stack — a pointer to the heap buffer, a `len`, and a `cap` (capacity):
+A `Vec<T>` is exactly the data structure behind Java's `ArrayList<T>`, Swift's `Array`, or Python's `list`: a heap allocation plus bookkeeping. Concretely, a `Vec<T>` value is three words on the stack — a pointer to the heap buffer, a `len`, and a `cap` (capacity):
 
 ```text
 stack:  Vec { ptr ──┐  len: 3  cap: 4 }
@@ -24,7 +24,7 @@ let w = vec![1, 2, 3];              // vec! macro: type inferred as Vec<i32>
 
 `Vec::new()` does not allocate; a fresh empty vector has capacity 0 and a dangling (non-null, well-aligned) pointer. The first `push` triggers the first allocation.
 
-> **🦀 From your toolbox →** This is `std::vector<T>`, down to the geometric growth and the move-on-realloc. The differences: (1) there is no copy constructor invoked on growth — Rust elements are *moved* by a bitwise `memcpy`, because Rust types have no self-referential move constructors (a moved-from value is simply abandoned, see [moves](02-ownership-and-moves.md)); (2) `Vec` has no implicit copy — `let w = v;` *moves* the three-word header and leaves `v` unusable, where C++ would copy unless you wrote `std::move`.
+> **🦀 From your toolbox →** This is Java's `ArrayList`, Swift's `Array`, Python's `list` — same heap buffer, same geometric growth, same amortised push. Two differences worth holding onto. (1) In Java and Python a variable is a *reference* to the list; assigning `w = v` makes a second handle to the *same* list. In Rust `let w = v;` *moves* the three-word header and leaves `v` unusable — there is exactly one owner (see [moves](02-ownership-and-moves.md)). Swift sits in between: its `Array` is a value type with copy-on-write, so `let w = v` looks like a copy but shares the buffer until one side mutates; Rust makes the single-owner story explicit instead of hiding it behind reference counting. (2) On growth the elements are *moved* by a plain `memcpy` — Rust has no copy/move hooks that run user code on a relocation, so a moved-from slot is simply abandoned. *Where it breaks down:* don't picture Java's resizing as identical — Java copies object *references* on growth, while Rust copies the elements themselves (for `Vec<String>`, the three-word `String` headers), since the elements live inline in the buffer.
 
 ### Indexing vs `get`: panic vs `Option`
 
@@ -46,7 +46,14 @@ if let Some(x) = v.get_mut(1) {
 }
 ```
 
-> **🎓 Tripos link →** *Semantics of Programming Languages.* Bounds-checked indexing is the operational cost Rust pays for soundness: array access cannot be proven in-bounds in general, so the safe operation either checks at runtime (`[]`, panic) or reflects the partiality in the type (`get`, `Option`). This is the same move as wrapping a partial function in an option type in OCaml — `List.nth_opt` rather than `List.nth`.
+> **🔧 In practice →** you're paginating: a request comes in for "page 7" of a result set, and you compute `let start = page * page_size;` then want `results.get(start)`. If you wrote `&results[start]` and the user asked for a page past the end, your service panics and the request 500s. With `results.get(start)` you get `None`, which you map to an empty page or a 404 — the out-of-bounds case becomes ordinary control flow:
+> ```rust
+> match results.get(start) {
+>     Some(_) => render_page(&results[start..end]),
+>     None    => render_empty_page(),   // no data this far in
+> }
+> ```
+> Rule of thumb: index with `[]` when an out-of-range value means *your own code has a bug*; reach for `get` the moment the index is derived from anything outside your control.
 
 ### Reading while mutating: the borrow rule that surprises everyone
 
@@ -63,7 +70,7 @@ println!("{first}");
 error[E0502]: cannot borrow `v` as mutable because it is also borrowed as immutable
 ```
 
-The reason is the layout above. `first` points *into the heap buffer*. `push(6)` might reallocate, moving the buffer and leaving `first` dangling. C++ has exactly this hazard — pushing onto a `std::vector` invalidates iterators and references — but C++ does not check it, so it is a famous source of use-after-free. Rust's rule ("one `&mut` xor any number of `&`") makes the hazard a compile error: holding `&v[0]` is an outstanding `&` borrow of `v`, so the `&mut v` that `push` needs is rejected. The fix is to dereference/copy before mutating, or to scope the borrow so it ends before the `push`.
+The reason is the layout above. `first` points *into the heap buffer*. `push(6)` might reallocate, moving the buffer and leaving `first` dangling. If you have ever held a reference to an element of a Python `list` (or a Java collection) and then mutated the collection through another path, you have met this hazard's cousins — `ConcurrentModificationException` in Java is the runtime version of the same problem. Rust's rule ("one `&mut` xor any number of `&`") makes the hazard a *compile* error instead of a runtime crash: holding `&v[0]` is an outstanding `&` borrow of `v`, so the `&mut v` that `push` needs is rejected. The fix is to dereference/copy before mutating, or to scope the borrow so it ends before the `push`.
 
 The same protection covers iteration. A `for` loop over `&v` holds a borrow of the whole vector for the loop's duration, so you cannot `push` or `remove` mid-iteration:
 
@@ -97,7 +104,7 @@ for s in owned.into_iter() { /* s: String — owned, moved out of the vec */ }
 
 `&v` in a `for` loop is sugar for `v.iter()`; `&mut v` for `v.iter_mut()`; a bare `v` for `v.into_iter()`. The third *consumes* the vector and hands you each element *by value* — this is how you move owned elements out without cloning. For `Copy` element types (`i32`) the distinction is mostly academic; for owning types (`String`, `Vec<_>`) it is the difference between borrowing the contents and dismantling the container.
 
-> **🦀 From your toolbox →** `iter()`/`iter_mut()` are `begin()`/`begin()` on a `const` vs non-`const` C++ container; `into_iter()` is closest to a *move iterator* (`std::make_move_iterator`) — except in Rust it also destroys the container, so there is no risk of touching moved-from elements afterward. In OCaml every `List.map` is `iter`-flavoured (immutable); Rust's `iter_mut` and `into_iter` have no OCaml analogue because OCaml has neither mutable-by-default bindings nor affine ownership.
+> **🦀 From your toolbox →** `iter()`/`iter_mut()` are the read-only vs in-place-mutating loops you already write in Swift (`for x in arr` vs mutating through indices) or Java (`for (T x : list)` with the `Iterator.remove`/`set` story). `into_iter()` is the one with no everyday equivalent in those languages: it hands you each element *by value and empties the container as it goes*, so afterward the vector is gone and there is no risk of touching a half-moved collection. In Python you might fake "drain everything out" with a `while lst: x = lst.pop()`, but Python keeps the list object alive and never gives you a moved-out value. *Where it breaks down:* in Java/Python the loop variable is always a reference into a still-living collection; only `into_iter` actually transfers ownership and leaves nothing behind.
 
 ### Heterogeneity via enums
 
@@ -112,7 +119,7 @@ enum Cell {
 let row = vec![Cell::Int(7), Cell::Label("hi".into()), Cell::Real(2.5)];
 ```
 
-Each slot is `size_of::<Cell>()` wide (the tag plus the largest variant). When the variant set is open-ended and unknown at compile time, you instead reach for trait objects, `Vec<Box<dyn Trait>>` — see [trait objects](09-trait-objects-and-oop.md).
+This is the same trick as a Swift `enum` with associated values (`enum Cell { case int(Int64); case real(Double); case label(String) }`) collected into an `[Cell]`: the array stays homogeneous because every element is a `Cell`, and the variant carries the real payload. Each slot is `size_of::<Cell>()` wide (the tag plus the largest variant). When the variant set is open-ended and unknown at compile time, you instead reach for trait objects, `Vec<Box<dyn Trait>>` — see [trait objects](09-trait-objects-and-oop.md).
 
 ### Capacity tuning
 
@@ -156,7 +163,7 @@ let s = format!("{x}-{y}-{z}");   // borrows everything, allocates once
 
 ## `HashMap<K, V>`: keys to values
 
-`HashMap<K, V>` is a hash table, heap-allocated like `Vec`. It is not in the prelude, so you must bring it in:
+`HashMap<K, V>` is a hash table, heap-allocated like `Vec` — Java's `HashMap`, Swift's `Dictionary`, Python's `dict`. It is not in the prelude, so you must bring it in:
 
 ```rust
 use std::collections::HashMap;
@@ -178,7 +185,7 @@ m.insert(name, val);
 // name and val are MOVED — using either is a compile error now
 ```
 
-Reading is by reference. `get` returns `Option<&V>` (the key might be absent), and you commonly `.copied()` to turn `Option<&i32>` into `Option<i32>` for a `Copy` value, then `.unwrap_or(default)`:
+This is where the Java/Python intuition needs adjusting. In Java `map.put(name, val)` stores *references*; `name` still points at the same `String` object afterward, and so does the map. In Rust there is one owner, and `insert` transferred it to the map — the local bindings are now used up. Reading is by reference. `get` returns `Option<&V>` (the key might be absent), and you commonly `.copied()` to turn `Option<&i32>` into `Option<i32>` for a `Copy` value, then `.unwrap_or(default)`:
 
 ```rust
 let blue = scores.get("Blue").copied().unwrap_or(0);
@@ -220,7 +227,16 @@ for n in 0..6 {
 }
 ```
 
-> **🎓 Tripos link →** *Concurrent and Distributed Systems / lock granularity.* The reason `entry` "plays nicely with the borrow checker" is the same reason a compare-and-swap beats a lock-read-then-lock-write: it collapses two separately-borrowed operations into one atomic borrow. `get`-then-`insert` requires two distinct `&`/`&mut` borrows of the same map that the borrow checker must reconcile across a gap; `entry` holds a single `&mut` for the whole read-modify-write, which is both sound and a single hash probe.
+> **🔧 In practice →** you're aggregating server logs and want, for each user ID, the list of endpoints they hit. In Python you would reach for `collections.defaultdict(list)` and write `groups[user].append(endpoint)`; `entry(...).or_default()` is exactly that, with the borrow checker keeping the lookup-and-mutate to a single map probe:
+> ```rust
+> let mut by_user: HashMap<UserId, Vec<&str>> = HashMap::new();
+> for entry in log_lines {
+>     by_user.entry(entry.user).or_default().push(entry.endpoint);
+> }
+> ```
+> Reach for `entry` whenever the shape is "look it up; if it's there update it, if not seed a default" — counters, multimaps, memoisation caches, dedup-with-tally. The naive `if map.contains_key(k) { ... } else { ... }` does two lookups and fights the borrow checker; `entry` does one of each.
+
+> **🎓 Tripos link →** *Concurrent and Distributed Systems.* The reason `entry` "plays nicely with the borrow checker" is the same reason you prefer a single atomic update over a separate read-then-write: it collapses two steps into one. `get`-then-`insert` reads the map, then comes back later to write it — two separate touches the borrow checker has to reconcile across a gap, just as a lock-read-then-lock-write leaves a window where another thread could interleave. `entry` holds one mutable handle for the whole read-modify-write, which is both easier to prove sound and a single hash probe instead of two.
 
 ### `Eq`, `Hash`, and the hashing function
 
@@ -256,7 +272,7 @@ let squares: HashMap<i32, i32> = (1..=5).map(|n| (n, n * n)).collect();
 | `BTreeSet<T>` | B-tree | **sorted** | membership *and* ordered iteration / ranges |
 | `BinaryHeap<T>` | binary max-heap | partial (peek = max) | priority queue: O(1) `peek` of the max, O(log n) `push`/`pop` |
 
-Two points worth pinning down. First, the `Hash`-vs-`Btree` axis is the classic hash-table-vs-balanced-tree tradeoff from Algorithms: `HashMap` gives O(1) average lookup but no order and worst-case O(n); `BTreeMap` gives O(log n) lookup *and* sorted traversal plus range queries, which the hash map fundamentally cannot offer. Choose `BTreeMap`/`BTreeSet` whenever ordering or ranges matter, `HashMap`/`HashSet` otherwise. Second, `BinaryHeap` is a **max-heap** — `pop` returns the *largest* element. For a min-heap, store `std::cmp::Reverse<T>`:
+Two points worth pinning down. First, the `Hash`-vs-`Btree` axis is the classic hash-table-vs-balanced-tree tradeoff from Algorithms: `HashMap` gives O(1) average lookup but no order and worst-case O(n); `BTreeMap` gives O(log n) lookup *and* sorted traversal plus range queries, which the hash map fundamentally cannot offer. (If you have used Java's `HashMap` vs `TreeMap`, this is precisely that pair.) Choose `BTreeMap`/`BTreeSet` whenever ordering or ranges matter, `HashMap`/`HashSet` otherwise. Second, `BinaryHeap` is a **max-heap** — `pop` returns the *largest* element. For a min-heap, store `std::cmp::Reverse<T>`:
 
 ```rust
 use std::collections::BinaryHeap;
@@ -271,7 +287,7 @@ min.push(Reverse(1));
 assert_eq!(min.pop(), Some(Reverse(1))); // Reverse flips the ordering
 ```
 
-Every owning collection here frees its buffer *and* recursively drops every element when it goes out of scope — dropping a `Vec<String>` drops each `String`, which frees each string's heap buffer. This is RAII applied transitively, with the borrow checker guaranteeing no reference outlives the collection that owns the data.
+Every owning collection here frees its buffer *and* recursively drops every element when it goes out of scope — dropping a `Vec<String>` drops each `String`, which frees each string's heap buffer. This is the cleanup story you may know from Swift's ARC or C++'s destructors-at-scope-end, but applied *transitively* and decided at compile time: unlike Java's or Python's garbage collector, there is no background reclaimer and no nondeterministic timing — the frees happen exactly when the owner's scope ends, with the borrow checker guaranteeing no reference outlives the collection that owns the data.
 
 ## Mental-model recap
 
@@ -283,20 +299,26 @@ Every owning collection here frees its buffer *and* recursively drops every elem
 
 ## Exercises
 
-1. Write `fn second(v: &Vec<i32>) -> Option<&i32>` two ways: once with `v.get(1)`, once with indexing. Then call your indexing version with a one-element vector and explain the panic in terms of the `Index` trait. Which signature is honest about partiality?
+1. You're writing a function that returns the *last* element of a slice. Sketch the signature `fn last<T>(xs: &[T]) -> Option<&T>` and decide: should the body use `xs[xs.len() - 1]` or `xs.last()`? Call your reasoning out explicitly — what happens for each choice when `xs` is empty, and which one makes the empty case impossible to forget at the call site?
 
-2. The following fails to compile. Give the exact error code, explain it via the `(ptr, len, cap)` layout, and fix it *without* cloning:
+2. Predict whether each of these compiles, and for the failures name the rule being enforced:
    ```rust
+   // (a)
    let mut v = vec![1, 2, 3];
-   let top = &v[2];
+   let x = v[0];          // note: no &
    v.push(4);
-   println!("{top}");
+   println!("{x}");
+
+   // (b)
+   let mut v = vec![String::from("a"), String::from("b")];
+   let r = &v[0];
+   v.push(String::from("c"));
+   println!("{r}");
    ```
+   Why does swapping `&v[0]` for `v[0]` change the answer? Tie it back to the `(ptr, len, cap)` layout.
 
-3. Build `fn frequencies(words: &[&str]) -> HashMap<&str, usize>` using the `entry` API in a single statement inside the loop. Then rewrite it with `get`-then-`insert` and articulate precisely which two borrows the borrow checker has to reconcile in the second version.
+3. You have `let words: Vec<String> = ...;` and want a single `String` joining them with `", "` between. Decide between `words.iter()` and `words.into_iter()` for the job, and say what each choice costs: which one forces a clone of every element, which one leaves `words` usable afterward, and which property actually matters for *this* task.
 
-4. You have `let owned: Vec<String> = ...;` and want one `String` that concatenates them all. Do it with `into_iter` and explain why `iter` would force a `.clone()` on every element while `into_iter` does not. (★)
+4. A teammate stores request timestamps as `HashMap<u64, LogLine>` and now needs "all log lines from the last 5 minutes" as a sorted range. Without writing the query, decide what single change to the *type* unlocks this, explain why the `HashMap` fundamentally cannot answer the range question, and state the rough cost of the range scan in terms of the tree's height and the number of results returned.
 
-5. (★) `let mut h: HashMap<f64, i32> = HashMap::new();` does not compile. Name the missing trait bound, explain *why* `f64` lacks it (one word: a particular IEEE value), and propose a key type that works while preserving the numeric value.
-
-6. (★) Take a `BTreeMap<u32, String>` of timestamps to log lines. Using one method call, extract just the entries whose key lies in `1000..2000`, and explain why the identical request is impossible to express on a `HashMap`. What is the asymptotic cost of your range query in terms of tree height and result size?
+5. (★) You're tallying votes where each ballot is an `f64` score, and you reach for `HashMap<f64, u32>` — it won't compile. Name the missing trait bound and the one IEEE value that is to blame. Then design a key type that lets you bucket by score *while preserving the numeric value* (hint: scores arrive rounded to two decimals — what integer could stand in for the key?), and say one thing your wrapper gives up compared to keying on the raw `f64`.

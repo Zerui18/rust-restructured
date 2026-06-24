@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -177,7 +177,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="12-closures--iterators"><a class="header" href="#12-closures--iterators">12. Closures &amp; Iterators</a></h1>
-<p>OCaml gave you closures and <code>List.map</code>; you have used <code>std::function</code> and lambdas in C++, and <code>.map</code>/<code>.filter</code> in TypeScript. So the <em>vocabulary</em> of this chapter is familiar. What is new is that Rust threads its entire ownership discipline through both features, statically and at zero runtime cost. A closure is not a heap-allocated object pointing at a GC’d environment, as in OCaml or JavaScript. It is an anonymous, compiler-generated <code>struct</code> whose fields <em>are</em> the captured variables, and whose “callability” is expressed through one of three traits. An iterator chain is not a sequence of allocating intermediate collections, as a naive <code>List.map |&gt; List.filter</code> is in OCaml. It is a tower of nested structs that the compiler monomorphises and inlines into a single loop with no allocation and no indirection.</p>
+<p>Java gave you lambdas and <code>Stream.map</code>; Swift gave you closures and <code>.map</code>/<code>.filter</code> on arrays; Python gave you <code>lambda</code>, comprehensions, and generators. So the <em>vocabulary</em> of this chapter is familiar. What is new is that Rust threads its entire ownership discipline through both features, statically and at zero runtime cost. A closure is not a heap-allocated object pointing at a garbage-collected environment, as in Java or Python. It is an anonymous, compiler-generated <code>struct</code> whose fields <em>are</em> the captured variables, and whose “callability” is expressed through one of three traits. An iterator chain is not a sequence of allocating intermediate collections, as a naive Python <code>map</code>-then-<code>filter</code> over lists would be. It is a tower of nested structs that the compiler monomorphises and inlines into a single loop with no allocation and no indirection.</p>
 <p>The thesis of this chapter: <em>Rust makes capture mode part of the type, and makes iteration a trait with one required method.</em> Everything else — the <code>Fn</code>/<code>FnMut</code>/<code>FnOnce</code> hierarchy, laziness, the zero-cost claim — follows from those two design decisions.</p>
 <h2 id="closures-are-anonymous-structs"><a class="header" href="#closures-are-anonymous-structs">Closures are anonymous structs</a></h2>
 <p>A closure literal <code>|params| body</code> desugars to an anonymous <code>struct</code> whose fields are exactly the environment variables the body mentions, plus an <code>impl</code> of a call trait. Consider:</p>
@@ -195,7 +195,7 @@ let scale = __Scale { factor: &amp;factor };
 <span class="boring">}</span></code></pre>
 <p>(The trait syntax is illustrative; you cannot hand-write <code>impl Fn</code> on stable.) The crucial consequence is that <strong>every closure has a distinct, unnameable type</strong>. Two closures with identical signatures and bodies are different types, exactly as two distinct <code>struct</code>s would be. This is why you cannot write <code>let f: ??? = |x| x + 1;</code> with a concrete named type — there isn’t one — and why closures are passed via generics (<code>F: Fn(...)</code>) or trait objects (<code>Box&lt;dyn Fn(...)&gt;</code>).</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> In C++ a lambda is also an anonymous class with <code>operator()</code>, and each lambda has a unique type — Rust matches this exactly. The difference: C++ makes you write the <em>capture list</em> (<code>[&amp;]</code>, <code>[=]</code>, <code>[x, &amp;y]</code>) explicitly, and gets capture mode wrong silently if you mismatch it (dangling references when <code>[&amp;]</code> outlives the frame). Rust <em>infers</em> capture mode from the body and then <em>checks</em> it with the borrow checker, so a closure that would dangle does not compile. OCaml closures always capture by reference into a GC-managed environment, so there is no capture-mode decision and no lifetime concern — the GC papers over it. Rust has no GC, so capture mode is load-bearing.</p>
+<p><strong>🦀 From your toolbox →</strong> In Swift, a closure captures variables from its surrounding scope much like Rust’s does, and you can store one in a variable typed <code>(Int) -&gt; Int</code>. The difference: Swift gives you a single nameable function type, and its closures live behind ARC (automatic reference counting), so capture has a runtime cost and the lifetime is managed for you. Rust instead generates a <em>fresh, unnameable type</em> per closure and decides capture mode at compile time, with no reference counting. Java’s lambdas are similar — each is an anonymous object implementing a functional interface — but the JVM’s garbage collector keeps captured objects alive for as long as the lambda references them, so capture is never a lifetime question. Rust has no GC and no ARC, so capture mode is load-bearing: it is exactly <em>how</em> the captured data enters the closure and <em>when</em> it is freed. (Where the analogy breaks down: in Java and Swift a captured local is reachable through a reference and the runtime keeps it alive; in Rust a captured borrow must be <em>proven</em> to outlive the closure, or it does not compile.)</p>
 </blockquote>
 <h3 id="type-inference-and-the-locked-in-signature"><a class="header" href="#type-inference-and-the-locked-in-signature">Type inference and the locked-in signature</a></h3>
 <p>Unlike <code>fn</code> items, closures usually need no type annotations. A <code>fn</code> exposes a public interface, so its types are mandatory; a closure is a local implementation detail, so the compiler infers parameter and return types from the body and the first call site. But inference picks <em>one</em> concrete type and freezes it:</p>
@@ -213,7 +213,7 @@ note: expected because the closure was earlier called with an argument of type `
 </code></pre>
 <p>This is not generics. A closure is not polymorphic over its argument types; inference simply defers the choice to the first use and then commits. If you want polymorphism, write a generic <code>fn</code>.</p>
 <h2 id="the-fn--fnmut--fnonce-hierarchy"><a class="header" href="#the-fn--fnmut--fnonce-hierarchy">The Fn / FnMut / FnOnce hierarchy</a></h2>
-<p>How a closure interacts with its environment determines <em>which</em> call traits it implements. There are three, and they form a subtype-like hierarchy by capability:</p>
+<p>How a closure interacts with its environment determines <em>which</em> call traits it implements. There are three, and they form a hierarchy by capability:</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -229,7 +229,7 @@ note: expected because the closure was earlier called with an argument of type `
 <p>The defining detail is the receiver. <code>FnOnce::call_once</code> takes <code>self</code> <em>by value</em>, so calling it consumes the closure struct — that is the type-level encoding of “callable at most once.” <code>FnMut::call_mut</code> takes <code>&amp;mut self</code>, so it needs exclusive access for each call. <code>Fn::call</code> takes <code>&amp;self</code>, so it can be called through a shared reference, even from multiple threads.</p>
 <p>These are <em>supertraits</em> in the capability sense: <code>Fn: FnMut: FnOnce</code>. Anything you can call with <code>&amp;self</code> you can call with <code>&amp;mut self</code> (just ignore the extra power), and anything callable repeatedly is callable once. So <strong>every closure implements <code>FnOnce</code></strong>; closures that don’t move-out also implement <code>FnMut</code>; closures that don’t mutate also implement <code>Fn</code>. The compiler implements the <em>largest</em> applicable set automatically.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is precisely the trait-bound machinery from <a href="08-generics-and-traits.html">generics and traits</a>, applied to compiler-generated types. From <em>Further Java</em>, recall that <code>Comparator&lt;T&gt;</code> is a single-method interface; an <code>FnMut(&amp;T) -&gt; K</code> bound is the same idea, except the “interface” is implemented by an anonymous struct and resolved by monomorphisation rather than erasure + vtable. The receiver-type encoding (<code>self</code> vs <code>&amp;mut self</code> vs <code>&amp;self</code>) is an affine-types argument from <em>Semantics</em>: consuming <code>self</code> makes a second call ill-typed, so “at most once” is enforced by the type system, not a runtime flag.</p>
+<p><strong>🦀 From your toolbox →</strong> This is the trait-bound machinery from <a href="08-generics-and-traits.html">generics and traits</a>, applied to compiler-generated types. Think of Java’s single-method interfaces: <code>Comparator&lt;T&gt;</code> has one method, and a lambda satisfies it. An <code>FnMut(&amp;T) -&gt; K</code> bound is the same idea — a one-method “interface” — except the implementer is an anonymous struct chosen at compile time rather than an object dispatched through the JVM. The receiver type (<code>self</code> vs <code>&amp;mut self</code> vs <code>&amp;self</code>) is the clever part: because <code>FnOnce::call_once</code> takes the closure <em>by value</em>, calling it uses the closure up, so a second call simply won’t type-check. “At most once” is enforced by the type system, not by a runtime flag you have to remember to check — closer in spirit to a value you can hand over exactly once, after which you no longer hold it.</p>
 </blockquote>
 <h3 id="capture-mode-is-chosen-by-the-body"><a class="header" href="#capture-mode-is-chosen-by-the-body">Capture mode is chosen by the body</a></h3>
 <p>The compiler picks the <em>least</em> powerful capture for each variable that still lets the body compile: shared <code>&amp;</code> if the body only reads, <code>&amp;mut</code> if it mutates, by-value move if it moves the value out or needs ownership.</p>
@@ -279,6 +279,21 @@ thread::spawn(move || println!("worker sees {nums:?}"))
 // nums is no longer accessible here — it was moved into the thread
 <span class="boring">}</span></code></pre>
 <blockquote>
+<p><strong>🔧 In practice →</strong> You’re writing an HTTP handler that fires off a background task — logging the request to a slow audit store without blocking the response. The data the task needs (a request id, a user id) lives in the handler’s stack frame, which disappears the instant you return the response. <code>move</code> is what lets the spawned closure <em>own</em> a copy of that data so it stays valid after the handler returns:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let request_id = req.id.clone();
+let user = req.user.clone();
+std::thread::spawn(move || {
+    // request_id and user are owned by this closure now,
+    // so they outlive the handler that spawned the task
+    audit_log.write(request_id, user);
+});
+// handler returns here; the background thread keeps running safely
+<span class="boring">}</span></code></pre>
+<p>Drop the <code>move</code> and the compiler refuses: the closure would borrow <code>request_id</code> from a frame that is about to vanish.</p>
+</blockquote>
+<blockquote>
 <p><strong>⚙️ Under the hood →</strong> Without <code>move</code>, the thread closure would capture <code>&amp;nums</code>, a reference into <code>main</code>’s stack frame. <code>thread::spawn</code> requires <code>F: Send + 'static</code>; a borrow of a local is not <code>'static</code>, so it fails to compile — the borrow checker proving statically what would otherwise be a use-after-free when <code>main</code>’s frame is popped while the worker still runs. We return to <code>Send</code>/<code>'static</code> in <a href="13-fearless-concurrency.html">fearless concurrency</a>.</p>
 </blockquote>
 <h3 id="bounds-in-practice-unwrap_or_else-vs-sort_by_key"><a class="header" href="#bounds-in-practice-unwrap_or_else-vs-sort_by_key">Bounds in practice: <code>unwrap_or_else</code> vs <code>sort_by_key</code></a></h3>
@@ -315,7 +330,20 @@ fn dispatch(neg: bool) -&gt; Box&lt;dyn Fn(i32) -&gt; i32&gt; {
 <span class="boring">}</span></code></pre>
 <p>Use <code>impl Fn</code> when one concrete closure type is returned on all paths; the compiler still knows the exact type and can inline. Use <code>Box&lt;dyn Fn&gt;</code> when different paths return <em>different</em> closure types (as in <code>dispatch</code>) — they must be unified behind a trait object, which means dynamic dispatch through a vtable, exactly the mechanism in <a href="09-trait-objects-and-oop.html">trait objects</a>. <code>move</code> is almost always required on a returned closure: any captured local would otherwise be a dangling reference once the function returns.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>Box&lt;dyn Fn(i32) -&gt; i32&gt;</code> is the moral equivalent of C++ <code>std::function&lt;int(int)&gt;</code> — both type-erase the concrete callable behind an allocation and indirect call. <code>impl Fn</code> has no C++ equivalent in the lambda world; it is closer to returning <code>auto</code> from a function whose body returns exactly one lambda type, with the compiler keeping that type opaque-but-concrete at the boundary. OCaml’s <code>int -&gt; int</code> is always the boxed, dynamically-dispatched form; OCaml has no monomorphised analogue of <code>impl Fn</code>.</p>
+<p><strong>🔧 In practice →</strong> You’re building a configurable filter for a search feature: the user picks a minimum price, and you want a reusable predicate to apply across thousands of items. A factory function that bakes the threshold into a returned closure is exactly the tool:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn min_price_filter(threshold: u32) -&gt; impl Fn(&amp;Item) -&gt; bool {
+    move |item| item.price &gt;= threshold   // threshold is captured by value
+}
+
+let keep = min_price_filter(user_min);
+let results: Vec&lt;_&gt; = catalog.iter().filter(|it| keep(it)).collect();
+<span class="boring">}</span></code></pre>
+<p>Return <code>impl Fn</code> here, not <code>Box&lt;dyn Fn&gt;</code>: there’s only one closure type, so the compiler keeps it concrete and inlines the call into the <code>filter</code> loop with zero overhead. Reach for <code>Box&lt;dyn Fn&gt;</code> only when different branches return genuinely different closures that must share one return type.</p>
+</blockquote>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>Box&lt;dyn Fn(i32) -&gt; i32&gt;</code> is the moral equivalent of Java storing a lambda in a <code>Function&lt;Integer, Integer&gt;</code> field, or Swift storing one in a <code>(Int) -&gt; Int</code> property: the concrete callable is hidden behind a single reference type and called indirectly. <code>impl Fn</code> has no direct analogue in those languages — it is closer to “this function returns <em>some specific</em> function type that I’m not naming, but the compiler knows exactly which one,” so it can be inlined. In Java and Swift, every stored function is effectively the boxed, dynamically-dispatched form; Rust gives you a static option that costs nothing.</p>
 </blockquote>
 <h2 id="the-iterator-trait-one-method-to-rule-them-all"><a class="header" href="#the-iterator-trait-one-method-to-rule-them-all">The Iterator trait: one method to rule them all</a></h2>
 <p>An iterator is any type implementing <code>Iterator</code>, whose <em>entire</em> required surface is one method:</p>
@@ -329,7 +357,7 @@ fn dispatch(neg: bool) -&gt; Box&lt;dyn Fn(i32) -&gt; i32&gt; {
 <span class="boring">}</span></code></pre>
 <p><code>Item</code> is an <em>associated type</em> (see <a href="17-advanced-traits-and-types.html">advanced traits</a>): the element type is a property of the iterator type, not a free generic parameter, so a given iterator yields exactly one element type. <code>next</code> takes <code>&amp;mut self</code> because pulling an element advances internal state (a cursor); it returns <code>Some(item)</code> until exhaustion, then <code>None</code> forever after. That is the whole protocol. Every other method — <code>map</code>, <code>filter</code>, <code>sum</code>, <code>collect</code>, <code>fold</code> — is a <em>default method</em> built on <code>next</code>. Implement <code>next</code> and you inherit all of them.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the <em>Foundations of Computer Science</em> lazy-list/<code>Seq</code> idea made into a trait. An OCaml <code>'a Seq.t = unit -&gt; 'a node</code> where <code>node = Nil | Cons of 'a * 'a Seq.t</code> is the same protocol: a thunk you force to get either “done” or “head + rest.” Rust’s <code>next() -&gt; Option&lt;Item&gt;</code> is the imperative dual — <code>None</code> is <code>Nil</code>, <code>Some(x)</code> is <code>Cons(x, _)</code>, and the “rest” is the mutated <code>self</code>. The laziness is identical; Rust just keeps the tail in mutable state rather than a fresh thunk.</p>
+<p><strong>🦀 From your toolbox →</strong> This is Python’s generator protocol made into a trait. A Python generator is an object whose <code>__next__()</code> either returns the next value or raises <code>StopIteration</code>; Rust’s <code>next()</code> returns <code>Some(item)</code> until exhausted, then <code>None</code>. Both are <em>lazy</em> — nothing is computed until you pull the next element. Java’s <code>Iterator</code> interface is the closer structural match (<code>hasNext()</code> + <code>next()</code>), but Rust folds both checks into a single call returning <code>Option</code>, so there’s no way to ask “is there more?” without also taking the element. The Swift analogue is <code>IteratorProtocol</code>, which likewise has one method returning an optional <code>next()</code>.</p>
 </blockquote>
 <p>A <code>for</code> loop is sugar over this trait. <code>for x in it { … }</code> desugars to taking <code>it</code> by value (via <code>IntoIterator</code>), making it <code>mut</code>, and looping <code>while let Some(x) = it.next() { … }</code>. That is why you never write the index arithmetic and never make the iterator <code>mut</code> yourself.</p>
 <h3 id="intoiterator-and-the-three-iteration-forms"><a class="header" href="#intoiterator-and-the-three-iteration-forms">IntoIterator and the three iteration forms</a></h3>
@@ -381,7 +409,7 @@ v.iter().map(|x| x + 1);   // warning: unused `Map` that must be used
 <li><code>enumerate</code> — yields <code>(index, item)</code>, replacing manual index counters.</li>
 <li><code>zip(other)</code> — yields <code>(a, b)</code> pairs, stopping when <em>either</em> side ends.</li>
 <li><code>chain(other)</code> — concatenate two iterators of the same <code>Item</code>.</li>
-<li><code>flat_map(f)</code> — map each item to an iterator, then flatten (the monadic bind).</li>
+<li><code>flat_map(f)</code> — map each item to an iterator, then flatten the results into one stream.</li>
 </ul>
 <p>Consumers (eager — they run the pipeline):</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -397,7 +425,7 @@ let product: usize   = (1..=5).fold(1, |acc, n| acc * n);            // 120
 <ul>
 <li><code>collect</code> — gather into a collection; the target type drives behaviour (see below).</li>
 <li><code>sum</code> / <code>product</code> / <code>count</code> — reduce to a scalar.</li>
-<li><code>fold(init, f)</code> — the general left-fold; <code>sum</code> is <code>fold(0, +)</code>. This is OCaml’s <code>List.fold_left</code> exactly.</li>
+<li><code>fold(init, f)</code> — the general left-fold: start from <code>init</code> and combine each element into a running accumulator; <code>sum</code> is <code>fold(0, +)</code>. (This is Python’s <code>functools.reduce</code> with an explicit initial value, or Java’s <code>Stream.reduce</code>.)</li>
 <li><code>for_each</code> — run a closure for its side effects (the consuming cousin of <code>map</code>).</li>
 <li><code>find</code> / <code>position</code> / <code>any</code> / <code>all</code> — searches that <em>short-circuit</em>: they stop pulling <code>next</code> the moment the answer is known.</li>
 </ul>
@@ -415,7 +443,22 @@ let map:   std::collections::HashMap&lt;&amp;str, i32&gt; = [("a", 1), ("b", 2)]
 // Err(ParseIntError) — stops at "x"
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> TypeScript’s <code>arr.map().filter()</code> allocates a fresh array at every step and runs eagerly; OCaml’s <code>List.map |&gt; List.filter</code> likewise builds intermediate lists. Rust’s adapters allocate <em>nothing</em> and run <em>nothing</em> until a consumer pulls — the chain is a description, not a computation. The closest mainstream analogue is Java’s <code>Stream</code> (lazy, single terminal operation) or C++20 <code>ranges</code>. The break from OCaml: there is no intermediate <code>list</code> materialised between <code>map</code> and <code>filter</code>; the data flows one element at a time through the whole pipe.</p>
+<p><strong>🔧 In practice →</strong> You’re parsing a CSV column of numbers from user-uploaded data, and you want to reject the whole upload if <em>any</em> cell is malformed — not silently skip bad rows. Annotate <code>collect</code> to target <code>Result&lt;Vec&lt;_&gt;, _&gt;</code> and it does exactly that, handing you the first parse error to surface back to the user:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn parse_amounts(rows: &amp;[&amp;str]) -&gt; Result&lt;Vec&lt;i32&gt;, std::num::ParseIntError&gt; {
+    rows.iter().map(|cell| cell.trim().parse::&lt;i32&gt;()).collect()
+}
+
+match parse_amounts(&amp;["10", "20", "oops", "40"]) {
+    Ok(amounts) =&gt; process(amounts),
+    Err(e) =&gt; return bad_request(format!("invalid amount: {e}")),
+}
+<span class="boring">}</span></code></pre>
+<p>The same pipeline, collected into <code>Vec&lt;i32&gt;</code> instead, would force you to handle each <code>Result</code> element by hand. Choosing the target type <em>is</em> choosing the error-handling strategy.</p>
+</blockquote>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Python’s <code>[f(x) for x in xs if g(x)]</code> and Swift’s <code>xs.map(f).filter(g)</code> both build a fresh list/array at each step and run immediately. Java’s <code>Stream</code> is the close match to Rust’s model: lazy adapters, a single terminal operation. Rust’s adapters allocate <em>nothing</em> and run <em>nothing</em> until a consumer pulls — the chain is a description, not a computation. The break from Python and Swift: there is no intermediate array materialised between <code>map</code> and <code>filter</code>; the data flows one element at a time through the whole pipe, just as it does through a Java stream.</p>
 </blockquote>
 <h3 id="implementing-iterator-for-your-own-type"><a class="header" href="#implementing-iterator-for-your-own-type">Implementing Iterator for your own type</a></h3>
 <p>Implement <code>next</code>, get the whole library. Here is a bounded Fibonacci generator:</p>
@@ -441,7 +484,7 @@ let sum_even: u64 = fib(20).filter(|n| n % 2 == 0).sum();
 <span class="boring">}</span></code></pre>
 <p><code>fib(20)</code> is a value of our struct; because it is an <code>Iterator</code>, <code>.filter(...).sum()</code> work for free. We wrote <code>next</code> and inherited the entire adapter/consumer tower. Returning <code>None</code> once is the contract; a well-behaved iterator returns <code>None</code> forever after.</p>
 <h2 id="the-zero-cost-claim"><a class="header" href="#the-zero-cost-claim">The zero-cost claim</a></h2>
-<p>The marketing line is “zero-cost abstraction.” Here is the precise mechanism, in <em>Compiler Construction</em> terms. Each adapter is a generic struct parameterised by the previous iterator and the closure type. Because closure types are concrete and the generics are resolved by <strong>monomorphisation</strong> — not erasure — <code>rustc</code> generates a specialised <code>next</code> for the <em>entire</em> chain with all closure bodies and all <code>next</code> calls statically known. There are no vtables, no <code>dyn</code> dispatch, no <code>std::function</code> indirection. The optimiser then <strong>inlines</strong> the nested <code>next</code> calls into one another, collapsing the tower into a single loop body. Bounds checks on slice access are elided where the index is provably in range, and loop unrolling applies as it would to a hand-written loop.</p>
+<p>The marketing line is “zero-cost abstraction.” Here is the precise mechanism. Each adapter is a generic struct parameterised by the previous iterator and the closure type. Because closure types are concrete and the generics are resolved by <strong>monomorphisation</strong> — the compiler stamps out a separate, specialised copy of the code for each concrete type combination, rather than using one shared erased version — <code>rustc</code> generates a specialised <code>next</code> for the <em>entire</em> chain with all closure bodies and all <code>next</code> calls statically known. There are no vtables, no <code>dyn</code> dispatch, no boxed-function indirection. The optimiser then <strong>inlines</strong> the nested <code>next</code> calls into one another, collapsing the tower into a single loop body. Bounds checks on slice access are elided where the index is provably in range, and loop unrolling applies as it would to a hand-written loop.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// These compile to essentially identical machine code:
@@ -458,7 +501,7 @@ fn sum_iter(v: &amp;[i32]) -&gt; i32 {
 <p><strong>⚙️ Under the hood →</strong> The <code>Map</code>/<code>Filter</code> structs are stack values holding the inner iterator and a closure (itself a zero-field struct if it captures nothing). After monomorphisation the call graph <code>Sum::sum → Filter::next → Map::next → Iter::next</code> is fully concrete; inlining flattens it. The standard-library benchmark — searching the full text of <em>Sherlock Holmes</em> for a word — shows the <code>for</code>-loop and iterator versions within noise of each other (~19.2M vs ~19.6M ns/iter). What you don’t use you don’t pay for; what you do use you couldn’t hand-code better. The iterator form often gets <em>better</em> codegen than a manual index loop because <code>v.iter()</code> carries the no-out-of-bounds invariant in the type, letting the optimiser drop bounds checks the index version may keep.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is <em>Compiler Construction</em>’s monomorphisation vs dynamic-dispatch tradeoff (cf. C++ templates vs Java erasure) decided in favour of monomorphisation for iterator chains. The cost is binary size (one specialised loop per distinct chain type); the benefit is that the high-level functional pipeline and the low-level imperative loop converge to the same SSA after inlining and bounds-check elimination — the abstraction genuinely vanishes at <code>-O</code>.</p>
+<p><strong>🎓 Course link →</strong> This is the classic <em>Compiler Construction</em> tradeoff between monomorphisation (the compiler stamps out a separate specialised copy of the code per concrete type) and dynamic dispatch (one shared copy that looks up the right code through a vtable at runtime, like Java’s erased generics). For iterator chains Rust always picks monomorphisation. The cost is binary size — one specialised loop per distinct chain type — and the payoff is that the high-level pipeline and the low-level hand loop compile to the same machine code after inlining and bounds-check elimination. The abstraction genuinely vanishes once you turn the optimiser on.</p>
 </blockquote>
 <h2 id="idiom-pipelines-replace-index-loops"><a class="header" href="#idiom-pipelines-replace-index-loops">Idiom: pipelines replace index loops</a></h2>
 <p>Given the zero-cost guarantee, the community idiom is unambiguous: prefer the iterator pipeline over a <code>for</code>-with-index loop. It is no slower, it eliminates the off-by-one and out-of-bounds failure modes that index arithmetic invites, and it reads as a declarative description of the transformation. Reach for an explicit <code>for</code> loop only when the body has complex control flow (early <code>return</code>, <code>break</code> with a value, <code>continue</code> across multiple conditions) that does not map cleanly onto adapters.</p>
@@ -487,22 +530,24 @@ let out: Vec&lt;_&gt; = items.iter()
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write a closure that mutates a captured <code>Vec</code>, then attempt to read the <code>Vec</code> <em>between</em> the closure’s definition and its call. Read the borrow-checker error, then fix it by reordering so the closure’s last use precedes the read. Explain why NLL makes this legal.</p>
+<p>Here are three closures, each passed to a function with a different bound. Predict which compile and which don’t, and explain each in one sentence:</p>
+<ul>
+<li><code>(0..3).map(|_| s.clone()).collect::&lt;Vec&lt;_&gt;&gt;()</code> where <code>s: String</code> — does the <code>map</code> closure need to be <code>FnMut</code>, and does cloning satisfy it?</li>
+<li><code>let g = move || drop(buf); g(); g();</code> where <code>buf: Vec&lt;u8&gt;</code> — what bound does <code>g</code> have, and what does the second call report?</li>
+<li><code>option.unwrap_or_else(move || expensive)</code> where <code>expensive: String</code> is moved out — why does this compile even though the closure moves a value out of its environment?</li>
+</ul>
 </li>
 <li>
-<p>Define <code>fn make_counter() -&gt; impl FnMut() -&gt; u32</code> returning a closure that yields 0, 1, 2, … on successive calls. Why must it be <code>FnMut</code> and not <code>Fn</code>? Why must the captured counter be <code>move</code>d in?</p>
+<p>You have <code>let words: Vec&lt;String&gt; = ...;</code> and want the total length of all words <em>over</em> 3 characters. Write it as an iterator pipeline. Then decide: should the pipeline start with <code>words.iter()</code>, <code>&amp;words</code>, or <code>words.into_iter()</code> if you need to keep <code>words</code> usable afterward? Justify the choice in terms of what each yields and does to the source.</p>
 </li>
 <li>
-<p>Pass a closure that moves an owned <code>String</code> out of its environment to <code>slice::sort_by_key</code>. Predict the exact error code, then fix it two ways: (a) capture a <code>&amp;mut</code> counter instead, (b) <code>clone()</code>. Argue which is correct and which is a code smell.</p>
+<p>The chapter says a function should take the <em>weakest</em> bound it can tolerate. Suppose you’re designing a <code>retry(times: u32, action: ...)</code> helper that calls <code>action</code> repeatedly until it succeeds. Which of <code>Fn</code>/<code>FnMut</code>/<code>FnOnce</code> should the <code>action</code> parameter require, and why would requiring <code>FnOnce</code> be wrong here while requiring <code>Fn</code> would be needlessly restrictive?</p>
 </li>
 <li>
-<p>(★) Implement <code>Iterator</code> for a <code>struct Window&lt;'a&gt; { data: &amp;'a [u8], pos: usize }</code> that yields overlapping pairs <code>(u8, u8)</code> of adjacent elements. Then express the same thing using the standard <code>windows(2)</code> adapter and compare. What lifetime appears on <code>Item</code>, and why can’t it be an owned slice?</p>
+<p>Take <code>let pairs = vec![("a", 1), ("b", 2), ("a", 3)];</code>. Using <code>collect</code>, build (a) a <code>HashMap&lt;&amp;str, i32&gt;</code> and (b) a <code>Vec&lt;(&amp;str, i32)&gt;</code> from the same pipeline by changing only the target type annotation. Predict what the <code>HashMap</code> contains for key <code>"a"</code> and explain why, then say in one sentence what general fact about <code>collect</code> this demonstrates.</p>
 </li>
 <li>
-<p>(★) Given <code>let xs = vec![Some(1), None, Some(3)];</code>, write one pipeline that produces <code>Vec&lt;i32&gt;</code> containing only the present values, and a <em>second</em> pipeline that produces <code>Option&lt;Vec&lt;i32&gt;&gt;</code> which is <code>None</code> if <em>any</em> element was <code>None</code>. Explain how <code>collect</code>’s target type changes the short-circuiting behaviour.</p>
-</li>
-<li>
-<p>Take <code>(0u64..).map(|n| n * n)</code> — an <em>infinite</em> iterator. Show that adding <code>.take(5).collect::&lt;Vec&lt;_&gt;&gt;()</code> terminates, and explain in one sentence why the infinite <code>map</code> does not loop forever at construction time.</p>
+<p>(★) Consider <code>(2u64..).filter(|n| is_prime(*n)).map(|n| n * n).take(4)</code>. This chains a <code>filter</code> and a <code>map</code> over an <em>infinite</em> range and never loops forever at construction. Explain the pull mechanism that makes this terminate: which method actually drives the iteration, and in what order do <code>take</code>, <code>map</code>, and <code>filter</code> call <code>next</code> on each other for a single produced element?</p>
 </li>
 </ol>
 
@@ -541,22 +586,6 @@ let out: Vec&lt;_&gt; = items.iter()
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

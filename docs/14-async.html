@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -216,9 +216,9 @@ enum FetchLen&lt;'a&gt; {
     Done,
 }
 <span class="boring">}</span></code></pre>
-<p>Each <code>.await</code> is a possible suspension point. By liveness analysis across those points, the compiler computes exactly which locals are still live at each one and stores precisely those in the corresponding variant. This is a <strong>continuation-passing-style transform</strong>: it carves the linear body into segments delimited by <code>.await</code>, and the variant you are “in” <em>is</em> the saved continuation.</p>
+<p>Each <code>.await</code> is a possible suspension point. The compiler chops the linear body into segments delimited by <code>.await</code>, figures out exactly which local variables are still needed when execution is paused at each suspension point, and stores precisely those in the corresponding variant. The variant you are currently “in” <em>is</em> the saved progress: it records where you stopped and everything you need to pick up from there.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the CPS transformation from Compiler Construction, materialised as a data structure instead of a closure. Where a CPS compiler heap-allocates a closure capturing the live environment at each yield, rustc lays out a <em>flat enum</em> whose largest variant bounds the whole future’s size — no per-suspension allocation. The liveness analysis deciding what each variant stores is the same dataflow analysis you saw for register allocation, run over <code>.await</code> boundaries instead of basic blocks.</p>
+<p><strong>🎓 Tripos link →</strong> From Compiler Construction: this body-chopping is a code transformation rustc applies, and deciding which locals each variant must store is the same “which variables are still live at this point?” dataflow analysis you saw used for register allocation — here run over <code>.await</code> boundaries instead of basic blocks. The payoff is that rustc lays out a <em>flat enum</em> whose largest variant bounds the whole future’s size, so there is no separate allocation per suspension point.</p>
 </blockquote>
 <h3 id="the-future-trait"><a class="header" href="#the-future-trait">The <code>Future</code> trait</a></h3>
 <p>A future is anything implementing this:</p>
@@ -245,17 +245,29 @@ pub enum Poll&lt;T&gt; {
 </code></pre>
 <p>The crucial line is <code>Pending =&gt; return Pending</code>. When an inner future isn’t ready, control doesn’t block — it returns all the way up through every enclosing future to the runtime, which is then free to poll a <em>different</em> task. That bubbling-up is the cooperative yield. Everything <em>between</em> two <code>.await</code> points runs straight through, synchronously.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> A <code>Future</code> is morally a reified continuation — like CPS-converting an OCaml function by hand, except the compiler does it and packs the environment into a struct. The <code>poll</code> signature <code>Poll&lt;T&gt;</code> from <code>&amp;mut self</code> should also remind you of <code>Iterator::next(&amp;mut self) -&gt; Option&lt;T&gt;</code>: both pull-based, both driven by repeated calls, both threading state through <code>&amp;mut self</code>. <code>for</code> desugars to <code>Iterator</code>; <code>.await</code>/<code>async</code> desugars to <code>Future</code>. The analogy breaks at <em>who drives</em>: you drive an iterator with a loop you wrote; a runtime drives a future, and only re-polls when told it <em>might</em> now progress (the waker, below) — it does not spin.</p>
+<p><strong>🦀 From your toolbox →</strong> The <code>poll</code> signature — <code>Poll&lt;T&gt;</code> produced from <code>&amp;mut self</code>, driven by repeated calls — should remind you of <code>Iterator::next(&amp;mut self) -&gt; Option&lt;T&gt;</code> (Java’s <code>Iterator</code>, Python’s iterator protocol, Swift’s <code>IteratorProtocol</code>): both pull-based, both advanced by calling them again, both threading state through <code>&amp;mut self</code>. <code>for</code> desugars to <code>Iterator</code>; <code>.await</code>/<code>async</code> desugars to <code>Future</code>. The closest single-language analogue is a Swift or Python generator function: writing it linearly, but the compiler/runtime secretly turns the suspension points into resumable state. The analogy breaks at <em>who drives</em>: you drive an iterator with a loop you wrote; a runtime drives a future, and only re-polls when told it <em>might</em> now progress (the waker, below) — it does not spin.</p>
+</blockquote>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You’re writing a web request handler that must do two slow things — read the user’s row from the database, then call a billing API — before it can reply. Written as a plain <code>async fn</code>, each <code>.await</code> is a place the handler can step aside so the same OS thread serves <em>other</em> in-flight requests while this one waits on the network:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn handle(req: Request) -&gt; Response {
+    let user = db.load_user(req.user_id).await;   // step aside while DB answers
+    let bill = billing.charge(&amp;user).await;       // step aside while billing answers
+    Response::ok(bill.receipt_id)
+}
+<span class="boring">}</span></code></pre>
+<p>With OS threads you’d dedicate one whole thread (and its stack) to each request, most of it spent blocked on I/O. Here one thread juggles thousands of half-finished handlers, each parked at whichever <code>.await</code> it’s currently stuck on. This is the bread-and-butter shape of every async server you’ll write.</p>
 </blockquote>
 <h3 id="futures-are-inert-until-polled--unlike-js-promises"><a class="header" href="#futures-are-inert-until-polled--unlike-js-promises">Futures are inert until polled — unlike JS Promises</a></h3>
-<p>If you come from TypeScript, internalise this now. A JavaScript <code>Promise</code> is <strong>eager</strong>: calling an <code>async function</code> starts its body executing up to the first <code>await</code>, scheduling work on the event loop <em>whether or not anyone ever <code>.then</code>s it</em>. A Rust future is <strong>lazy</strong>: calling an <code>async fn</code> runs <em>zero</em> of its body, handing you an inert state machine in its <code>Start</code> state. Nothing happens until a runtime polls it — because you <code>.await</code>ed it, or handed it to the runtime to drive.</p>
+<p>A JavaScript <code>Promise</code> is <strong>eager</strong>: calling an <code>async function</code> starts its body executing up to the first <code>await</code>, scheduling work on the event loop <em>whether or not anyone ever <code>.then</code>s it</em>. A Rust future is <strong>lazy</strong>: calling an <code>async fn</code> runs <em>zero</em> of its body, handing you an inert state machine in its <code>Start</code> state. Nothing happens until a runtime polls it — because you <code>.await</code>ed it, or handed it to the runtime to drive. (If you’ve touched TypeScript, this is the one habit to unlearn first.)</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let fut = fetch_len("https://example.com"); // NOTHING has happened. No request sent.
 // ... fut is just a value. You could drop it here and no I/O ever occurs.
 let n = fut.await;                            // NOW it runs (when the surrounding task is polled).
 <span class="boring">}</span></code></pre>
-<p>The compiler enforces awareness of this: an unused future raises a <code>#[must_use]</code> warning, because constructing a future and never awaiting it is almost always a bug — the dead giveaway of a TS habit applied to Rust.</p>
+<p>The compiler enforces awareness of this: an unused future raises a <code>#[must_use]</code> warning, because constructing a future and never awaiting it is almost always a bug.</p>
 <blockquote>
 <p><strong>⚠️ Pitfall →</strong> <code>warning: unused implementer of </code>Future<code> that must be used</code> — <code>note: futures do nothing unless you </code>.await<code> or poll them</code>. You wrote <code>something_async();</code> expecting a fire-and-forget side effect, as you would in JS. In Rust that line constructs a future and immediately drops it, doing nothing. The fix: <code>.await</code> it, or hand it to the runtime with <code>spawn</code> (below) if you genuinely want it to run independently.</p>
 </blockquote>
@@ -313,6 +325,17 @@ async fn race() {
 }
 <span class="boring">}</span></code></pre>
 <p>A timeout is <em>just composition</em>: two futures, first to finish wins. That is the payoff of futures being first-class values — <code>timeout</code>, <code>retry</code>, <code>throttle</code> are ordinary functions over futures, not built-in keywords.</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You’re calling a flaky third-party API and refuse to let one slow call hang a request handler forever. Because a future is just a value, you don’t need a special “timeout API” — you race your real call against a timer and take whichever finishes first:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match timeout(fetch_quote(&amp;symbol), Duration::from_millis(500)).await {
+    Ok(quote) =&gt; render(quote),
+    Err(_)    =&gt; render_stale_cache(&amp;symbol),   // the timer won the race
+}
+<span class="boring">}</span></code></pre>
+<p>If <code>fetch_quote</code> is still <code>Pending</code> when the 500 ms <code>sleep</code> resolves, <code>select!</code> returns the <code>Err</code> arm and <em>drops</em> the in-flight request future (which cancels it). The same <code>select!</code> building block gives you “first response from any of three replica servers” or “user pressed cancel, so abandon this upload” — all just races between futures.</p>
+</blockquote>
 <p><strong><code>spawn</code> — hand a task to the runtime to drive independently.</strong> <code>join!</code> and <code>select!</code> keep everything in <em>one</em> task; the futures share that task’s poll budget and cannot outlive the <code>join!</code>. <code>tokio::spawn</code> is different: it submits a future as a <em>new top-level task</em> the executor schedules independently, possibly on another OS thread (tokio’s default runtime is multithreaded and <strong>work-stealing</strong>). It returns a <code>JoinHandle</code>, itself a future you <code>.await</code> for the result.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -325,7 +348,7 @@ async fn race() {
 }
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>join!</code> is like interleaving two coroutines on the <em>same</em> thread yourself — structured, scoped, no shared-thread escape. <code>tokio::spawn</code> is like <code>std::thread::spawn</code> from <a href="13-fearless-concurrency.html">chapter 13</a>: fire-it-and-get-a-handle, may land on a different OS thread, hence requires <code>Send</code> (next section). The analogy to threads breaks on <em>cost and number</em>: spawning a task is a small heap box plus a queue push (microseconds, kilobytes), so 100,000 tasks is routine where 100,000 threads is not.</p>
+<p><strong>🦀 From your toolbox →</strong> <code>join!</code> is like running two pieces of work interleaved on the <em>same</em> thread under your control — structured, scoped, neither escapes onto another thread. <code>tokio::spawn</code> is the analogue of <code>std::thread::spawn</code> from <a href="13-fearless-concurrency.html">chapter 13</a>, or of submitting a task to a Java <code>ExecutorService</code> and getting a <code>Future</code> back: fire-it-and-get-a-handle, may land on a different OS thread, hence requires <code>Send</code> (next section). The analogy to threads breaks on <em>cost and number</em>: spawning a task is a small heap box plus a queue push (microseconds, kilobytes), so 100,000 tasks is routine where 100,000 OS threads is not — closer in spirit to how Java’s virtual threads or Swift’s lightweight tasks are meant to be cheap and plentiful.</p>
 </blockquote>
 <h3 id="tasks-vs-threads-vs-futures-the-mn-picture"><a class="header" href="#tasks-vs-threads-vs-futures-the-mn-picture">Tasks vs threads vs futures: the M:N picture</a></h3>
 <p>Three nested units of concurrency:</p>
@@ -336,7 +359,7 @@ async fn race() {
 </ul>
 <p>This is an <strong>M:N model</strong>: M tasks scheduled onto N OS threads (N ≈ core count). Work-stealing lets an idle worker steal tasks from a busy worker’s queue, balancing load transparently. A task can migrate between threads at <code>.await</code> points — precisely why spawned futures must be <code>Send</code>.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> M:N user-level threading is the green-threads / user-level-scheduling design from Concurrent and Distributed Systems. The classic green-thread problem — one blocking syscall stalls the whole scheduler thread — is dodged because async futures <em>never</em> make a blocking syscall at an <code>.await</code>; they register a waker and yield. For genuinely blocking work, <code>spawn_blocking</code> moves it to a dedicated thread pool so it can’t stall the cooperative scheduler.</p>
+<p><strong>🎓 Tripos link →</strong> Multiplexing many lightweight tasks onto a few OS threads (the M:N model) is the user-level / green-threads scheduling design from Concurrent and Distributed Systems. The classic green-thread pitfall — one blocking syscall stalls the whole scheduler thread — is dodged because async futures <em>never</em> make a blocking syscall at an <code>.await</code>; they register a waker and yield. For genuinely blocking work, <code>spawn_blocking</code> moves it to a dedicated thread pool so it can’t stall the cooperative scheduler.</p>
 </blockquote>
 <h2 id="the-starvation-trap-only-await-yields"><a class="header" href="#the-starvation-trap-only-await-yields">The starvation trap: only <code>.await</code> yields</a></h2>
 <p>Cooperative scheduling has a sharp edge. <strong>A task yields control <em>only</em> at an <code>.await</code> point.</strong> Everything between <code>.await</code>s runs to completion with no preemption. So a future doing a long CPU-bound stretch — or worse, calling a <em>blocking</em> synchronous API like <code>std::thread::sleep</code> or a synchronous file read — without awaiting will <strong>starve</strong> every other task sharing its thread. The runtime cannot preempt it; there is no timer interrupt in user space.</p>
@@ -377,7 +400,7 @@ async fn bad() {
 //   the trait `Send` is not implemented for `Rc&lt;i32&gt;`
 //   note: future is not `Send` as this value is used across an await
 <span class="boring">}</span></code></pre>
-<p>The compiler tracks, per <code>.await</code>, exactly which locals are live (the liveness analysis from the desugaring). If a <code>!Send</code> value is live across an <code>.await</code>, the whole future is <code>!Send</code> and can’t be spawned on a multithreaded runtime. The fix is usually to make the value <code>Send</code> (<code>Arc</code> not <code>Rc</code>) — or, tellingly, to <em>not hold it across the await</em>: drop it in an inner scope first, and the future stays <code>Send</code>.</p>
+<p>The compiler tracks, per <code>.await</code>, exactly which locals are live. If a <code>!Send</code> value is live across an <code>.await</code>, the whole future is <code>!Send</code> and can’t be spawned on a multithreaded runtime. The fix is usually to make the value <code>Send</code> (<code>Arc</code> not <code>Rc</code>) — or, tellingly, to <em>not hold it across the await</em>: drop it in an inner scope first, and the future stays <code>Send</code>.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>async fn good() {
@@ -388,6 +411,9 @@ async fn bad() {
     do_io().await;                   // nothing !Send is live across this point
 }
 <span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>Rc</code> vs <code>Arc</code> is the exact distinction you’d want if you could choose Swift’s reference-counting (<code>ARC</code>) to be either single-thread-only or thread-safe: <code>Rc</code> is a cheap, non-atomic refcount (fine on one thread); <code>Arc</code> uses atomic increments so it’s safe to hand a shared object to another thread — the price being the atomic operation, the same kind of cost a thread-safe refcount or a synchronized Java reference pays. Python’s GIL hides this choice from you entirely (its refcount is always under one global lock). Here Rust makes you pick, and <code>spawn</code>’s <code>Send</code> bound enforces the pick: hold an <code>Rc</code> across an <code>.await</code> in a spawned task and the compiler refuses, because that object could otherwise cross threads without atomic protection.</p>
+</blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> “Held across an <code>.await</code>” is a dataflow notion, not a lexical one. The compiler asks: at each suspension point, is this variable in the live set? A value constructed, used, and dropped <em>between</em> two awaits never appears in any variant, so it never affects <code>Send</code>-ness. That is why the inner-scope trick works: ending the scope kills the liveness, so the variable isn’t stored in the variant straddling the next <code>.await</code>.</p>
 </blockquote>
@@ -417,6 +443,19 @@ async fn consume(mut stream: impl Stream&lt;Item = i32&gt; + Unpin) {
 <span class="boring">}</span></code></pre>
 <p>Note the loop shape: <code>while let Some(v) = stream.next().await</code>, not <code>for v in stream</code>. Rust has no <code>for await</code> syntax (yet); <code>while let</code> over <code>.next().await</code> is the idiom. Each iteration hits an <code>.await</code>, so each is a cooperative yield point — a stream consumer interleaves naturally with other tasks.</p>
 <blockquote>
+<p><strong>🔧 In practice →</strong> You’re handling a chat WebSocket: messages arrive one at a time, indefinitely, and you want to react to each as it lands without blocking the connection. That’s a <code>Stream</code>, consumed exactly like an async loop:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn pump(mut socket: impl Stream&lt;Item = Msg&gt; + Unpin) {
+    while let Some(msg) = socket.next().await {   // park here until the next msg arrives
+        broadcast(msg).await;
+    }
+    // stream ended (client disconnected) -&gt; None breaks the loop
+}
+<span class="boring">}</span></code></pre>
+<p>Each <code>.await</code> parks the task until the next message is ready, so one thread can pump thousands of these chat connections at once. The same shape covers reading lines from a network socket, draining a job queue, or following a database change feed — anywhere items trickle in over time rather than all at once.</p>
+</blockquote>
+<blockquote>
 <p><strong>⚠️ Pitfall →</strong> <code>error[E0599]: no method named </code>next<code> found for ...</code>, <code>StreamExt is not in scope</code>. You have a <code>Stream</code> but called <code>.next()</code> without <code>use futures::StreamExt;</code> (or the runtime’s re-export, <code>tokio_stream::StreamExt</code>). The method-providing trait must be imported — the same in-scope rule as any extension trait, in spirit identical to needing <code>Iterator</code> in scope.</p>
 </blockquote>
 <h2 id="pin-and-unpin-the-self-referential-future-problem"><a class="header" href="#pin-and-unpin-the-self-referential-future-problem">Pin and Unpin: the self-referential-future problem</a></h2>
@@ -430,7 +469,7 @@ async fn consume(mut stream: impl Stream&lt;Item = i32&gt; + Unpin) {
 }
 <span class="boring">}</span></code></pre>
 <p>Both <code>buf</code> and <code>slice</code> must be saved in the state-machine variant straddling that <code>.await</code>, but <code>slice</code> points <em>into</em> <code>buf</code>, and both now live in the <em>same</em> struct. The future is <strong>self-referential</strong>: a field holds a pointer to another field of the same struct.</p>
-<p>Self-referential structs are catastrophic to <em>move</em>. A move in Rust is a bitwise copy of bytes to a new address (recall <a href="02-ownership-and-moves.html">moves</a>), and Rust does <strong>not</strong> fix up internal pointers. After the move, <code>slice</code> still holds the <em>old</em> address of <code>buf</code>, now garbage — dereferencing it is a use-after-free. This is exactly why the borrow checker normally forbids moving a value while a reference into it is live; but here the reference is <em>inside</em> the value being moved, so the usual rule can’t apply.</p>
+<p>Self-referential structs are catastrophic to <em>move</em>. A move in Rust is a bitwise copy of bytes to a new address (recall <a href="02-ownership-and-moves.html">moves</a>), and Rust does <strong>not</strong> fix up internal pointers. After the move, <code>slice</code> still holds the <em>old</em> address of <code>buf</code>, now garbage — dereferencing it is a use-after-free, the C-style dangling-pointer bug Rust exists to prevent. This is exactly why the borrow checker normally forbids moving a value while a reference into it is live; but here the reference is <em>inside</em> the value being moved, so the usual rule can’t apply.</p>
 <p>The fix is <strong><code>Pin</code></strong>. <code>Pin&lt;P&gt;</code> wraps a pointer <code>P</code> (<code>&amp;mut T</code>, <code>Box&lt;T&gt;</code>, …) and statically guarantees the <em>pointee</em> never moves again until dropped. Look back at the trait: <code>poll</code> takes <code>self: Pin&lt;&amp;mut Self&gt;</code>, not <code>&amp;mut self</code>. That is the whole point — to poll a future (and drive its self-references forward) you must first pin it, promising it won’t move out from under its own pointers. A pinned future has a stable address, so its self-references stay valid. Pinning the <em>pointer</em> is fine: you can move a <code>Pin&lt;Box&lt;Fut&gt;&gt;</code> freely, because moving the <code>Box</code> doesn’t move the heap allocation the <code>Fut</code> lives in. What’s pinned is the pointee at its address.</p>
 <p><strong><code>Unpin</code></strong> is the escape hatch: an auto-trait (like <code>Send</code>) the compiler implements for every type <em>safe to move even when pinned</em> — i.e. without internal self-references. <code>i32</code>, <code>String</code>, <code>Vec&lt;T&gt;</code>, ordinary structs: all <code>Unpin</code>. For an <code>Unpin</code> type, <code>Pin</code> is a no-op wrapper — you can freely get <code>&amp;mut T</code> back out. The only <code>!Unpin</code> types are ones that genuinely can’t move after pinning: compiler-generated self-referential futures, and a few hand-built types opting out with <code>PhantomPinned</code>. Mental rule: <strong><code>Unpin</code> is the normal case; <code>!Unpin</code> is the rare self-referential case; pinning only constrains you when the type is <code>!Unpin</code>.</strong></p>
 <p>Why doesn’t <code>.await</code> force <code>Pin</code> everywhere? Because awaiting a future <em>pins it implicitly</em> — the <code>.await</code> machinery pins it in place (on the current stack frame) before polling. You only meet <code>Pin</code>/<code>Unpin</code> in errors when you handle a future <em>as a value</em> without awaiting it directly:</p>
@@ -452,10 +491,7 @@ let futures: Vec&lt;Pin&lt;&amp;mut dyn Future&lt;Output = ()&gt;&gt;&gt; = vec!
 trpl::join_all(futures).await;
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <code>Pin</code> is a <em>type-system encoding of an address-stability invariant</em> — Curry-Howard flavour from Logic and Proof. The invariant “this value’s address never changes after pinning” can’t be checked at runtime, so it’s lifted into a type whose API makes violating it impossible in safe code (you can’t get <code>&amp;mut T</code> out of <code>Pin&lt;&amp;mut T&gt;</code> unless <code>T: Unpin</code>). The proof obligation discharged when you <em>do</em> go through <code>unsafe</code> (a manual <code>Future</code> impl) is precisely “I uphold the pin contract.”</p>
-</blockquote>
-<blockquote>
-<p><strong>⚙️ Under the hood →</strong> Why not have the compiler patch internal pointers on every move, like a moving GC? Because that taxes <em>every</em> move of <em>every</em> type to fix a problem only self-referential types have, and Rust’s moves are meant to be trivial <code>memcpy</code>s with no hidden code. <code>Pin</code> instead makes the <em>minority</em> (self-referential futures) bear the cost via a restrictive API, while <code>Unpin</code> exempts the overwhelming majority at zero cost.</p>
+<p><strong>⚙️ Under the hood →</strong> Why not have the compiler patch internal pointers on every move, like a moving garbage collector does when it relocates objects? Because that would tax <em>every</em> move of <em>every</em> type to fix a problem only self-referential types have, and Rust’s moves are meant to be trivial <code>memcpy</code>s with no hidden code. <code>Pin</code> instead makes the <em>minority</em> (self-referential futures) bear the cost via a restrictive API, while <code>Unpin</code> exempts the overwhelming majority at zero cost.</p>
 </blockquote>
 <h2 id="async-in-traits-the-current-status"><a class="header" href="#async-in-traits-the-current-status"><code>async</code> in traits: the current status</a></h2>
 <p>Until recently you could not write <code>async fn</code> in a trait at all: the desugared return type is an <em>anonymous, per-implementation</em> future, with no way to name it in the trait. As of Rust 1.75, <strong><code>async fn</code> in traits (“AFIT”) is stable</strong> for the common case:</p>
@@ -476,10 +512,10 @@ trpl::join_all(futures).await;
 <li><strong>CPU-bound, parallelisable</strong> (image processing, numerical kernels): use threads (<code>rayon</code>, a thread pool). Async gives you <em>nothing</em> here — it structures concurrency, it is not a parallelism primitive, and CPU work in an <code>async fn</code> just starves the scheduler.</li>
 <li><strong>Both</strong>: combine them. Encode video on a dedicated thread pool, notify the async network layer via a channel. <code>tokio::spawn_blocking</code> exists precisely to bridge blocking/CPU work into an async program without stalling the executor.</li>
 </ul>
-<p>The costs of going async: a steeper type-level curve (<code>Pin</code>, <code>Send</code>-across-await, lifetimes in futures), longer compiles and larger binaries (every distinct future is a monomorphised state machine), worse backtraces (the stack is a state machine, not a real stack), and the ever-present starvation footgun. The reward, when the workload fits, is C10k-and-beyond on a handful of threads with statically-guaranteed data-race freedom — something thread-per-connection cannot afford.</p>
+<p>The costs of going async: a steeper type-level curve (<code>Pin</code>, <code>Send</code>-across-await, lifetimes in futures), longer compiles and larger binaries (every distinct future is a separate state machine the compiler stamps out per concrete type), worse backtraces (the stack is a state machine, not a real stack), and the ever-present starvation footgun. The reward, when the workload fits, is C10k-and-beyond on a handful of threads with statically-guaranteed data-race freedom — something thread-per-connection cannot afford.</p>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
-<li><code>async fn</code>/<code>async {}</code> compile to an anonymous <strong>state machine</strong> implementing <code>Future</code>; <code>.await</code> carves the body at suspension points (a compiler CPS transform). <code>.await</code> = “poll the inner future; if <code>Pending</code>, register the waker and yield <code>Pending</code> up to the runtime.”</li>
+<li><code>async fn</code>/<code>async {}</code> compile to an anonymous <strong>state machine</strong> implementing <code>Future</code>; <code>.await</code> carves the body at suspension points (the compiler chops the body and saves the live locals at each cut). <code>.await</code> = “poll the inner future; if <code>Pending</code>, register the waker and yield <code>Pending</code> up to the runtime.”</li>
 <li>Futures are <strong>lazy/inert</strong>: calling an <code>async fn</code> runs none of its body and allocates nothing; only polling runs it. The opposite of eager JS Promises, and the source of zero-cost composition.</li>
 <li>Rust ships <strong>no runtime</strong> — the executor is a pluggable crate (<code>tokio</code> etc.) matched to the workload, from 64-core servers to heapless microcontrollers. <code>block_on</code> is where you cross from sync to async.</li>
 <li>Three nested units in an <strong>M:N</strong> model: futures (concurrency <em>within</em> a task via <code>join!</code>/<code>select!</code>), tasks (scheduled by the runtime, <code>spawn</code>), threads (the few OS threads tasks multiplex onto, work-stealing). Async yields <strong>only</strong> at <code>.await</code>, so blocking/CPU code between awaits <em>starves</em> the scheduler.</li>
@@ -488,22 +524,54 @@ trpl::join_all(futures).await;
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write an <code>async fn</code> that constructs a future with <code>let f = some_async_call();</code>, never <code>.await</code>s it, and returns. Predict the compiler diagnostic, then confirm it. Explain in one sentence why this is a warning and not an error, and why the equivalent JS code <em>would</em> perform the side effect.</p>
+<p>Two functions differ only in <em>where</em> a future is awaited:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn eager_ish() {
+    let a = fetch_len("https://a.com").await;   // awaited immediately
+    let b = fetch_len("https://b.com").await;
+    use_both(a, b);
+}
+async fn concurrent() {
+    let (a, b) = join!(fetch_len("https://a.com"), fetch_len("https://b.com"));
+    use_both(a, b);
+}
+<span class="boring">}</span></code></pre>
+<p>If each fetch takes ~100 ms of network wait, predict the wall-clock time of each function and explain the difference in terms of <em>when</em> each future actually starts doing I/O. (Hint: recall that the future returned by the first <code>fetch_len</code> call doesn’t start running just because you constructed it.)</p>
 </li>
 <li>
-<p>Build a <code>retry</code> combinator: <code>async fn retry&lt;F, Fut, T, E&gt;(mut make: F, attempts: u32) -&gt; Result&lt;T, E&gt;</code> where <code>F: FnMut() -&gt; Fut</code> and <code>Fut: Future&lt;Output = Result&lt;T, E&gt;&gt;</code>. It calls <code>make()</code> to get a fresh future each attempt (why must you re-call <code>make</code> rather than <code>.await</code> the same future twice — what does the note about polling-after-<code>Ready</code> say?), awaits it, and retries on <code>Err</code> up to <code>attempts</code> times.</p>
+<p>You’re given two ways to run a background job and grab its result later:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// (A)
+let h = tokio::spawn(do_job());
+other_work().await;
+let r = h.await.unwrap();
+
+// (B)
+let fut = do_job();
+other_work().await;
+let r = fut.await;
+<span class="boring">}</span></code></pre>
+<p>Does <code>do_job</code> make progress <em>during</em> <code>other_work().await</code> in (A)? In (B)? Explain the difference, and name one situation where you’d specifically <em>want</em> (B) over (A) even though it’s “less concurrent.”</p>
 </li>
 <li>
-<p>Take the <code>bad()</code>/<code>good()</code> <code>Rc</code>-across-await example. Without changing <code>Rc</code> to <code>Arc</code>, make the future <code>Send</code>-spawnable purely by restructuring scopes. Then explain, in terms of the state-machine variant straddling the <code>.await</code>, exactly <em>why</em> your version is <code>Send</code> and the original is not.</p>
+<p>Here are three function bodies. Which can be passed to <code>tokio::spawn</code> on a multithreaded runtime, and which are rejected? For each rejection, name the offending value and the one-line fix.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// (a)
+async fn one() { let s = String::from("hi"); do_io().await; println!("{s}"); }
+// (b)
+async fn two() { let r = std::rc::Rc::new(0); do_io().await; println!("{r}"); }
+// (c)
+async fn three() { { let r = std::rc::Rc::new(0); println!("{r}"); } do_io().await; }
+<span class="boring">}</span></code></pre>
 </li>
 <li>
-<p>You have a <code>tokio</code> runtime and inside an <code>async fn</code> you write <code>std::thread::sleep(Duration::from_secs(1));</code> in a loop that’s supposed to run concurrently with another task via <code>join!</code>. Describe the observed behaviour, why there is <em>no</em> compiler error, and give two distinct correct fixes (one if the sleep is a real wait, one general one for an unavoidable blocking call).</p>
+<p>You want “do this work, but give up after 2 seconds.” You have <code>timeout(work, limit)</code> from the chapter (built on <code>select!</code>). Sketch how you’d use it, then answer: when the timer wins the race, what happens to the half-finished <code>work</code> future? Why is that the <em>correct</em> default for a network request, but a footgun if <code>work</code> was halfway through writing to a file?</p>
 </li>
 <li>
-<p>(★) Hand-write a type <code>Countdown { remaining: u32 }</code> that implements <code>Future&lt;Output = ()&gt;</code> directly (no <code>async</code>): each <code>poll</code> decrements <code>remaining</code>, and returns <code>Pending</code> (after re-waking via <code>cx.waker().wake_by_ref()</code>) until it hits zero, then <code>Ready(())</code>. Then explain why <code>Countdown</code> is <code>Unpin</code> even though it implements <code>Future</code> by hand, whereas a compiler-generated <code>async {}</code> future generally is not.</p>
-</li>
-<li>
-<p>(★) <code>trpl::join_all(vec![Box::new(fut_a), Box::new(fut_b)])</code> fails with <code>the trait Unpin is not implemented for dyn Future</code>. Explain the error in terms of what <code>join_all</code> must do to each future, why <code>await</code>ing a single future directly does <em>not</em> trigger this, and fix it two ways: with <code>Box::pin</code> and with the <code>std::pin::pin!</code> macro. State the difference in <em>where</em> each pins the future (heap vs stack) and when you’d prefer each.</p>
+<p>(★) <code>yield_now().await</code> and <code>tokio::time::sleep(Duration::ZERO).await</code> both “give other tasks a turn.” A colleague claims they’re interchangeable. Predict whether a tight loop calling each one a million times behaves the same, and explain the difference in terms of what each future registers with the runtime before returning <code>Pending</code> (one re-queues its own waker immediately; the other involves the timer/reactor). Which would you reach for in the <code>polite()</code> CPU loop, and why?</p>
 </li>
 </ol>
 
@@ -542,22 +610,6 @@ trpl::join_all(futures).await;
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

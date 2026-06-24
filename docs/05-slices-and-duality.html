@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -180,7 +180,7 @@
 <p>The previous three chapters built a single machine: <a href="02-ownership-and-moves.html">ownership</a> gives every value exactly one owner, <a href="03-references-and-borrowing.html">borrowing</a> hands out checked references, and <a href="04-lifetimes.html">lifetimes</a> are the regions over which those references stay valid. So far every reference has pointed at <em>one whole value</em>. This chapter introduces the reference that points at a <em>contiguous run of values inside</em> a larger one: the <strong>slice</strong>, written <code>&amp;[T]</code> and <code>&amp;str</code>.</p>
 <p>Slices are where the ownership model stops being an abstract discipline and starts paying you back. They are the reason idiomatic Rust signatures look the way they do, and they expose a pattern that recurs across the entire standard library — the <strong>owned/borrowed pair</strong>: <code>String</code>/<code>&amp;str</code>, <code>Vec&lt;T&gt;</code>/<code>&amp;[T]</code>, <code>PathBuf</code>/<code>&amp;Path</code>, <code>OsString</code>/<code>&amp;OsStr</code>. Learn the pattern once and a dozen APIs become predictable.</p>
 <h2 id="the-ptr-len-idiom-but-checked"><a class="header" href="#the-ptr-len-idiom-but-checked">The <code>(ptr, len)</code> idiom, but checked</a></h2>
-<p>You have written <code>void process(const int *data, size_t len);</code> in C a hundred times. The pair <code>(ptr, len)</code> <em>is</em> a slice — a view into someone else’s array. C just refuses to enforce anything about it: nothing stops <code>len</code> outliving the allocation <code>data</code> points into, nothing bounds-checks <code>data[i]</code>, nothing stops a caller passing <code>len</code> of 50 for a buffer of 10. The convention lives entirely in your head and in the comments.</p>
+<p>If you have ever passed an array to a function in a lower-level language, you have passed a pointer and a length side by side — <code>process(data, len)</code> — and trusted the caller and callee to agree about them. That pair <code>(ptr, len)</code> <em>is</em> a slice: a view into someone else’s array. The low-level version refuses to enforce anything about it: nothing stops <code>len</code> outliving the allocation <code>data</code> points into, nothing bounds-checks <code>data[i]</code>, nothing stops a caller passing <code>len</code> of 50 for a buffer of 10. The convention lives entirely in your head and in the comments.</p>
 <p>A Rust slice is exactly that pair — a pointer and a length — promoted to a first-class type whose two invariants the compiler enforces:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -192,9 +192,9 @@
 let view = &amp;a[1..3];          // type &amp;[i32], points at a[1], length 2
 assert_eq!(view, &amp;[2, 3]);
 <span class="boring">}</span></code></pre>
-<p>The range <code>1..3</code> is half-open: start inclusive, end exclusive, length <code>3 - 1 = 2</code>. Indexing <code>view[i]</code> is bounds-checked against that length; the lifetime of <code>view</code> is tied by the borrow checker to <code>a</code>, so the view can never outlive its backing storage. The two failure modes you debugged for years in C are now a compile error and a panic, respectively, instead of silent corruption.</p>
+<p>The range <code>1..3</code> is half-open: start inclusive, end exclusive, length <code>3 - 1 = 2</code>. Indexing <code>view[i]</code> is bounds-checked against that length; the lifetime of <code>view</code> is tied by the borrow checker to <code>a</code>, so the view can never outlive its backing storage. The two failure modes you would otherwise debug by hand — an index past the end, and a view that survives its data — are now a panic and a compile error respectively, instead of silent corruption.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is C’s <code>(ptr, len)</code> argument pair, or C++’s <code>std::span&lt;T&gt;</code> / <code>std::string_view</code>, made memory- and lifetime-safe. The analogy to <code>span</code>/<code>string_view</code> is close enough to be dangerous: those C++ types are <em>also</em> non-owning views, but they carry no lifetime — a dangling <code>string_view</code> compiles fine and is a classic use-after-free. <code>&amp;[T]</code> carries its lifetime in the type system, so the dangle is rejected statically.</p>
+<p><strong>🦀 From your toolbox →</strong> A slice is the “pass an array plus its length” pattern made safe. In Java you would pass the <code>int[]</code> itself (the array object carries its own <code>.length</code> and every access is bounds-checked) or, since Java 9, a <code>List</code> view; in Swift you would pass an <code>ArraySlice&lt;Int&gt;</code> or just the <code>Array</code>; in Python a list (and <code>a[1:3]</code> <em>copies</em> a sub-list). Rust’s <code>&amp;[i32]</code> gives you Java-and-Swift-style bounds safety, but unlike all three it is a genuine <em>non-owning window</em> into the original buffer — no copy, no separate object, no garbage collector keeping the backing array alive. Where the analogy breaks down: a Python or Swift slice keeps its source alive by reference counting; Rust instead ties the view’s <em>lifetime</em> to the source at compile time, so the view simply cannot outlive what it points into. (If you have met C++’s <code>string_view</code> / <code>span</code>: same idea, but those carry no lifetime, so a dangling one compiles and is a classic use-after-free — Rust rejects that statically.)</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>&amp;[T]</code> and <code>&amp;str</code> are <strong>fat pointers</strong>: two machine words, <code>(*const T, usize)</code> for the data pointer and the element count. On 64-bit, <code>size_of::&lt;&amp;[i32]&gt;() == 16</code> and <code>size_of::&lt;&amp;str&gt;() == 16</code>, versus <code>size_of::&lt;&amp;i32&gt;() == 8</code> for an ordinary thin reference. The length lives in the pointer, not in the pointee — which is the whole trick: a slice of a heap <code>Vec</code>, a stack array, or a <code>&amp;str</code> baked into the binary all have the identical runtime representation, because the metadata travels with the reference rather than the data. We will see in <a href="15-smart-pointers.html">smart pointers</a> that this is the general mechanism for <em>dynamically sized types</em> (DSTs): <code>[T]</code> and <code>str</code> have no statically known size, so you can only ever hold them behind a fat pointer (<code>&amp;[T]</code>, <code>Box&lt;[T]&gt;</code>, <code>&amp;str</code>, …) that supplies the missing length.</p>
@@ -220,7 +220,7 @@ let end = first_word_end(&amp;line);   // 5
 line.clear();                      // line is now ""
 // `end` is still 5, now pointing past the end of an empty string
 <span class="boring">}</span></code></pre>
-<p>This is the same class of error as a dangling pointer or an iterator invalidated by a container mutation (Java’s <code>ConcurrentModificationException</code> catches a cousin of it — at runtime, on a good day). A slice fixes it by <em>fusing the index range into a borrow</em>:</p>
+<p>This is the same class of error as a dangling pointer, or as an index into a Python list after you have <code>del</code>-ed elements out from under it, or Java’s <code>ConcurrentModificationException</code> — a stored position that the container has silently moved out from under you (Java catches its cousin at runtime, on a good day). A slice fixes it by <em>fusing the index range into a borrow</em>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn first_word(text: &amp;str) -&gt; &amp;str {
@@ -241,10 +241,20 @@ line.clear();                   // wants &amp;mut line — ERROR
 println!("{word}");             // borrow still live here
 <span class="boring">}</span></code></pre>
 <blockquote>
+<p><strong>🔧 In practice →</strong> This is exactly how you write a tokenizer or a parser without copying. Say you are reading a log line <code>"2026-06-24 ERROR disk full"</code> and want the level field. You return <code>&amp;line[11..16]</code> — a <code>&amp;str</code> pointing straight into the original buffer — and pass it around, compare it, match on it, all with zero allocation. The borrow checker guarantees you cannot accidentally free or overwrite <code>line</code> while any token still points into it, which is the bug that makes hand-rolled C parsers leak and crash. A real sketch:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn parse_level(line: &amp;str) -&gt; Option&lt;&amp;str&gt; {
+    line.split_whitespace().nth(1)   // borrows from `line`, no copy
+}
+<span class="boring">}</span></code></pre>
+<p>The returned <code>Option&lt;&amp;str&gt;</code> is alive only as long as <code>line</code> is — try to drop <code>line</code> while you still hold the level and the compiler stops you.</p>
+</blockquote>
+<blockquote>
 <p><strong>⚠️ Pitfall →</strong> The above is <code>error[E0502]: cannot borrow </code>line<code> as mutable because it is also borrowed as immutable</code>. <code>String::clear</code> needs <code>&amp;mut self</code>, but <code>word</code> holds a live <code>&amp;</code> into the same string, and the <a href="03-references-and-borrowing.html">borrowing</a> rules forbid a mutable and an immutable borrow coexisting. The fix is not a workaround — it is the point. The compiler has proved that mutating the string while a view into it is alive would invalidate the view, exactly the bug the index version hid. Finish using <code>word</code> first, or compute an owned <code>String</code> if you genuinely need to outlive the source.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the regions discipline from <em>Semantics of Programming Languages</em> applied to interior pointers. The slice’s lifetime is a region; the type rule “a <code>&amp;mut</code> borrow may not overlap any <code>&amp;</code> borrow of the same place” is precisely what makes the operational step <code>clear()</code> ill-typed while <code>word</code> is in scope. The index-returning version type-checks but is <em>unsound at the level of program logic</em> — the type was too weak to capture the invariant. The slice strengthens the type until well-typed implies the invariant holds, which is type-safety doing real work rather than ceremony.</p>
+<p><strong>🎓 Tripos link →</strong> The intuition here connects to <em>Semantics of Programming Languages</em>: a value’s type can be made strong enough to carry an invariant the program must respect. The index-returning version type-checks but the type was too weak — it said “this is a number”, not “this number is only valid while <em>that</em> string is unchanged”. The slice strengthens the type until “it compiles” implies “the view is still valid”, so the <code>clear()</code> call becomes a compile error rather than a silent bug. That is the type system doing real work, not ceremony — the same lifetime/region reasoning you saw in <a href="04-lifetimes.html">lifetimes</a>, now applied to a pointer into the <em>middle</em> of a value.</p>
 </blockquote>
 <h2 id="the-ownedborrowed-pair"><a class="header" href="#the-ownedborrowed-pair">The owned/borrowed pair</a></h2>
 <p><code>String</code> and <code>&amp;str</code> are not two unrelated string types; they are the <strong>owning</strong> and <strong>borrowing</strong> halves of one design. This split is the central idea of the chapter, so make it explicit:</p>
@@ -275,7 +285,7 @@ fn sum(xs: &amp;[i32]) -&gt; i32 { /* ... */ }           // not &amp;Vec&lt;i32&
 <span class="boring">}</span></code></pre>
 <p>A <code>&amp;str</code> parameter accepts <em>both</em> an owned <code>String</code> (via the deref coercion below) and a borrowed <code>&amp;str</code>, including string literals and sub-slices. A <code>&amp;[i32]</code> accepts a whole <code>Vec</code>, a stack array, or any sub-slice of either. Taking <code>&amp;String</code> or <code>&amp;Vec&lt;T&gt;</code> is a beginner tell: it needlessly narrows your callers to one of the two halves and buys you nothing — <code>&amp;String</code> gives you no capability over a string that <code>&amp;str</code> does not.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> In Java you would overload on <code>CharSequence</code>, or in C++ template on <code>Range</code>, to accept “anything string-like”. The owned/borrowed pair achieves the same generality with a <em>single concrete type and no genericity</em>, because the owned type is built to hand out a borrow of exactly the view type. The closest OCaml analogy is weak: OCaml <code>string</code> is immutable and <code>bytes</code> is mutable, but neither is a borrowed view — there is no sub-string-without-copy because there are no interior references to bound by a lifetime.</p>
+<p><strong>🦀 From your toolbox →</strong> In Java you reach for the widest interface that still does the job — you type a parameter as <code>CharSequence</code> or <code>List&lt;T&gt;</code> rather than <code>String</code> or <code>ArrayList&lt;T&gt;</code>, so any conforming implementation can be passed. In Swift you would write against a protocol like <code>StringProtocol</code> or <code>Collection</code> for the same reason. The owned/borrowed pair achieves that same “accept anything string-like / array-like” generality, but with a <em>single concrete type and no genericity at all</em>, because the owned type is built to hand out a borrow of exactly the view type. Where it differs: Java’s <code>CharSequence</code> and Swift’s <code>StringProtocol</code> are abstractions over <em>many implementations</em>; <code>&amp;str</code> is one concrete type that every owner narrows down to. (The OCaml angle is weak here — OCaml <code>string</code> is immutable and <code>bytes</code> is mutable, but neither is a borrowed window: there is no substring-without-copy because there are no interior references for a lifetime to bound.)</p>
 </blockquote>
 <h2 id="deref-coercion-why-string-becomes-str"><a class="header" href="#deref-coercion-why-string-becomes-str">Deref coercion: why <code>&amp;String</code> becomes <code>&amp;str</code></a></h2>
 <p>When you pass a <code>&amp;String</code> where a <code>&amp;str</code> is expected, the compiler silently inserts a conversion called a <strong>deref coercion</strong>: <code>String</code> implements <code>Deref&lt;Target = str&gt;</code>, so <code>&amp;String</code> coerces to <code>&amp;str</code> (concretely, <code>&amp;s[..]</code>). The same machinery turns <code>&amp;Vec&lt;T&gt;</code> into <code>&amp;[T]</code>, <code>&amp;Box&lt;T&gt;</code> into <code>&amp;T</code>, and so on — every owned type in the table above implements <code>Deref</code> to its borrowed view.</p>
@@ -317,7 +327,7 @@ assert_eq!(s.bytes().count(), 4);    // bytes again
 <span class="boring">}</span></code></pre>
 <p>There is a second reason beyond ambiguity: indexing is expected to be O(1), but locating the <em>n</em>-th scalar value in UTF-8 requires scanning from the start. Rust will not let an operator silently hide a linear scan behind <code>[]</code> syntax. If you genuinely want the <em>n</em>-th scalar value, you write the cost explicitly: <code>s.chars().nth(n)</code>.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> Every language you know lies about strings, just differently. C: <code>char*</code> is NUL-terminated bytes with no encoding guarantee and <code>strlen</code> is O(n). Java/JavaScript: <code>String</code> is a sequence of UTF-16 code units, so <code>.length</code> and <code>charAt</code> count <em>code units</em> — an emoji or astral-plane character is two units and <code>charAt</code> can hand you a lone surrogate (the same class of “you got half a character” bug, just relocated). OCaml: <code>string</code> is immutable bytes, <code>String.length</code> is bytes, no Unicode awareness at all. Rust’s choice — UTF-8 bytes, no integer indexing, explicit <code>.chars()</code>/<code>.bytes()</code> — is the only one of these that forces you to name the granularity, which is why it feels obstructive coming from the others and correct after a week.</p>
+<p><strong>🦀 From your toolbox →</strong> Every language you know lies about strings, just differently. Python 3: <code>str</code> is a sequence of Unicode scalar values, so <code>s[0]</code> and <code>len(s)</code> count <em>code points</em> — convenient, but the underlying storage and the cost model are hidden from you, and you silently pay for the abstraction. Java (and JavaScript): <code>String</code> is a sequence of UTF-16 code units, so <code>.length()</code> and <code>charAt</code> count <em>code units</em> — an emoji or other astral-plane character is two units and <code>charAt</code> can hand you a lone surrogate (the same “you got half a character” bug, just relocated). Swift gets closest to honest: <code>String</code> is a collection of <em>grapheme clusters</em> (<code>Character</code>), so <code>count</code> matches human intuition — but it deliberately drops integer subscripting (you index with <code>String.Index</code>, not <code>Int</code>) for the very reason Rust does: there is no O(1) answer. Rust’s choice — UTF-8 bytes, no integer indexing, explicit <code>.chars()</code>/<code>.bytes()</code> — forces you to name the granularity, which is why it feels obstructive coming from Python and correct after a week.</p>
 </blockquote>
 <p>You <em>can</em> slice a string by <strong>byte</strong> range, and it yields a <code>&amp;str</code> — but the range bounds must fall on UTF-8 character boundaries or the program <strong>panics at runtime</strong>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -363,16 +373,33 @@ if let [head, tail @ ..] = &amp;nums[..] {
 }
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is OCaml’s <code>match xs with | [] -&gt; ... | x :: rest -&gt; ...</code> from <em>Foundations of Computer Science</em>, but on a contiguous random-access slice instead of a cons list — so <code>[first, .., last]</code> (front <em>and</em> back at once) is O(1), which the linked-list version cannot express without a traversal. Unlike OCaml lists, a fixed-length pattern like <code>[a, b, c]</code> is <em>refutable</em> against <code>&amp;[T]</code> (the length is a runtime fact), so the compiler forces you to handle the non-matching lengths — there is no fall-through to undefined behaviour the way a C <code>switch</code> on <code>len</code> would permit.</p>
+<p><strong>🦀 From your toolbox →</strong> This is OCaml’s <code>match xs with | [] -&gt; ... | x :: rest -&gt; ...</code> from <em>Foundations of Computer Science</em> — and the same head/tail destructuring you would write in Swift with <code>if case let</code> on an enum, or fake in Python with <code>head, *tail = xs</code>. The crucial win over the OCaml/Python list version: a slice is a contiguous random-access window, so <code>[first, .., last]</code> (front <em>and</em> back at once) is O(1), which a cons list or a Python list-with-star-unpack cannot do without walking or copying. And unlike OCaml lists, a fixed-length pattern like <code>[a, b, c]</code> is <em>refutable</em> against <code>&amp;[T]</code> (the length is a runtime fact), so the compiler forces you to handle the other lengths — there is no silent fall-through.</p>
 </blockquote>
 <blockquote>
-<p><strong>⚙️ Under the hood →</strong> <code>tail @ ..</code> does not copy. It produces a new fat pointer <code>(ptr + 1, len - 1)</code> aliasing the same backing buffer — pure pointer arithmetic, no allocation. The match on <code>[]</code> / <code>[only]</code> / <code>[first, .., last]</code> compiles to a length comparison plus offset loads, the same code you would hand-write in C from <code>(ptr, len)</code>, but with the bounds proven correct by the pattern’s exhaustiveness rather than by you.</p>
+<p><strong>🔧 In practice →</strong> Slice patterns shine when you are dispatching on a parsed command. You split a line into arguments and match on the shape directly, instead of indexing-and-hoping:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn run(args: &amp;[&amp;str]) -&gt; Result&lt;(), String&gt; {
+    match args {
+        []                 =&gt; Err("no command".into()),
+        ["help"]           =&gt; { print_help(); Ok(()) }
+        ["add", item]      =&gt; { add(item); Ok(()) }
+        ["mv", from, to]   =&gt; { rename(from, to); Ok(()) }
+        ["add", rest @ ..] =&gt; Err(format!("add takes 1 arg, got {}", rest.len())),
+        [cmd, ..]          =&gt; Err(format!("unknown command: {cmd}")),
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>The arity of each command is checked by the pattern itself — wrong number of arguments falls through to a real error arm instead of panicking on an out-of-bounds index. This is how you would route subcommands in a small CLI tool.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>tail @ ..</code> does not copy. It produces a new fat pointer <code>(ptr + 1, len - 1)</code> aliasing the same backing buffer — pure pointer arithmetic, no allocation. The match on <code>[]</code> / <code>[only]</code> / <code>[first, .., last]</code> compiles to a length comparison plus offset loads, the same code you would hand-write from a <code>(ptr, len)</code> pair, but with the bounds proven correct by the pattern’s exhaustiveness rather than by you.</p>
 </blockquote>
 <h2 id="string-literals-are-static-str"><a class="header" href="#string-literals-are-static-str">String literals are <code>&amp;'static str</code></a></h2>
 <p>The type of <code>"hello"</code> is <code>&amp;'static str</code>: a slice pointing into a read-only region of the compiled binary, with the <code>'static</code> lifetime because that data lives for the whole program. That single fact explains several things at once: literals are immutable (a <code>&amp;str</code> is an immutable borrow), they need no allocation, and they can be returned from any function without a lifetime worry — they outlive everything. It also closes the loop on <code>first_word(s: &amp;str)</code>: a literal <em>is already</em> a <code>&amp;str</code>, so it passes with no coercion at all, while a <code>String</code> passes via deref coercion. One signature, every caller.</p>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
-<li>A slice is C’s <code>(ptr, len)</code> pair as a checked, lifetime-bearing <strong>fat pointer</strong> (two words). <code>&amp;[T]</code> and <code>&amp;str</code> own nothing; they are <em>views</em> whose lifetime the borrow checker ties to the backing storage, killing dangling-view and index-out-of-sync bugs at compile time.</li>
+<li>A slice is the <code>(ptr, len)</code> pair as a checked, lifetime-bearing <strong>fat pointer</strong> (two words). <code>&amp;[T]</code> and <code>&amp;str</code> own nothing; they are <em>views</em> whose lifetime the borrow checker ties to the backing storage, killing dangling-view and index-out-of-sync bugs at compile time.</li>
 <li>The <strong>owned/borrowed pair</strong> is a standard-library design law: <code>String</code>/<code>&amp;str</code>, <code>Vec&lt;T&gt;</code>/<code>&amp;[T]</code>, <code>PathBuf</code>/<code>&amp;Path</code>. Write parameters against the <em>borrowed</em> half (<code>&amp;str</code>, <code>&amp;[T]</code>) — it accepts both callers and grants every capability <code>&amp;Owned</code> would.</li>
 <li><strong>Deref coercion</strong> (<code>String: Deref&lt;Target=str&gt;</code>) is what auto-narrows <code>&amp;String -&gt; &amp;str</code> and <code>&amp;Vec&lt;T&gt; -&gt; &amp;[T]</code> at compile time; it is also why <code>s1 + &amp;s2</code> and <code>&amp;v[..]</code> Just Work.</li>
 <li>A <code>String</code> is UTF-8 <strong>bytes</strong>, not a <code>char</code> array: no integer indexing (it would be ambiguous <em>and</em> not O(1)). Choose your granularity explicitly with <code>.bytes()</code>, <code>.chars()</code>, or a grapheme crate. <code>s.len()</code> counts bytes.</li>
@@ -381,38 +408,48 @@ if let [head, tail @ ..] = &amp;nums[..] {
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write <code>fn longest_word(text: &amp;str) -&gt; &amp;str</code> returning the longest whitespace-delimited word (ties: the first). Use <code>split_whitespace()</code> and return a sub-slice, not a new <code>String</code>. Confirm the returned <code>&amp;str</code> borrows from <code>text</code> by trying to mutate <code>text</code> while the result is live and reading the error.</p>
-</li>
-<li>
-<p>Take this and explain the borrow-checker error, then fix it <em>without</em> cloning:</p>
+<p><strong>Predict the errors.</strong> Here are three call sites against <code>fn first_word(text: &amp;str) -&gt; &amp;str</code>. Decide which compile and which do not, and for each rejection name the borrow that conflicts and roughly where it ends:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let mut s = String::from("alpha beta");
+</span>// (a)
+let s = String::from("alpha beta");
 let w = first_word(&amp;s);
-s.push_str(" gamma");
+println!("{w}");
+drop(s);
+
+// (b)
+let s = String::from("alpha beta");
+let w = first_word(&amp;s);
+let n = s.len();          // another shared borrow
+println!("{w} {n}");
+
+// (c)
+let s = String::from("alpha beta");
+let w = first_word(&amp;s);
+s.push_str(" gamma");     // wants &amp;mut s
 println!("{w}");
 <span class="boring">}</span></code></pre>
-<p>Which exact lines constitute the conflicting borrows, and what is the lifetime of <code>w</code>?</p>
+<p>Why does (b) compile even though <code>w</code> is still live, while (c) does not?</p>
 </li>
 <li>
-<p>Predict the output of each, then run it:</p>
+<p><strong>Choose the signature.</strong> You are writing <code>fn count_vowels(?) -&gt; usize</code>. A teammate proposes <code>&amp;String</code>; you propose <code>&amp;str</code>. Give one concrete caller that compiles against <code>&amp;str</code> but <em>not</em> against <code>&amp;String</code>, and explain why the reverse direction (a <code>&amp;str</code> caller against a <code>&amp;String</code> parameter) never even comes up. Then state the one situation in which taking <code>String</code> <em>by value</em> would actually be the right choice.</p>
+</li>
+<li>
+<p><strong>Adapt the parser.</strong> Starting from <code>parse_level</code> in the “In practice” callout (returns <code>Option&lt;&amp;str&gt;</code>), write <code>fn fields(line: &amp;str) -&gt; Option&lt;(&amp;str, &amp;str, &amp;str)&gt;</code> that returns the date, level, and the <em>rest of the message</em> of a log line like <code>"2026-06-24 ERROR disk full"</code>, all as sub-slices of <code>line</code> with no allocation. Then explain: what is the lifetime relationship between the three returned <code>&amp;str</code>s and <code>line</code>, and why can none of them outlive it?</p>
+</li>
+<li>
+<p><strong>Slice patterns vs. owning.</strong> Implement <code>fn split_last&lt;T&gt;(xs: &amp;[T]) -&gt; Option&lt;(&amp;[T], &amp;T)&gt;</code> with a slice pattern (<code>None</code> for empty). Give the <code>ptr</code>/<code>len</code> of the returned <code>&amp;[T]</code> relative to <code>xs</code>, and confirm it allocates nothing. Now suppose you instead needed to return the elements <em>reversed</em> — argue why that return type cannot stay <code>&amp;[T]</code> and must become <code>Vec&lt;T&gt;</code>.</p>
+</li>
+<li>
+<p><strong>The non-ASCII trap.</strong> This function looks reasonable but can panic:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let s = "café";          // 'é' is 2 bytes in UTF-8
-println!("{}", s.len());
-println!("{}", s.chars().count());
-let bad = &amp;s[0..3];      // ?
+</span>fn first_three(s: &amp;str) -&gt; &amp;str { &amp;s[0..3] }
 <span class="boring">}</span></code></pre>
-<p>Why does the third line behave differently from <code>&amp;s[0..2]</code>? Rewrite it to take the first three <em>scalar values</em> safely.</p>
+<p>Give one input on which it returns a correct <code>&amp;str</code> and one (non-ASCII) input on which it panics, quoting the kind of message you would get. Then rewrite it to return the first three <em>scalar values</em> safely (hint: <code>char_indices</code> or <code>chars</code>), and say what your new version returns for a string with only two scalar values.</p>
 </li>
 <li>
-<p>Implement <code>fn split_first&lt;T&gt;(xs: &amp;[T]) -&gt; Option&lt;(&amp;T, &amp;[T])&gt;</code> using a slice pattern, returning <code>None</code> for the empty slice. Then explain why the returned <code>&amp;[T]</code> involves no allocation (what are its <code>ptr</code> and <code>len</code> relative to <code>xs</code>?).</p>
-</li>
-<li>
-<p>(★) <code>fn dedup_view(xs: &amp;[i32]) -&gt; Vec&lt;i32&gt;</code> must collapse consecutive duplicates (<code>[1,1,2,3,3,3]</code> → <code>[1,2,3]</code>). Now argue precisely why the return type cannot be <code>&amp;[i32]</code>: what would such a slice have to be a view <em>into</em>, and which ownership rule forbids returning a borrow of a local? Contrast with exercise 4, where returning a borrow <em>is</em> fine.</p>
-</li>
-<li>
-<p>(★) The signature <code>fn join_first(a: &amp;str, b: &amp;str) -&gt; &amp;str</code> does not compile. State the elision-rule reason (recall <a href="04-lifetimes.html">lifetimes</a>: two input references, ambiguous output region). Give two distinct fixes — one that changes the return type to an owned <code>String</code>, and one that adds an explicit lifetime constraining the output to one specific input — and say when each is the right call.</p>
+<p>(★) <strong>Why a borrow won’t do.</strong> Consider <code>fn dedup_view(xs: &amp;[i32]) -&gt; ???</code> that collapses consecutive duplicates (<code>[1,1,2,3,3,3]</code> → <code>[1,2,3]</code>). Explain precisely why the return type cannot be <code>&amp;[i32]</code>: what would such a slice have to be a view <em>into</em>, and which ownership rule forbids returning it? Contrast with exercise 4’s <code>split_last</code>, where returning a borrow <em>is</em> fine — what is structurally different about the two outputs? Then give the return type that does work, and say in one line what it costs that <code>split_last</code> did not.</p>
 </li>
 </ol>
 
@@ -451,22 +488,6 @@ let bad = &amp;s[0..3];      // ?
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

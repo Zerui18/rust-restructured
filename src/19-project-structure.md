@@ -1,8 +1,8 @@
 # 19. Crates, Modules & Workspaces
 
-You already know several answers to "how do I split a program into pieces and control what's visible." C++ gives you headers, translation units, the One-Definition Rule, `#include`, and namespaces — orthogonal mechanisms you juggle simultaneously. Java fuses the compilation unit, the namespace, and the directory layout into one concept (the package), with `public`/`protected`/`private`/package-private as a separate access lattice. OCaml is cleaner: a module is a structure, and the `.ml`/`.mli` split separates implementation from interface.
+You already know several answers to "how do I split a program into pieces and control what's visible." Java fuses the compilation unit, the namespace, and the directory layout into one concept (the package), with `public`/`protected`/`private`/package-private as a separate access lattice. Swift gives you modules at the framework/target level and `private`/`fileprivate`/`internal`/`public` as the access ladder. Python leans on files-as-modules and directories-as-packages, with no enforced privacy at all (just the `_name` convention). OCaml is cleaner still: a module is a structure, and the `.ml`/`.mli` split separates implementation from interface.
 
-Rust's answer is its own, and the headline facts trip up everyone arriving from C++: **there is no preprocessor, no textual inclusion, and no linking object files by name.** A crate compiles as one unit from a single root file. Modules are a purely *logical* namespace tree inside that crate — the mapping to files is a compiler convention, not a fundamental. And visibility is **module-scoped, not type-scoped**: privacy is the boundary of a `mod`, the single biggest delta from Java's per-class `private`.
+Rust's answer is its own, and a few headline facts trip up newcomers from every one of those languages: **there is no preprocessor, no textual inclusion, and no linking object files by name.** A crate compiles as one unit from a single root file. Modules are a purely *logical* namespace tree inside that crate — the mapping to files is a compiler convention, not a fundamental. And visibility is **module-scoped, not type-scoped**: privacy is the boundary of a `mod`, the single biggest delta from Java's per-class `private` or Swift's per-type defaults.
 
 This chapter builds the vocabulary — package, crate, module, path, visibility, `use` — then scales up to multi-crate workspaces.
 
@@ -14,7 +14,7 @@ These three words are used loosely in conversation and precisely by the compiler
 - A **package** is the unit Cargo manages: a directory with a `Cargo.toml`. A package bundles **one or more crates**: at most one library crate, plus any number of binary crates. It is the thing you `cargo new`, version, and publish.
 - A **module** is a namespace *inside* a crate. Modules nest, forming the **module tree**, and they are the unit of *privacy*.
 
-> **🦀 From your toolbox →** A C++ *translation unit* is the nearest analogue to a crate, but the analogy breaks on scale and linkage. A TU is typically one `.cpp`; a crate is potentially hundreds of `.rs` files compiled together. There is no ODR across crates because there is no textual `#include` duplicating definitions into many TUs — each crate is compiled once and depended upon by name. A Rust **module** is closest to a C++ `namespace` or an OCaml `module`, a logical naming scope — but unlike a C++ namespace (open, reopenable anywhere) a Rust module's contents are fixed at its definition site.
+> **🦀 From your toolbox →** A Rust **crate** is closest to a Swift *module* (one Xcode target / one Swift Package Manager target compiled together) or a Java *compilation unit scaled up* — the whole tree of files that builds into one artifact and is then depended on by name, not pasted in. A Rust **module** is closest to a Java `package` or a Swift namespace: a logical naming scope, not a file. The analogy breaks on directory rigidity — Java forces `com.example.Foo` to live at `com/example/Foo.java`, whereas Rust's file mapping is a flexible convention you can override. (If you remember C, the rough touch is "a crate is compiled once and linked by name, not `#include`d as text into many files.")
 
 The file conventions Cargo uses:
 
@@ -30,7 +30,7 @@ my_package/
 
 Nothing in `Cargo.toml` names `src/main.rs` or `src/lib.rs`. Cargo *assumes* them by convention: `src/main.rs` is a binary crate root, `src/lib.rs` is a library crate root, and each file under `src/bin/` is its own additional binary crate. A package with both `main.rs` and `lib.rs` has two crates that share the package's name.
 
-> **🦀 From your toolbox →** This is the opposite of C/C++'s explicit build description, where every TU is listed in a `Makefile`/`CMakeLists.txt`. Rust trades configurability for convention: you almost never enumerate source files, because `mod` declarations (below) thread them into the tree automatically. It is closer to how `dune` discovers OCaml modules, or how Java maps `com.example.Foo` to `com/example/Foo.java` — but Rust's mapping is far more flexible than Java's rigid package-equals-directory rule.
+> **🦀 From your toolbox →** Compared with the way Java and Swift make you enumerate or wire up sources — a Maven/Gradle build file, or an Xcode target's file membership — Rust trades configurability for convention: you almost never list source files, because `mod` declarations (below) thread them into the tree automatically. The closest familiar feeling is Python, where dropping a `.py` file into a package directory and writing `import` is enough — except in Rust you still need one explicit `mod` line to attach the file, and the directory mapping is a default you can bend rather than a hard rule.
 
 ## The module tree
 
@@ -63,17 +63,17 @@ crate
 
 The vocabulary mirrors a filesystem and is worth fixing: `invoices` and `ledger` are **siblings** (defined in the same parent); `invoices` is a **child** of `billing`; `billing` is the **parent** of `invoices`. The whole tree is rooted at `crate`.
 
-> **🎓 Tripos link →** In *Foundations of Computer Science* you used OCaml modules to bundle a type with the operations over it (the classic `Stack` / `Queue` ADT presentation). A Rust module serves the identical *organisational* role, but the encapsulation mechanism differs: OCaml hides representation by *omitting* it from an `.mli` signature, whereas Rust hides items by *default privacy* and selectively *exposes* with `pub`. Same goal — abstraction boundaries the compiler enforces — opposite default (OCaml: list it to export with a signature; Rust: everything private until annotated).
+> **🎓 Tripos link →** In *Foundations of Computer Science* you used OCaml modules to bundle a type with the operations over it (the classic `Stack` / `Queue` ADT presentation). A Rust module serves the identical *organisational* role, but the encapsulation mechanism is the mirror image: OCaml hides a representation by *omitting* it from an `.mli` signature (you list what to export), whereas Rust hides items by *default privacy* and selectively *exposes* them with `pub` (everything is private until you annotate it). Same goal — abstraction boundaries the compiler enforces — opposite default.
 
 ## Modules are not files
 
-This is where C++ intuition misleads you. In C++, `#include "foo.h"` is *textual substitution* — the preprocessor pastes the file's bytes into the current TU; the file *is* the unit. In Rust, **the module tree is logical and exists independently of how it is spread across files.** The line
+This is where intuition from Python and C alike can mislead you. In Python, the file *is* the module, one-to-one; in C, `#include "foo.h"` is *textual substitution* — the file's bytes get pasted into whoever includes it. In Rust, **the module tree is logical and exists independently of how it is spread across files.** The line
 
 ```rust
 mod billing;   // note: semicolon, not a brace block
 ```
 
-is not an include. It declares: *"a module named `billing` exists here in the tree; go find its body."* The compiler then looks, in order, in:
+is not an include and not a Python `import`. It declares: *"a module named `billing` exists here in the tree; go find its body."* The compiler then looks, in order, in:
 
 - `src/billing.rs` (modern, idiomatic), or
 - `src/billing/mod.rs` (older style, still supported).
@@ -85,9 +85,9 @@ Two rules that follow, and that catch newcomers:
 1. **You declare a file into the tree exactly once,** with one `mod` statement, at the position in the tree where you want it. Other code then refers to its contents *by path*, never by re-declaring `mod` again. Writing `mod billing;` in two places does not "include it twice" — it tries to create two modules and is usually an error.
 2. **`use` does not pull files into the build.** Only `mod` does. `use` merely creates a local shorthand for an already-existing path (more below). A file with no `mod` declaration pointing at it is simply not part of the crate.
 
-> **⚠️ Pitfall →** Coming from C, you write `use crate::billing;` expecting it to "import the module" the way `#include` makes a file's contents available — but you never wrote `mod billing;`. The error is `error[E0432]: unresolved import` or `failed to resolve: use of unresolved module`. The fix is to add `mod billing;` in the crate root (or appropriate parent) to *attach the file to the tree*; `use` only shortens a path that already resolves.
+> **⚠️ Pitfall →** Expecting `use crate::billing;` to "import the module" the way a Python `import` would make a sibling file's contents available — but you never wrote `mod billing;`. The error is `error[E0432]: unresolved import` or `failed to resolve: use of unresolved module`. The fix is to add `mod billing;` in the crate root (or appropriate parent) to *attach the file to the tree*; `use` only shortens a path that already resolves.
 
-> **⚙️ Under the hood →** Because there is no textual inclusion, a generic definition in module `a` and its use site in module `b` are seen by `rustc` in one pass over one crate. Monomorphisation (the machinery from *Compiler Construction*) runs with full visibility of every instantiation — none of the "template lives in the header, use lives in another TU" fragility. Cross-crate generics work because the library crate ships its generic bodies in metadata, not by re-parsing headers.
+> **⚙️ Under the hood →** Because there is no textual inclusion, a generic definition in module `a` and its use site in module `b` are seen by `rustc` in one pass over one crate. Monomorphisation — the machinery from *Compiler Construction*, where the compiler stamps out a separate concrete copy per type you instantiate the generic with — runs with full visibility of every instantiation. Cross-crate generics work because the library crate ships its generic bodies in metadata, not by re-parsing any header.
 
 Whether to use inline `mod foo { ... }` or file-based `mod foo;` is purely stylistic — the resulting tree is identical. Inline is convenient for small or test modules; files for anything that grows.
 
@@ -123,7 +123,7 @@ mod reporting {
 
 Which to prefer? **Default to absolute (`crate::…`).** When you later move the *calling* code, an absolute path keeps resolving (the target didn't move); when you move the *definition*, you fix it either way. Since refactors move callers more often than definitions, absolute paths break less. Reach for `super::` only when a child is tightly coupled to its parent and you expect them to move together.
 
-> **🦀 From your toolbox →** `crate::` is Rust's analogue of a leading `/` (filesystem root) or a fully-qualified Java name `com.example.billing.Invoices`. `super::` is `..`. The break from Java: there is no implicit "same package, no qualification needed" — siblings still need a path segment, and crucially the path is checked against *privacy* at every segment, which Java's package-private does not do hierarchically.
+> **🦀 From your toolbox →** `crate::` is Rust's analogue of a fully-qualified name like Java's `com.example.billing.Invoices` or referring to a Swift symbol through its module name — a path anchored at the top. `super::` is like the parent-directory `..`. The break from Java and Swift: there is no implicit "same package/same module, no qualification needed" free pass — siblings still need a path segment, and crucially the path is checked against *privacy* at every segment, which Java's package-private and Swift's `internal` do not do hierarchically.
 
 ## Visibility: private by default, and module-scoped
 
@@ -148,9 +148,9 @@ pub fn run() {
 }
 ```
 
-> **⚠️ Pitfall →** You add `pub` to `mod invoices` and re-run, expecting success, and instead get `error[E0603]: function `issue` is private` pointing at the *function*. The mental bug is treating a module like a Java class where one access modifier on the container governs members. In Rust, `pub mod` and `pub fn` are independent gates — the path must be public *at every segment*. Fix: annotate each item you intend to export, not just the module.
+> **⚠️ Pitfall →** You add `pub` to `mod invoices` and re-run, expecting success, and instead get `error[E0603]: function `issue` is private` pointing at the *function*. The mental bug is treating a module like a Java class or a Swift type where one access modifier on the container governs members. In Rust, `pub mod` and `pub fn` are independent gates — the path must be public *at every segment*. Fix: annotate each item you intend to export, not just the module.
 
-For structs, `pub struct` exposes the type but **each field stays private unless individually `pub`** — so you can publish a type whose representation is sealed, exactly the OCaml abstract-type pattern. Enums are the exception: `pub enum` makes **all variants public**, because an enum with hidden variants is almost useless to a caller (you cannot pattern-match on what you cannot name).
+For structs, `pub struct` exposes the type but **each field stays private unless individually `pub`** — so you can publish a type whose representation is sealed, exactly the OCaml abstract-type pattern (and the same effect Swift gets with `public` on a struct but no `public` on its stored properties). Enums are the exception: `pub enum` makes **all variants public**, because an enum with hidden variants is almost useless to a caller (you cannot pattern-match on what you cannot name).
 
 ```rust
 pub struct Account {
@@ -168,11 +168,21 @@ impl Account {
 
 Because `balance_cents` is private, external code cannot construct an `Account` with a struct literal nor mutate the balance directly — it must go through `open` and methods. Encapsulation is enforced *by the module boundary*, which is why the constructor lives where the private field lives.
 
-> **🎓 Tripos link →** This is the same encapsulation guarantee you reasoned about informally in *Further Java*, but with a sharper formal property. In *Semantics of Programming Languages* terms, module privacy is a *static* representation-hiding discipline: a well-typed external client provably cannot observe or depend on private state, so you may change `balance_cents` (its type, its representation, even split it into two fields) without breaking any compiling client. That is a soundness-style invariant the compiler maintains, not a runtime convention.
+> **🔧 In practice →** This is exactly how you ship a type whose internal invariant must never break. Suppose you're writing a money type and the rule is "balance is always tracked in integer cents, never floats." Make the field private and force every caller through methods that uphold it:
+> ```rust
+> pub struct Money { cents: i64 }   // field private — the invariant lives here
+> impl Money {
+>     pub fn from_dollars(d: f64) -> Money { Money { cents: (d * 100.0).round() as i64 } }
+>     pub fn cents(&self) -> i64 { self.cents }
+> }
+> ```
+> A caller in another module *cannot* write `Money { cents: -1 }` to sneak in a bad value, and you stay free to change the representation later (split into `dollars` + `cents`, switch to a bigint) without breaking a single line of their code. Reach for a private field whenever "the only valid way to build/modify this is through my functions."
+
+> **🎓 Tripos link →** This is the same encapsulation guarantee you reasoned about informally in *Further Java*. The plain-language version of the property the compiler maintains: a client outside the module can never *observe* or *depend on* a private field, so you may change `balance_cents` — its type, its layout, even split it into two fields — and every program that previously compiled against your module still compiles and behaves the same. The boundary is checked once, at compile time, not policed at runtime.
 
 ### Finer-grained visibility
 
-`pub` means "public to anyone who can reach the path," including other crates. Often you want narrower scopes. Rust offers a small lattice:
+`pub` means "public to anyone who can reach the path," including other crates. Often you want narrower scopes. Rust offers a small ladder:
 
 ```rust
 pub(crate) fn internal_helper() {}     // visible anywhere in THIS crate, never exported
@@ -182,7 +192,7 @@ pub(in crate::billing) fn scoped() {}  // visible within a named ancestor module
 
 `pub(crate)` is the workhorse: it is how you share an item freely across your own crate's modules while keeping it out of your *public API*. Reach for it constantly when building a library — most of your "internal but cross-module" functions want `pub(crate)`, not bare `pub`.
 
-> **🦀 From your toolbox →** Java's four levels (`public`, `protected`, package-private, `private`) map roughly but not cleanly: `private` ≈ Rust default *at the module level* (not the type level!), package-private ≈ `pub(crate)` in spirit, `public` ≈ `pub`. There is no `protected` because Rust has no inheritance (see [trait objects & OOP](09-trait-objects-and-oop.md)). The decisive difference: in Java `private` is per-*class*, so two classes in the same file cannot see each other's privates; in Rust privacy is per-*module*, so two `struct`s in the same module freely access each other's private fields. This makes the "module = friend group" pattern idiomatic where C++ would reach for `friend`.
+> **🦀 From your toolbox →** Map this onto the access ladders you know. Java's `private`/package-private/`public` and Swift's `private`/`fileprivate`/`internal`/`public` line up *roughly*: Rust's default ≈ "module-private," `pub(crate)` ≈ Java package-private or Swift `internal` (visible across the whole compiled unit but not exported), and `pub` ≈ Java/Swift `public`. There is no `protected` because Rust has no inheritance (see [trait objects & OOP](09-trait-objects-and-oop.md)). The decisive difference from Java and Swift: their default privacy is per-*type* (and Swift's `fileprivate` is per-*file*), so two classes can't reach each other's privates by default — whereas in Rust privacy is per-*module*, so two `struct`s defined in the same module freely touch each other's private fields. That makes a "module = trusted friend group" pattern idiomatic.
 
 ## `use`: shortcuts into scope
 
@@ -196,7 +206,7 @@ pub fn run() {
 }
 ```
 
-A `use` is like a symbolic link, and it is **scoped to the block it appears in** — it does not leak into child modules. It is also subject to privacy: `use` cannot reach a private item any more than a full path can.
+A `use` behaves like a symbolic link, and it is **scoped to the block it appears in** — it does not leak into child modules. It is also subject to privacy: `use` cannot reach a private item any more than a full path can.
 
 **Idiomatic granularity.** The community convention — and it is a real convention worth following for readability, not a rule the compiler cares about:
 
@@ -239,7 +249,7 @@ use std::collections::*;
 
 Use it sparingly. It obscures where names came from, and it makes you fragile to upstream additions: if a dependency later adds a public name that collides with one of yours, your build breaks on upgrade. The two sanctioned uses are (1) `use super::*;` inside a `#[cfg(test)]` test module to grab everything under test, and (2) deliberate *prelude* modules designed to be glob-imported (below).
 
-> **🦀 From your toolbox →** `use` is *not* `#include` and *not* Java's `import` in effect on the build. Java's `import` is also just a naming shorthand (the class is found via the classpath regardless), so that analogy holds — but in C++, omitting an `#include` means the symbol genuinely does not exist in the TU. In Rust, the item exists in the crate as soon as `mod` attaches it; `use` only abbreviates. Forgetting a `use` is a *spelling* fix (write the full path), never a *linkage* error.
+> **🦀 From your toolbox →** `use` is exactly Java's `import` or Swift's `import` in *effect on the build*: pure naming shorthand. The class or symbol is found regardless (via the classpath in Java, via the linked module in Swift); `import` just lets you drop the qualifier. Rust's `use` is the same — the item already exists in the crate the moment `mod` attaches it, and `use` only abbreviates the path. So forgetting a `use` is always a *spelling* fix (write the full path instead), never a "the symbol doesn't exist / didn't link" error.
 
 ## Re-exports: `pub use` shapes your public API
 
@@ -259,6 +269,15 @@ pub use crate::billing::invoices;
 ```
 
 A caller now writes `my_crate::invoices::issue()` instead of `my_crate::billing::invoices::issue()` and never learns `billing` exists. This is the standard technique for a library that wants a flat, curated front door over a deep internal hierarchy — your contributors navigate `billing::invoices`, your users see a tidy top-level API. It is also how a crate provides a single import point: re-export the handful of types and traits most users need from the root.
+
+> **🔧 In practice →** This is the move you make right before publishing a library, to keep your *internal* file layout free to churn while your *public* API stays stable. Say your crate grows into `mod client; mod transport; mod error;` but you want users to just reach for the three things they actually need. Gather them at the root:
+> ```rust
+> // src/lib.rs
+> mod client; mod transport; mod error;
+> pub use client::Client;        // users write my_crate::Client
+> pub use error::{Error, Result};
+> ```
+> Now `use my_crate::{Client, Error};` works regardless of which internal file `Client` lives in — and six months later you can split `client.rs` into a submodule directory without breaking a single downstream `use`. This is precisely why `serde`, `tokio`, and friends feel like a clean flat API despite huge internal trees.
 
 > **⚙️ Under the hood →** `pub use` re-exports also flow into generated documentation: `cargo doc` lists a re-exported item at the re-export site, so your published docs reflect the curated structure, not the raw module tree. This is why mature crates (`tokio`, `serde`) feel coherent despite large internal module trees — the public path geometry is hand-shaped with `pub use`, independent of where things actually live.
 
@@ -282,7 +301,7 @@ The standard library `std` is special only in that it ships with the toolchain, 
 
 **The prelude** is why you never `use std::option::Option;`. The standard library defines a small set of ubiquitous items — `Option`, `Result`, `Vec`, `String`, `Box`, `Clone`, `Iterator`, `drop`, and so on — in `std::prelude`, and the compiler glob-imports it into *every* module automatically: the prelude pattern applied by the language itself. Crates can ship their own opt-in prelude (`use some_crate::prelude::*;`) for the same purpose — one glob bringing the crate's most-used traits into scope, which matters because trait methods are only callable when the trait is in scope (see [generics & traits](08-generics-and-traits.md)).
 
-> **🎓 Tripos link →** The automatic prelude is the language pre-populating the typing context Γ that you formalised in *Semantics of Programming Languages*. Every module begins not with an empty environment but with the prelude's bindings already in Γ, which is why bare `Option` type-checks. A crate prelude is the same move at library granularity — extending the ambient context so the common case needs no explicit `use`.
+> **🎓 Tripos link →** The automatic prelude is the language pre-loading the set of names every module starts with. Rather than each module beginning with an empty slate of available names, the compiler arranges for the prelude's items to already be in scope everywhere — which is why bare `Option` resolves without any `use`. A crate prelude is the same idea at library scale: a curated bundle of names you opt into so the common case needs no explicit imports.
 
 ## Workspaces: many crates, one build
 
@@ -327,11 +346,13 @@ cargo test               # test every member (unit, integration, doc tests)
 cargo test -p domain     # test only `domain`
 ```
 
+> **🔧 In practice →** Workspaces earn their keep the moment a project has a clear layering you want the *compiler* to enforce, not just a style guide. A common shape: a web service split into `domain` (pure business types and logic, no I/O), `storage` (database access), and `api` (the HTTP binary). Because each is its own crate, `domain` literally cannot call into `storage` unless you add the dependency edge — so the "domain layer has no database knowledge" rule is structural, not a code-review note. You get a second payoff on every edit: change a request handler in `api` and only `api` recompiles; `domain` and `storage` are reused from the shared `target/`, which on a large codebase is the difference between a two-second and a thirty-second rebuild.
+
 > **⚙️ Under the hood →** The single shared `target/` is the load-bearing design choice. If each member had its own `target/`, then `app` depending on `domain` would force a *separate* compilation of `domain` into `app`'s target — every dependent re-compiling every dependency. One shared output directory means `domain` is built **once** and its artifact reused by all dependents, which is exactly the build-graph deduplication that makes large workspaces tractable.
 
 The shared **`Cargo.lock`** is the other half: every member resolves against *one* unified dependency graph, so if both `domain` and `storage` depend on `rand`, they get the *same* resolved version, recorded once, downloaded once. The members are therefore mutually compatible — you cannot accidentally link two copies of a shared dependency at incompatible versions (Cargo resolves to as few versions as semver allows). A frequent surprise on the flip side: a dependency declared in `domain/Cargo.toml` is **not** usable from `storage` — each member lists its own `[dependencies]`. The lockfile unifies *versions*, not *visibility*.
 
-> **🎓 Tripos link →** A workspace's build is a DAG of crates, each a node compiled once after its dependencies — precisely the dependency-ordered compilation you analysed in *Compiler Construction*, and the topological scheduling Cargo performs is the same problem as instruction/phase scheduling over a DAG. The single `target/` is content-addressed caching over that DAG: a node is recompiled only when its inputs (source or upstream artifacts) change.
+> **🎓 Tripos link →** A workspace's build is a DAG of crates: each crate is a node that can be compiled only after the crates it depends on are built. That is the dependency-ordered compilation you saw in *Compiler Construction* — Cargo topologically sorts the graph and schedules the nodes, building independent branches in parallel. The single `target/` acts as a cache over that graph: a node is recompiled only when its inputs (its own source, or an upstream artifact) have changed.
 
 ## Mental-model recap
 
@@ -343,14 +364,23 @@ The shared **`Cargo.lock`** is the other half: every member resolves against *on
 
 ## Exercises
 
-1. Create a binary package with `src/main.rs` that declares `mod config;` and calls `config::load()`. Write `config.rs` containing a *private* `fn load()`. Predict the exact error code before compiling, then fix it with the minimal change. Now move `config.rs` to `src/config/mod.rs` and confirm the build still works — explain why the module path is unchanged.
+1. **Predict the resolution.** A file `src/billing.rs` contains `mod invoices;`. The compiler now searches two specific paths for the body of `invoices`. Name both, in the order it tries them, and say what changes about that search if you had instead put `billing` at `src/billing/mod.rs`. Then: if `src/billing/invoices.rs` and `src/billing/invoices/mod.rs` both existed, what do you expect to happen, and why is that the sensible rule?
 
-2. In one file, write `mod a { pub(super) fn helper() {} }` at the crate root and try to call `a::helper()` from `main`. Does it compile? Now nest `a` inside `mod outer { mod a { ... } }` and call `helper` from `outer`. Explain what `pub(super)` resolves to in each case.
+2. **Which compiles, and why?** Given
+   ```rust
+   mod outer {
+       fn secret() {}
+       pub mod inner {
+           pub fn calls_up() { super::secret(); }
+       }
+   }
+   ```
+   does `inner::calls_up` compile even though `secret` is private? Now swap the bodies: make `secret` try to call `inner::calls_up()` from inside `outer`. Predict which direction works and state the one-sentence rule that decides it.
 
-3. Define `pub struct Meter { value: f64 }` in a module `units` with a private field, and a function `meters(x: f64) -> Meter`. From `main`, try (a) `units::Meter { value: 3.0 }` and (b) `units::meters(3.0).value`. Both fail — give the two distinct error codes and explain why the private field forbids each independently.
+3. **A design choice: `pub` vs `pub(crate)`.** You're writing a library with modules `parser` and `lexer`. `parser` needs to call a `tokenize` function that lives in `lexer`, but no *user of your crate* should ever call `tokenize` directly. Which visibility do you give `tokenize`, and what concretely goes wrong if you pick bare `pub` instead? Describe the symptom a user would never see versus the one your future self would regret.
 
-4. You have `use std::fmt::Display;` and `use crate::ui::Display;` (your own type) in the same module. State the error, then resolve it two different ways — once with `as`, once by keeping a parent-module path on one of them.
+4. **Adapt a clashing import.** You already have `use std::fmt;` in a module and call `fmt::Display`. A teammate adds a local type also named `Display` and writes `use crate::ui::Display;`, and now your file won't build. Without renaming the teammate's type, give *two* different edits that resolve the clash, and say which one you'd prefer in a file that mentions `Display` (the trait) twenty times versus once.
 
-5. (★) Build a library crate with internal modules `net::tcp` and `net::http`, where `http` has a `pub(crate)` function that `tcp` must call but no external user should reach. Then add a `pub use` at the crate root that re-exports `http::Client` as `my_crate::Client`. Write a doc comment and run `cargo doc --open`; confirm `Client` appears at the root and the `pub(crate)` function appears nowhere in the docs. Explain the two different visibility decisions you made and why bare `pub` would have been wrong for the helper.
+5. **Reshape a public API with `pub use`.** A crate is laid out as `crate::net::http::Client` internally, but you want users to write `my_crate::Client`. Write the one line at the crate root that achieves this. Then predict: after adding it, does `my_crate::net::http::Client` *still* work for a user, or does the re-export hide the original path? Explain what controls that.
 
-6. (★) Create a workspace with members `core` (lib) and `cli` (bin) where `cli` depends on `core` via a path dependency. Add `rand = "0.8"` to `core` only. Now write `use rand;` in `cli/src/main.rs` and predict the error. Fix it the *correct* way (not by removing the line). Then run `cargo build`, inspect the top-level `Cargo.lock`, and confirm `rand` appears exactly once even though two members now depend on it — explain what guarantee that single entry provides.
+6. (★) **Reason about the shared lockfile.** In a workspace, `domain/Cargo.toml` lists `rand = "0.8"` and `storage/Cargo.toml` separately lists `rand = "0.8"`. You expect `Cargo.lock` to contain `rand` exactly once. Now suppose `storage` instead asks for `rand = "0.7"`. Predict how many `rand` entries the lockfile holds now, whether the build still succeeds, and what would break if a type from `rand` 0.7 in `storage` were passed to a function expecting that type from `rand` 0.8 in `domain`. What single guarantee does "one resolved version" buy you that two versions cannot?

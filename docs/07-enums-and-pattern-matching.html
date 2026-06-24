@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -177,9 +177,9 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="7-enums--pattern-matching"><a class="header" href="#7-enums--pattern-matching">7. Enums &amp; Pattern Matching</a></h1>
-<p>You already know this construct under another name. In OCaml you wrote <code>type shape = Circle of float | Rect of float * float</code>; in Foundations you destructured it with <code>match</code>. Rust’s <code>enum</code> <em>is</em> the OCaml variant — a <strong>sum type</strong>, a tagged union — wearing C-family syntax. So the conceptual delta in this chapter is small but the engineering payoff is enormous: Rust takes the OCaml sum type, gives it a guaranteed memory layout, makes its constructors first-class functions, fuses it with the ownership system from <a href="02-ownership-and-moves.html">ownership</a>, and then uses <em>exhaustiveness checking</em> — a totality argument straight out of your Semantics course — to statically eliminate two of the most expensive bug classes in the C/Java world: the null dereference and the unhandled case.</p>
-<p>If <a href="06-structs-and-methods.html">structs</a> are Rust’s product types (a value of <code>Point</code> is an <code>x</code> <strong>and</strong> a <code>y</code>), enums are its sum types (a value of <code>Shape</code> is a <code>Circle</code> <strong>or</strong> a <code>Rect</code>). Everything else in this chapter follows from taking that “or” seriously.</p>
-<h2 id="enums-are-sum-types-with-a-runtime-tag"><a class="header" href="#enums-are-sum-types-with-a-runtime-tag">Enums are sum types with a runtime tag</a></h2>
+<p>You already know this construct under several names. In Swift you wrote <code>enum Shape { case circle(Double); case rect(Double, Double) }</code> and switched over it with <code>switch</code>. In OCaml it was <code>type shape = Circle of float | Rect of float * float</code>. Rust’s <code>enum</code> <em>is</em> that same idea — a value that is <strong>one of several shapes</strong>, each carrying its own payload, wearing C-family syntax. So the conceptual delta in this chapter is small but the engineering payoff is enormous: Rust takes the Swift/OCaml enum, gives it a guaranteed memory layout, makes its constructors first-class functions, fuses it with the ownership system from <a href="02-ownership-and-moves.html">ownership</a>, and then <em>checks at compile time that you handled every case</em> — statically eliminating two of the most expensive bug classes in the Java/C world: the null dereference and the unhandled case.</p>
+<p>If <a href="06-structs-and-methods.html">structs</a> bundle several fields together (a value of <code>Point</code> is an <code>x</code> <strong>and</strong> a <code>y</code>), enums express a choice (a value of <code>Shape</code> is a <code>Circle</code> <strong>or</strong> a <code>Rect</code>). Everything else in this chapter follows from taking that “or” seriously.</p>
+<h2 id="enums-are-a-choice-between-shapes-with-a-runtime-tag"><a class="header" href="#enums-are-a-choice-between-shapes-with-a-runtime-tag">Enums are a choice between shapes, with a runtime tag</a></h2>
 <p>Here is the definition that anchors the whole chapter:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -197,14 +197,14 @@
 let b = Shape::Circle(2.0);
 let c = Shape::Rect { w: 3.0, h: 4.0 };
 <span class="boring">}</span></code></pre>
-<p>A subtle, useful fact: the tuple-like constructor <code>Shape::Circle</code> is <em>itself a function</em> of type <code>fn(f64) -&gt; Shape</code>. You can pass it to a higher-order function exactly as you would in OCaml:</p>
+<p>A subtle, useful fact: the tuple-like constructor <code>Shape::Circle</code> is <em>itself a function</em> of type <code>fn(f64) -&gt; Shape</code>. You can pass it to a higher-order function exactly as you would pass a method reference in Java or a function in Swift:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let radii = [1.0, 2.0, 3.0];
 let circles: Vec&lt;Shape&gt; = radii.into_iter().map(Shape::Circle).collect();
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is OCaml’s <code>type</code> with <code>|</code> variants, almost beat for beat — and the <code>Shape::Circle</code>-as-function trick is exactly OCaml treating a constructor as a function in <code>List.map Circle xs</code>. The analogy breaks down against C and Java. A C <code>enum</code> is just a named integer; it carries no payload and offers no type safety. The faithful C analogue is a <code>struct { enum tag; union { ... }; }</code> discriminated union — but C will not stop you reading the wrong union arm, which is exactly the unsoundness Rust closes. Java has no sum types until sealed interfaces (Java 17+); before that you reached for the visitor pattern or a class hierarchy, both of which scatter one logical type across many files.</p>
+<p><strong>🦀 From your toolbox →</strong> This is Swift’s <code>enum</code> with associated values, almost beat for beat: <code>Shape::Circle(2.0)</code> is Rust’s <code>.circle(2.0)</code>, and switching over it is Swift’s <code>switch shape { case .circle(let r): ... }</code>. The <code>Shape::Circle</code>-as-function trick mirrors how Swift lets you pass <code>.circle</code> where a function is expected. The analogy breaks down against Java and C. Java had no real sum types until sealed interfaces (Java 17+); before that you reached for an <code>abstract class</code> hierarchy or the visitor pattern, both of which scatter one logical type across many files and lose the compiler’s “did you handle every case” check. A C <code>enum</code> is just a named integer — it carries no payload and offers no type safety; the faithful C analogue is a hand-written <code>struct</code> holding a tag plus a <code>union</code>, but C will not stop you from reading the wrong union arm, which is exactly the hole Rust closes.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> An enum is laid out as a <em>discriminant</em> (the tag, an integer wide enough to count the variants) followed by enough space for the largest variant’s payload. <code>Shape</code> above is roughly <code>{ tag: u8, payload: [the bigger of f64 and (f64,f64)] }</code>, so <code>size_of::&lt;Shape&gt;()</code> is dominated by the <code>Rect</code> arm plus tag and alignment padding — every <code>Shape</code>, even a <code>Dot</code>, occupies that worst-case size. This is the same trade-off as a C tagged union, except rustc both computes the layout and inserts the tag checks the C programmer had to write by hand. The exact discriminant type and ordering are unspecified unless you pin them with <code>#[repr(...)]</code> (see <a href="16-unsafe-and-ffi.html">unsafe and FFI</a>).</p>
@@ -218,8 +218,8 @@ let circles: Vec&lt;Shape&gt; = radii.into_iter().map(Shape::Circle).collect();
     Some(T),
 }
 <span class="boring">}</span></code></pre>
-<p>A generic sum type (we cover generics properly in <a href="08-generics-and-traits.html">generics and traits</a>; read <code>&lt;T&gt;</code> here the way you read OCaml’s <code>'a option</code>). <code>Option&lt;T&gt;</code> is so fundamental it is in the prelude — you write <code>Some</code>/<code>None</code> without qualification — and it is Rust’s answer to what Tony Hoare called his “billion-dollar mistake”: the null reference.</p>
-<p>In C, every <code>T*</code> is implicitly nullable, and the compiler does nothing to make you check. In Java every reference is implicitly nullable, and the NPE is a <em>runtime</em> event. Rust’s move is to make absence a <em>value of a distinct type</em>: a <code>String</code> is always a real string, and “maybe a string” is a different type, <code>Option&lt;String&gt;</code>, with a different shape. You cannot accidentally use an <code>Option&lt;String&gt;</code> where a <code>String</code> is wanted — the types don’t unify — so the compiler forces you to handle the <code>None</code> case <em>before</em> you can touch the inner value. The billion-dollar mistake becomes a compile error.</p>
+<p>A generic enum (we cover generics properly in <a href="08-generics-and-traits.html">generics and traits</a>; read <code>&lt;T&gt;</code> here the way you read Swift’s <code>Optional&lt;T&gt;</code> or Java’s <code>Optional&lt;T&gt;</code>). <code>Option&lt;T&gt;</code> is so fundamental it is in the prelude — you write <code>Some</code>/<code>None</code> without qualification — and it is Rust’s answer to what Tony Hoare called his “billion-dollar mistake”: the null reference.</p>
+<p>In Java every reference is implicitly nullable, and the NPE is a <em>runtime</em> event. In C, every <code>T*</code> is implicitly nullable too, and the compiler does nothing to make you check. Rust’s move is the same one Swift made with <code>Optional</code>: make absence a <em>value of a distinct type</em>. A <code>String</code> is always a real string, and “maybe a string” is a different type, <code>Option&lt;String&gt;</code>, with a different shape. You cannot accidentally use an <code>Option&lt;String&gt;</code> where a <code>String</code> is wanted — the types don’t unify — so the compiler forces you to handle the <code>None</code> case <em>before</em> you can touch the inner value. Where Swift gives you <code>if let</code>/<code>guard let</code> to unwrap an optional, Rust gives you <code>match</code>/<code>if let</code>/<code>let ... else</code> to do exactly the same job. The billion-dollar mistake becomes a compile error.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn first_word(s: &amp;str) -&gt; Option&lt;&amp;str&gt; {
@@ -233,11 +233,11 @@ match first_word("  hello world") {
     None    =&gt; println!("(empty)"),
 }
 <span class="boring">}</span></code></pre>
-<p><code>Result&lt;T, E&gt;</code> is the same idea applied to fallible operations: <code>enum Result&lt;T, E&gt; { Ok(T), Err(E) }</code>. We mention it here only so the shape is familiar; the full treatment, including the <code>?</code> operator, lives in <a href="11-error-handling.html">error handling</a>.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> In Semantics, a type system is <em>sound</em> when “well-typed programs do not go wrong” — the progress-and-preservation argument. <code>Option&lt;T&gt;</code> is exactly how Rust extends that guarantee to cover absence. “Dereferencing null” is a way for a program to go wrong; by reifying absence into the type, Rust pushes that failure mode out of the set of well-typed programs entirely. Java’s <code>null</code> is the classic counterexample where the type system <em>fails</em> to be sound in this respect: <code>String s</code> claims to be a string but may be <code>null</code>, and the unsoundness is only caught dynamically.</p>
+<p><strong>🔧 In practice →</strong> You’re parsing a config file where a <code>timeout</code> key is optional. You model the lookup as <code>config.get("timeout"): Option&lt;&amp;str&gt;</code> and <em>cannot</em> forget that it might be missing, because the type won’t let you call <code>.parse()</code> on it directly. The natural code reads almost like a sentence: <code>let timeout = config.get("timeout").and_then(|s| s.parse().ok()).unwrap_or(30);</code> — “look it up; if present, try to parse it; if any step failed, fall back to 30.” This is the Swift <code>??</code> default-value habit, but the compiler <em>enforces</em> that you account for the missing case rather than trusting you to remember.</p>
 </blockquote>
-<h2 id="match-an-expression-and-a-totality-check"><a class="header" href="#match-an-expression-and-a-totality-check"><code>match</code>: an expression, and a totality check</a></h2>
+<p><code>Result&lt;T, E&gt;</code> is the same idea applied to fallible operations: <code>enum Result&lt;T, E&gt; { Ok(T), Err(E) }</code>. We mention it here only so the shape is familiar; the full treatment, including the <code>?</code> operator, lives in <a href="11-error-handling.html">error handling</a>.</p>
+<h2 id="match-an-expression-that-forces-you-to-cover-every-case"><a class="header" href="#match-an-expression-that-forces-you-to-cover-every-case"><code>match</code>: an expression that forces you to cover every case</a></h2>
 <p><code>match</code> compares a <em>scrutinee</em> against a sequence of <em>arms</em>, each arm being a pattern, an optional guard, and an expression. The first arm whose pattern matches wins, and its expression becomes the value of the whole <code>match</code>.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -249,13 +249,13 @@ match first_word("  hello world") {
     }
 }
 <span class="boring">}</span></code></pre>
-<p>Three things to internalise immediately, because they distinguish <code>match</code> from C’s <code>switch</code>:</p>
+<p>Three things to internalise immediately, because they distinguish <code>match</code> from Java’s <code>switch</code> and C’s <code>switch</code>:</p>
 <ol>
 <li>
-<p><strong>It is an expression, not a statement.</strong> <code>area</code> has no <code>return</code>; the <code>match</code> <em>is</em> the function body. This is the OCaml/expression-oriented model from Foundations, not the C statement model. Every arm must produce a value of the same type.</p>
+<p><strong>It is an expression, not a statement.</strong> <code>area</code> has no <code>return</code>; the <code>match</code> <em>is</em> the function body. Think of it like Swift’s expression-style code or a ternary that scales — every arm must produce a value of the same type, and that value flows out as the result.</p>
 </li>
 <li>
-<p><strong>No fall-through.</strong> Unlike C’s <code>switch</code>, arms do not fall through to the next; there is no <code>break</code>. Each arm is self-contained.</p>
+<p><strong>No fall-through.</strong> Unlike a classic C/Java <code>switch</code>, arms do not fall through to the next; there is no <code>break</code>. Each arm is self-contained.</p>
 </li>
 <li>
 <p><strong>It is exhaustive — and that is checked at compile time.</strong> You must handle every possible value of the scrutinee. Omit the <code>Dot</code> arm and the program does not compile:</p>
@@ -263,9 +263,12 @@ match first_word("  hello world") {
 </ol>
 <pre><code class="language-text">error[E0004]: non-exhaustive patterns: `&amp;Shape::Dot` not covered
 </code></pre>
-<p>This exhaustiveness check is the single most valuable property of <code>match</code>. It is a <strong>totality</strong> argument: the compiler proves your function is defined on every inhabitant of the input type. When you later add a <code>Triangle</code> variant to <code>Shape</code>, every <code>match</code> that has not been updated becomes a compile error pointing you at exactly the code that needs attention. In a Java <code>switch</code> or a chain of <code>instanceof</code>, that same change fails silently and you discover the gap in production.</p>
+<p>This exhaustiveness check is the single most valuable property of <code>match</code>: the compiler refuses to accept the function until it handles every shape the input could take. When you later add a <code>Triangle</code> variant to <code>Shape</code>, every <code>match</code> that has not been updated becomes a compile error pointing you at exactly the code that needs attention. In a Java <code>switch</code> over an enum, or a chain of <code>instanceof</code>, that same change compiles fine and you discover the gap in production — exactly the failure Swift’s exhaustive <code>switch</code> also exists to prevent.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is precisely OCaml’s “this pattern-matching is not exhaustive” warning from Foundations, promoted from a warning to a hard error. Formally it is a coverage/totality check over the inhabitants of an algebraic data type — the compiler verifies that the patterns partition the value space. Tie it to Semantics: making the function <em>total</em> (defined everywhere on its domain) is what lets <code>match</code> be sound as an expression — there is no “stuck” configuration where no arm applies.</p>
+<p><strong>🔧 In practice →</strong> You add a new payment method to an e-commerce backend — a <code>PaymentMethod::ApplePay</code> variant alongside <code>Card</code> and <code>BankTransfer</code>. Without exhaustive <code>match</code>, you’d grep for every place that handles payment methods and hope you found them all. With it, you just add the variant and recompile: every <code>match</code> that hasn’t been taught about <code>ApplePay</code> lights up red — the refund calculator, the receipt formatter, the fraud check. The compiler hands you a to-do list of exactly the sites that need updating, and you can’t ship until they’re all handled.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Foundations of CS link →</strong> This is the same machinery as OCaml’s “this pattern-matching is not exhaustive” warning you met in Foundations, promoted from a warning to a hard error. The intuition is simple: the compiler checks that your arms, taken together, cover every possible value of the type, with no value left unhandled. Because there is no value that falls through the bottom, a <code>match</code> always produces a result — which is what lets it safely be an expression.</p>
 </blockquote>
 <h3 id="binding-catch-alls-and-_"><a class="header" href="#binding-catch-alls-and-_">Binding, catch-alls, and <code>_</code></a></h3>
 <p>Arms can bind parts of the scrutinee to names (that is how <code>r</code>, <code>w</code>, and <code>h</code> above came into scope). To make a <code>match</code> exhaustive without enumerating everything, end with a catch-all:</p>
@@ -282,7 +285,7 @@ match first_word("  hello world") {
     }
 }
 <span class="boring">}</span></code></pre>
-<p>A bare identifier like <code>other</code> is an <em>irrefutable</em> pattern (defined below) that matches anything and binds it. If you need a catch-all but do not need the value, use <code>_</code>, the wildcard, which matches anything and binds <em>nothing</em>:</p>
+<p>A bare identifier like <code>other</code> matches anything and binds it. If you need a catch-all but do not need the value, use <code>_</code>, the wildcard, which matches anything and binds <em>nothing</em>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>match config_flag {
@@ -303,7 +306,7 @@ match first_word("  hello world") {
     _           =&gt; "other",
 }
 <span class="boring">}</span></code></pre>
-<p>Ranges in patterns are restricted to integers and <code>char</code>, because those are the only types for which rustc can decide at compile time whether a range is empty (and thus reason about exhaustiveness). Note the <code>..=</code> (inclusive); the half-open <code>..</code> is <em>not</em> a pattern range — it means something else, below.</p>
+<p>Ranges in patterns are restricted to integers and <code>char</code>, because those are the only types for which rustc can decide at compile time whether a range is empty (and thus check that you’ve covered the whole space). Note the <code>..=</code> (inclusive); the half-open <code>..</code> is <em>not</em> a pattern range — it means something else, below.</p>
 <p><strong>Alternation with <code>|</code>.</strong> <code>1 | 2 | 3</code> matches any of the three. Combined with <code>@</code> and guards it composes (see below); note its precedence interacts with guards — <code>4 | 5 | 6 if cond</code> parses as <code>(4 | 5 | 6) if cond</code>, the guard applies to the whole alternation.</p>
 <p><strong>Destructuring structs.</strong> Bind fields by name, optionally renaming or matching literals:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -360,7 +363,7 @@ match p {
     None                  =&gt; {}
 }
 <span class="boring">}</span></code></pre>
-<p>Beware: a guard <em>defeats exhaustiveness analysis</em>. The compiler cannot reason about arbitrary boolean conditions, so <code>Some(x) if x % 2 == 0</code> is not treated as covering any <code>Some</code>; you still need a fallback arm. Use guards for refinement, not as your only handler of a variant.</p>
+<p>Beware: a guard <em>defeats the exhaustiveness check</em>. The compiler cannot reason about arbitrary boolean conditions, so <code>Some(x) if x % 2 == 0</code> is not treated as covering any <code>Some</code>; you still need a fallback arm. Use guards for refinement, not as your only handler of a variant.</p>
 <h3 id="shadowing-inside-patterns--the-classic-gotcha"><a class="header" href="#shadowing-inside-patterns--the-classic-gotcha">Shadowing inside patterns — the classic gotcha</a></h3>
 <p>Because each <code>match</code>/<code>if let</code>/<code>while let</code> arm opens a new scope, a <em>bare name</em> in a pattern introduces a fresh binding that <strong>shadows</strong> any outer variable of the same name. This bites people constantly:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -376,7 +379,7 @@ match x {
 <span class="boring">}</span></code></pre>
 <p>If your intent was “match when the inner value <em>equals the outer</em> <code>y</code>”, the pattern <code>Some(y)</code> does the opposite — it captures the inner value into a new <code>y</code>. The fix is a guard against a differently-named binding: <code>Some(n) if n == y</code>.</p>
 <blockquote>
-<p><strong>⚠️ Pitfall →</strong> Forgetting that patterns bind rather than compare is the most common <code>match</code> bug for newcomers from C, where <code>case y:</code> would compare. There is no compiler <em>error</em> here — the code compiles and runs, it just always takes the <code>Some(_)</code> arm. The idiomatic fix is to bind to a fresh name and compare in a guard (<code>Some(n) if n == y</code>), or to inline the constant if it is one (<code>Some(10) =&gt; ...</code>).</p>
+<p><strong>⚠️ Pitfall →</strong> Forgetting that patterns bind rather than compare is the most common <code>match</code> bug for newcomers coming from Java/C, where <code>case y:</code> would compare. There is no compiler <em>error</em> here — the code compiles and runs, it just always takes the <code>Some(_)</code> arm. The idiomatic fix is to bind to a fresh name and compare in a guard (<code>Some(n) if n == y</code>), or to inline the constant if it is one (<code>Some(10) =&gt; ...</code>).</p>
 </blockquote>
 <h2 id="refutability-which-patterns-go-where"><a class="header" href="#refutability-which-patterns-go-where">Refutability: which patterns go where</a></h2>
 <p>A pattern is <strong>irrefutable</strong> if it matches every possible value of its type (e.g. <code>x</code>, <code>(a, b)</code>, <code>Point { x, y }</code> — they cannot fail), and <strong>refutable</strong> if some value fails to match (e.g. <code>Some(x)</code>, <code>1..=5</code>, <code>Shape::Circle(r)</code>). This distinction is <em>the</em> rule that decides which construct a pattern is legal in:</p>
@@ -392,11 +395,11 @@ help: you might want to use `let else` to handle the variant that isn't matched
 </code></pre>
 <p>The <code>let</code> form must always succeed because there is nowhere to put the failure. The compiler even points you at the fix: <code>let ... else</code>.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> Refutability is the static decision procedure behind exhaustiveness from your Semantics/Foundations work, viewed from the other side. An irrefutable pattern is one whose coverage is the entire type — a single arm that is <em>total</em> on its own. <code>let PATTERN = EXPR;</code> is sound only when <code>PATTERN</code> is total, because there is no second arm to handle the gap; the compiler discharges exactly that proof obligation before accepting the binding.</p>
+<p><strong>🎓 Plain-language insight →</strong> Refutability is just exhaustiveness seen from the other side. An irrefutable pattern is one that covers the <em>whole</em> type on its own — it can never fail to match, so it needs no second arm. <code>let PATTERN = EXPR;</code> is allowed only when <code>PATTERN</code> is irrefutable, because a plain <code>let</code> has nowhere to send a value that didn’t match. The moment a pattern <em>could</em> fail, the compiler insists you use a form that has a “didn’t match” branch (<code>if let</code>, <code>while let</code>, <code>let ... else</code>).</p>
 </blockquote>
 <h2 id="the-conditional-family-if-let-let--else-while-let-matches"><a class="header" href="#the-conditional-family-if-let-let--else-while-let-matches">The conditional family: <code>if let</code>, <code>let ... else</code>, <code>while let</code>, <code>matches!</code></a></h2>
 <p>When you care about <em>one</em> pattern and want to ignore the rest, a full <code>match</code> with a <code>_ =&gt; {}</code> arm is noise. The conditional forms are sugar over that pattern.</p>
-<p><strong><code>if let</code></strong> runs a block only when one refutable pattern matches, optionally with <code>else</code>:</p>
+<p><strong><code>if let</code></strong> runs a block only when one refutable pattern matches, optionally with <code>else</code>. This is the direct counterpart of Swift’s <code>if let</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>if let Some(w) = first_word(line) {
@@ -406,7 +409,7 @@ help: you might want to use `let else` to handle the variant that isn't matched
 }
 <span class="boring">}</span></code></pre>
 <p>You can chain <code>else if let</code> for unrelated conditions — more flexible than <code>match</code> (which tests one scrutinee) but, critically, <em>not</em> exhaustiveness-checked. Drop a case and the compiler stays silent. That is the price of the conciseness; pay it knowingly.</p>
-<p><strong><code>let ... else</code></strong> is the early-return idiom and, in my view, the most underused construct for newcomers. It binds in the <em>enclosing</em> scope on success and <em>diverges</em> (returns, breaks, panics) on failure — flattening the dreaded rightward-drift staircase:</p>
+<p><strong><code>let ... else</code></strong> is the early-return idiom — Rust’s version of Swift’s <code>guard let ... else { return }</code> — and, in my view, the most underused construct for newcomers. It binds in the <em>enclosing</em> scope on success and <em>diverges</em> (returns, breaks, panics) on failure — flattening the dreaded rightward-drift staircase:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn config_port(raw: Option&lt;&amp;str&gt;) -&gt; u16 {
@@ -420,7 +423,10 @@ help: you might want to use `let else` to handle the variant that isn't matched
     port                        // `text` and `port` are live here, unindented
 }
 <span class="boring">}</span></code></pre>
-<p>The <code>else</code> block is mandatory and must not fall through to the code after it — it has to <code>return</code>, <code>break</code>, <code>continue</code>, or <code>panic!</code>. The bindings introduced by the pattern escape into the surrounding scope, which is exactly what makes it a “guard clause” in the classic sense. Compare this to the OCaml/C habit of nesting the success case ever deeper inside <code>match</code>/<code>if</code>; <code>let ... else</code> lets you assert preconditions linearly and keep the main logic at the left margin.</p>
+<p>The <code>else</code> block is mandatory and must not fall through to the code after it — it has to <code>return</code>, <code>break</code>, <code>continue</code>, or <code>panic!</code>. The bindings introduced by the pattern escape into the surrounding scope, which is exactly what makes it a “guard clause” in the classic sense — identical in spirit to Swift’s <code>guard</code>. Compare this to the habit of nesting the success case ever deeper inside <code>if let</code>/<code>switch</code>; <code>let ... else</code> lets you assert preconditions linearly and keep the main logic at the left margin.</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You’re in a web request handler that needs a logged-in user and a valid order id from the request. Instead of nesting two <code>if let</code>s and drifting rightward, you write the preconditions as flat guard clauses: <code>let Some(user) = session.user() else { return Response::unauthorized(); };</code> then <code>let Ok(order_id) = params.get("id").parse::&lt;u64&gt;() else { return Response::bad_request(); };</code>. Both <code>user</code> and <code>order_id</code> are now in scope for the rest of the handler, which stays at the left margin and reads top-to-bottom as “here are the things that must be true; now do the work.”</p>
+</blockquote>
 <p><strong><code>while let</code></strong> loops as long as the pattern keeps matching — the idiomatic way to drain something that yields <code>Some</code>/<code>Ok</code> until it stops:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -465,45 +471,49 @@ assert_eq!(size_of::&lt;NonZeroU32&gt;(),   size_of::&lt;Option&lt;NonZeroU32&gt
 <span class="boring">}</span></code></pre>
 <p>So <code>Option&lt;&amp;T&gt;</code> is genuinely a nullable pointer at the machine level — you get C’s compact representation and Rust’s safety, simultaneously, with the null check <em>enforced by the type</em>. Types without a spare niche still need a discriminant: <code>Option&lt;i32&gt;</code> is 8 bytes (4 for the <code>i32</code>, plus a tag word with alignment), because every 32-bit pattern is a valid <code>i32</code> and there is nothing to steal for <code>None</code>. (<code>bool</code> has a niche — only <code>0</code> and <code>1</code> are valid — so <code>Option&lt;bool&gt;</code> fits in one byte.)</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This recovers, <em>safely</em>, the C idiom where you overload a sentinel value to mean “absent” — a <code>char *</code> of <code>NULL</code>, an index of <code>-1</code>, a <code>find</code> returning <code>npos</code>. In C you and every caller must remember the sentinel and check it by hand; nothing in the type records the convention. Niche-optimised <code>Option&lt;&amp;T&gt;</code> gives you byte-for-byte the same representation, but the compiler <em>forces</em> the check and there is no way to forget which value is the sentinel. The analogy breaks down on safety, not on layout: the bits are identical, the guarantees are not.</p>
+<p><strong>🦀 From your toolbox →</strong> This recovers, <em>safely</em>, the old habit of overloading a sentinel value to mean “absent”: a pointer of <code>null</code>, an index of <code>-1</code>, a search returning some magic “not found” constant. In Java or C you and every caller must remember the sentinel and check it by hand; nothing in the type records the convention, which is how the NPE happens. Niche-optimised <code>Option&lt;&amp;T&gt;</code> gives you byte-for-byte the same compact representation, but the compiler <em>forces</em> the check and there is no way to forget which value is the sentinel. The contrast with Swift is the useful one: Swift’s <code>Optional</code> also makes absence type-safe, and Rust matches that safety while <em>also</em> guaranteeing the cheap pointer-sized layout. The analogy to old C/Java sentinels breaks down on safety, not on layout: the bits are identical, the guarantees are not.</p>
 </blockquote>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
-<li>An <code>enum</code> is a <strong>sum type</strong> (OCaml variant / tagged union), laid out as a discriminant plus space for the largest variant. The tag and payload are inseparable, so reading the wrong arm is impossible.</li>
+<li>An <code>enum</code> is a value that is <strong>one of several shapes</strong> (Swift enum with associated values / OCaml variant / tagged union), laid out as a discriminant plus space for the largest variant. The tag and payload are inseparable, so reading the wrong arm is impossible.</li>
 <li><code>Option&lt;T&gt;</code> reifies absence as a <em>value of a distinct type</em>, turning the null dereference from a runtime crash into a compile error. <code>Result&lt;T, E&gt;</code> does the same for failure (<a href="11-error-handling.html">error handling</a>).</li>
-<li><code>match</code> is an <strong>expression</strong> and is <strong>exhaustive</strong> — a compile-time totality check that forces every case to be handled and flags every site when you add a variant.</li>
+<li><code>match</code> is an <strong>expression</strong> and is <strong>exhaustive</strong> — a compile-time check that forces every case to be handled and flags every site when you add a variant.</li>
 <li><strong>Refutability</strong> decides placement: irrefutable patterns only in <code>let</code>/params/<code>for</code>; refutable patterns drive <code>if let</code>/<code>while let</code>/<code>let ... else</code>. Use <code>let ... else</code> to keep the happy path unindented.</li>
 <li>Match the <strong>reference</strong> (<code>&amp;val</code>), not the owned value, when you still need the original — match ergonomics then borrows the inner data instead of moving it.</li>
 </ul>
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Define <code>enum Json { Null, Bool(bool), Num(f64), Str(String), Arr(Vec&lt;Json&gt;), Obj(Vec&lt;(String, Json)&gt;) }</code> and write <code>fn depth(j: &amp;Json) -&gt; usize</code> returning the maximum nesting depth. Then add a <code>Json::Date(...)</code> variant and observe which <code>match</code> sites stop compiling — that is the totality check doing your refactoring for you.</p>
+<p><strong>Adapt and observe.</strong> Define <code>enum Json { Null, Bool(bool), Num(f64), Str(String), Arr(Vec&lt;Json&gt;), Obj(Vec&lt;(String, Json)&gt;) }</code> and write <code>fn depth(j: &amp;Json) -&gt; usize</code> returning the maximum nesting depth. Now add a <code>Json::Date(...)</code> variant <em>without</em> touching <code>depth</code>, and predict before compiling: which lines does rustc flag, and what error code? Was a <code>_ =&gt; ...</code> catch-all in your <code>depth</code> a good idea or a liability for this kind of refactor? Justify your choice.</p>
 </li>
 <li>
-<p>Explain why <code>let Shape::Circle(r) = shape;</code> fails to compile, quote the error code, and give two distinct fixes (one using <code>match</code>, one using <code>let ... else</code>). Which one is appropriate when <code>shape</code> might legitimately be any variant at runtime?</p>
+<p><strong>Which compiles, and why.</strong> For each of the following, decide whether it compiles, and if not, name the failing rule (refutability or move-out):</p>
+<ul>
+<li><code>let Some(x) = compute();</code> where <code>compute() -&gt; Option&lt;i32&gt;</code></li>
+<li><code>let (a, b) = pair;</code> where <code>pair: (i32, String)</code> and you use <code>pair</code> afterwards</li>
+<li><code>for Shape::Circle(r) in shapes { ... }</code> where <code>shapes: Vec&lt;Shape&gt;</code></li>
+<li><code>if let Point { x, y } = p { ... }</code> where <code>Point</code> has exactly those two fields
+Then state the one-line fix for each that does <em>not</em> compile.</li>
+</ul>
 </li>
 <li>
-<p>The following compiles and runs but always prints <code>"other"</code>. Find the bug without running it, and fix it so it prints <code>"target"</code> when <code>code == limit</code>:</p>
+<p><strong>Predict the silent bug.</strong> This compiles, runs, and always prints <code>"other"</code>. Without running it, explain why, then fix it so it prints <code>"target"</code> when <code>code == limit</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let code = 7;
 let limit = 7;
 match code {
-    limit =&gt; println!("target"),   // why does this not do what it looks like?
+    limit =&gt; println!("target"),
     _     =&gt; println!("other"),
 }
 <span class="boring">}</span></code></pre>
-<p>(Bonus: the compiler emits a <em>warning</em> here too — what is it, and why?)</p>
+<p>The compiler also emits a <em>warning</em> here — predict what it is and why it appears.</p>
 </li>
 <li>
-<p>(★) Write <code>fn sum_tree(t: &amp;Tree) -&gt; i32</code> for <code>enum Tree { Leaf(i32), Node(Box&lt;Tree&gt;, Box&lt;Tree&gt;) }</code>. Do it by matching on <code>&amp;t</code>. Then try writing it by matching on <code>t</code> by value and explain the exact borrow-checker error you get, in terms of moving out of a shared reference.</p>
+<p><strong>Design decision.</strong> You’re handling an <code>Option&lt;Config&gt;</code> in three different functions: (a) one that should fall back to a default if it’s <code>None</code>, (b) one that should bail out early and return an error if it’s <code>None</code>, and (c) one that needs to read a field whether or not it’s present but must not consume the <code>Option</code>. For each, choose between <code>match</code>, <code>if let ... else</code>, <code>let ... else</code>, and matching on <code>&amp;opt</code> — and say in one sentence why that form fits best.</p>
 </li>
 <li>
-<p>(★) Predict <code>size_of</code> for each, then verify with a program: <code>Option&lt;i32&gt;</code>, <code>Option&lt;&amp;i32&gt;</code>, <code>Option&lt;Box&lt;i32&gt;&gt;</code>, <code>Option&lt;Option&lt;&amp;i32&gt;&gt;</code>, and <code>Option&lt;bool&gt;</code>. Explain <em>each</em> result in terms of niche optimisation — in particular, why <code>Option&lt;Option&lt;&amp;i32&gt;&gt;</code> does <strong>not</strong> stay pointer-sized but <code>Option&lt;&amp;i32&gt;</code> does.</p>
-</li>
-<li>
-<p>Refactor a function written as a deeply nested <code>if let { if let { ... } }</code> staircase (invent one that parses two <code>Option&lt;&amp;str&gt;</code> fields and validates them) into a flat sequence of <code>let ... else</code> guard clauses. State precisely what each <code>else</code> block must do for the code to compile.</p>
+<p>(★) <strong>Predict the sizes.</strong> Predict <code>size_of</code> for each, then verify with a program: <code>Option&lt;i32&gt;</code>, <code>Option&lt;&amp;i32&gt;</code>, <code>Option&lt;Box&lt;i32&gt;&gt;</code>, <code>Option&lt;Option&lt;&amp;i32&gt;&gt;</code>, and <code>Option&lt;bool&gt;</code>. Explain <em>each</em> result in terms of niche optimisation — in particular, why <code>Option&lt;Option&lt;&amp;i32&gt;&gt;</code> does <strong>not</strong> stay pointer-sized even though <code>Option&lt;&amp;i32&gt;</code> does. (Hint: once the inner <code>Option</code> has claimed the null niche, what is left for the outer one to use?)</p>
 </li>
 </ol>
 
@@ -542,22 +552,6 @@ match code {
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

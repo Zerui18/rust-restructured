@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -191,10 +191,10 @@
 <p>The difference is <strong>cardinality of implementations</strong>. A generic trait <code>Iterator&lt;Item&gt;</code> could be implemented <em>many times</em> for one type — <code>impl Iterator&lt;u32&gt; for Counter</code> and <code>impl Iterator&lt;String&gt; for Counter</code> would coexist. The associated-type form pins it to <em>exactly one</em>: there is one <code>impl Iterator for Counter</code>, so <code>Counter</code>’s <code>Item</code> is determined, full stop. That uniqueness is what lets you write <code>counter.next()</code> with no turbofish — the compiler does not need you to disambiguate which iterator you meant, because there is only one.</p>
 <p>The rule of thumb: <strong>associated type when the implementor determines the type as a function of <code>Self</code>; generic parameter when the caller chooses it.</strong> <code>Iterator::Item</code> is fixed by the iterator. <code>Add&lt;Rhs&gt;</code> (below) is parameterised because you genuinely want <code>f32 + f32</code> <em>and</em> <code>f32 + &amp;f32</code>.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is the input/output type distinction from Haskell type classes. A generic trait parameter is an <em>input</em> type — it participates in instance selection, so <code>Add&lt;i32&gt;</code> and <code>Add&lt;f64&gt;</code> are different instances. An associated type is an <em>output</em> type — functionally determined by the inputs, like a type family / functional dependency. OCaml has no direct analogue; the nearest is a module signature with an abstract <code>type t</code> that a functor fixes on application. The analogy breaks in that OCaml modules are explicitly applied, whereas Rust’s impl is selected implicitly by trait resolution.</p>
+<p><strong>🦀 From your toolbox →</strong> Think of a Java interface where the result type is <em>fixed per implementing class</em> rather than chosen by each caller. If you declared <code>interface Iterator&lt;Item&gt;</code>, the same class could implement both <code>Iterator&lt;String&gt;</code> and <code>Iterator&lt;Integer&gt;</code>, and at each call site you’d have to say which one you meant. Rust’s associated type behaves like an interface that builds the element type <em>into</em> the implementation — one class, one element type, no annotation needed at the call site. Swift’s <code>protocol Iterator { associatedtype Element; ... }</code> is the direct cousin: an <code>associatedtype</code> is exactly this “output type the conformer fills in.” OCaml’s nearest echo is a module signature with an abstract <code>type t</code> that each module fills in with a concrete type — but you wire OCaml modules together by hand, whereas Rust picks the impl for you during trait resolution, so the analogy stops there.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> An associated type is a type-level function <code>Self ↦ Self::Item</code>, defined by the impl. Trait coherence (the orphan rule plus the one-impl restriction) is exactly the side-condition that makes this a <em>function</em> and not a relation — without it, <code>Self::Item</code> would not be well-defined, and type inference would lose the principal-type property.</p>
+<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> The intuition worth keeping: an associated type is a <em>type-level lookup</em> — given the implementor, the compiler reads off one fixed answer for <code>Self::Item</code>. The rule that there is only ever one <code>impl Iterator for Counter</code> (coherence) is what makes that lookup yield a single answer instead of several, which is precisely why <code>counter.next()</code> needs no hint about which iterator you meant.</p>
 </blockquote>
 <h3 id="associated-constants"><a class="header" href="#associated-constants">Associated constants</a></h3>
 <p>The same idea extends to constants. A trait may declare a <code>const</code> that each impl supplies, available as <code>Self::NAME</code>:</p>
@@ -248,7 +248,16 @@ impl Add for Vec2 {            // Rhs defaults to Vec2
 <p>Both impls coexist because <code>Add&lt;Vec2&gt;</code> and <code>Add&lt;f64&gt;</code> are different traits as far as coherence is concerned — the generic parameter is part of the trait’s identity.</p>
 <p>Rust will not let you invent new operator glyphs (no <code>**</code> for power), and you cannot overload <code>&amp;&amp;</code>, <code>||</code>, or <code>?</code>. The overloadable set is fixed: the traits in <code>std::ops</code> (<code>Add</code>, <code>Sub</code>, <code>Mul</code>, <code>Index</code>, <code>Deref</code>, <code>Neg</code>, <code>AddAssign</code>, …).</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> C++ operator overloading is freeform — any <code>operator+</code> member or free function, with ad-hoc overload resolution. Rust routes everything through a <em>named trait</em>, which means (a) the overload set is closed and discoverable, and (b) generic code can bound on <code>T: Add&lt;Output = T&gt;</code> and rely on <code>+</code> working. The cost is rigidity: no overloading <code>&lt;&lt;</code> to mean “stream insert”, because <code>Shl</code> means shift and that is the only meaning.</p>
+<p><strong>🦀 From your toolbox →</strong> Java refuses operator overloading entirely (<code>+</code> works on numbers and <code>String</code>, end of story); Swift lets you declare <code>static func + (lhs:rhs:)</code> on a type and even define brand-new operators; Python routes <code>+</code> through the dunder method <code>__add__</code>. Rust sits closest to Python’s model but stricter: every operator maps to <em>one named trait</em> (<code>+</code> is always <code>Add::add</code>), the set is closed, and you cannot repurpose a glyph for an unrelated meaning. The payoff over Python: generic code can write <code>T: Add&lt;Output = T&gt;</code> and statically rely on <code>+</code> existing, with no runtime attribute lookup. The cost over Swift: you can’t invent <code>**</code> or give <code>&lt;&lt;</code> a new “stream insert” meaning — <code>Shl</code> means shift, and that is the only meaning it will ever have.</p>
+</blockquote>
+<blockquote>
+<p><strong>🔧 In practice →</strong> you’re writing a small 2D-physics or graphics routine and you want positions and velocities to add and scale the way the math reads. Implementing <code>Add</code> and <code>Mul&lt;f64&gt;</code> on a <code>Vec2</code> lets you write the update step as it appears on the whiteboard:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// pos and vel are Vec2; dt is an f64 timestep
+let next_pos = pos + vel * dt;   // Mul&lt;f64&gt; then Add — reads like the equation
+<span class="boring">}</span></code></pre>
+<p>Without the overloads you’d be spelling out <code>Vec2 { x: pos.x + vel.x * dt, y: ... }</code> at every call site, which is where transcription bugs hide. Reach for operator overloading when a type is genuinely number-like (vectors, money, matrices, durations) — not to be clever, but so the arithmetic reads like the domain.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>a + b</code> is sugar; rustc lowers it to the trait-method call and monomorphises. For a <code>Copy</code> <code>Vec2</code>, the two <code>f64</code> adds inline to scalar FP instructions with no struct ever materialised on the stack in optimised builds. Operator overloading carries zero dispatch cost — it is the same machinery as any other generic trait call.</p>
@@ -300,7 +309,7 @@ trait Framed: Display {
 <span class="boring">}</span></code></pre>
 <p><code>Framed: Display</code> means every <code>Framed</code> type is also <code>Display</code>, so inside <code>framed</code> you may call <code>Display</code>’s methods (<code>to_string</code>). Try to <code>impl Framed for Point</code> without a <code>Display</code> impl and you get <code>error[E0277]: Point doesn't implement std::fmt::Display</code>, with a note pointing at the <code>required by a bound in Framed</code>. Supertraits are not inheritance — there is no subtyping, no <code>is-a</code> — they are a <em>precondition</em> on the impl, exactly a trait bound that happens to live in the trait header rather than on a function.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> Looks like Java <code>interface Framed extends Display</code>, and the surface effect (a <code>Framed</code> is usable where <code>Display</code> is wanted) matches. But there is no class hierarchy and no dynamic upcast: a <code>Box&lt;dyn Framed&gt;</code> does not silently coerce to <code>Box&lt;dyn Display&gt;</code> (trait-object upcasting only stabilised recently and must be spelled out). The relationship is a static obligation discharged at impl time, not a runtime type relation.</p>
+<p><strong>🦀 From your toolbox →</strong> Surface-wise this reads like Java’s <code>interface Framed extends Display</code> or Swift’s <code>protocol Framed: CustomStringConvertible</code> — and the visible effect matches: a <code>Framed</code> value can be used where a <code>Display</code> value is wanted, and the default method may call <code>Display</code>’s methods. The difference is that there is no class hierarchy and no automatic upcast. A <code>Box&lt;dyn Framed&gt;</code> does not silently become a <code>Box&lt;dyn Display&gt;</code> (trait-object upcasting only stabilised recently and must be written out), unlike a Java reference that flows freely up the inheritance chain. The relationship is a static obligation discharged when you write the impl, not a runtime type relation you can lean on for polymorphism.</p>
 </blockquote>
 <h2 id="the-newtype-pattern-a-tuple-struct-with-one-field"><a class="header" href="#the-newtype-pattern-a-tuple-struct-with-one-field">The newtype pattern: a tuple struct with one field</a></h2>
 <p>Wrap an existing type in a single-field tuple struct and you get a brand-new, distinct type at zero runtime cost. This one pattern solves three different problems.</p>
@@ -333,10 +342,24 @@ fn validate(raw: String) -&gt; Option&lt;Validated&gt; {
 <p>If the inner field is private (in its own module), the <em>only</em> way to obtain a <code>Validated</code> is through <code>validate</code>. Any function taking <code>Validated</code> now has a static proof the string was checked — a poor-man’s refinement type.</p>
 <p><strong>(c) Hide the implementation.</strong> A newtype exposes whatever public API you give it and nothing else. Wrap a <code>HashMap&lt;u64, String&gt;</code> as <code>struct Registry(HashMap&lt;u64, String&gt;)</code>, expose <code>insert(&amp;mut self, name: &amp;str)</code>, and callers cannot depend on the fact that you used a hashmap — you can swap it for a <code>BTreeMap</code> without breaking them.</p>
 <blockquote>
+<p><strong>🔧 In practice →</strong> you’re building a web service and several different IDs flow through it — user IDs, order IDs, session tokens — and they’re all really just <code>u64</code> or <code>String</code> underneath. Bare aliases let you accidentally pass an order ID where a user ID was expected and the compiler stays silent. Newtypes close that hole:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct UserId(u64);
+struct OrderId(u64);
+
+fn cancel_order(id: OrderId) { /* ... */ }
+
+let u = UserId(42);
+// cancel_order(u);          // compile error: expected OrderId, found UserId
+<span class="boring">}</span></code></pre>
+<p>The same move guards a validated request body (<code>struct Email(String)</code> you can only build via a parser) or a sanitized SQL fragment. You pay nothing at runtime — the wrapper is erased — and you buy a class of mix-up bugs that the compiler now rejects before the code ever runs.</p>
+</blockquote>
+<blockquote>
 <p><strong>⚙️ Under the hood →</strong> A single-field tuple struct has <em>identical layout</em> to its field; the wrapper is erased. <code>Meters(3.0)</code> is one <code>f64</code> in a register. This is why the pattern is free — newtypes are a compile-time fiction. If you want the wrapper to forward the inner type’s methods, implement <code>Deref</code> (<a href="15-smart-pointers.html">smart pointers</a>); if you want only a subset, write just those.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics.</em> This is nominal typing deployed deliberately on top of a structurally-identical representation — the static enforcement of an abstraction boundary you proved sound when you studied data abstraction and representation independence. The <code>Validated</code> newtype is a constructive existential: holding one is evidence the invariant held at construction.</p>
+<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> The plain idea: you are deliberately drawing an abstraction boundary on top of a representation that is byte-for-byte identical, and asking the type checker to police it. Because the only way to make a <code>Validated</code> is to go through <code>validate</code>, holding one is itself evidence that the check ran at construction time — the type <em>is</em> the proof, and nothing downstream has to re-verify it.</p>
 </blockquote>
 <h2 id="type-aliases-vs-newtypes-same-bits-opposite-meaning"><a class="header" href="#type-aliases-vs-newtypes-same-bits-opposite-meaning">Type aliases vs newtypes: same bits, opposite meaning</a></h2>
 <p>A <code>type</code> alias is <em>not</em> a new type — it is a synonym, fully transparent to the type checker.</p>
@@ -369,9 +392,9 @@ let t: f64 = d;          // fine — Metres IS f64
     Err(_) =&gt; continue,         // : !  →  coerces to u32
 };
 <span class="boring">}</span></code></pre>
-<p>Both arms must agree on a type. The <code>Ok</code> arm is <code>u32</code>; the <code>Err</code> arm is <code>!</code>, which the unifier happily narrows to <code>u32</code> because there is no value of <code>!</code> that could violate it. Same mechanism in <code>Option::unwrap</code>: the <code>Some(v) =&gt; v</code> arm is <code>T</code>, the <code>None =&gt; panic!(...)</code> arm is <code>!</code>, the whole <code>match</code> is <code>T</code>. The expression “returns” <code>T</code> precisely because the panic arm provably contributes no value.</p>
+<p>Both arms must agree on a type. The <code>Ok</code> arm is <code>u32</code>; the <code>Err</code> arm is <code>!</code>, which the compiler happily treats as <code>u32</code> because there is no value of <code>!</code> that could ever flow out and violate that. Same mechanism in <code>Option::unwrap</code>: the <code>Some(v) =&gt; v</code> arm is <code>T</code>, the <code>None =&gt; panic!(...)</code> arm is <code>!</code>, the whole <code>match</code> is <code>T</code>. The expression “returns” <code>T</code> precisely because the panic arm provably contributes no value.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Logic and Proof / Semantics.</em> Under Curry–Howard, <code>!</code> is the type of <em>false</em> (⊥), the empty sum. <code>! → T</code> for any <code>T</code> is <strong>ex falso quodlibet</strong> — from a proof of false, anything follows. A diverging function is an inhabitant of <code>⊥</code>’s eliminator: it discharges the obligation to produce a <code>T</code> by demonstrating control never reaches a return. This is also why <code>!</code> is a subtype of every type in the coercion lattice: the empty set is a subset of everything.</p>
+<p><strong>🦀 From your toolbox →</strong> In Java, Swift, and Python the closest thing you have <em>seen</em> is a method whose body always throws or calls <code>System.exit</code> / <code>fatalError()</code> / <code>sys.exit()</code> — control leaves and never reaches the next statement. The languages mostly don’t give you a <em>type</em> for “this never returns” (Swift’s <code>Never</code> is the exception, and <code>!</code> is its direct twin: a function returning <code>Never</code> is one that always traps or loops forever). What Rust adds on top is that this empty type slots cleanly into any other type, so a <code>match</code> arm that diverges can sit next to one producing a <code>u32</code> and the whole expression is still a <code>u32</code>. You can read <code>!</code> as “this branch can’t actually hand you a value, so trust the other branch for the type.”</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>!</code> carries no data, so a value of type <code>!</code> occupies zero bytes and the codegen for a diverging arm is just the unconditional jump/trap — there is no “convert <code>!</code> to <code>u32</code>” instruction because control never arrives at the join point. On stable Rust <code>!</code> is not yet nameable in arbitrary positions (the <code>never_type</code> feature), but it is fully load-bearing in inference, which is all the above relies on.</p>
@@ -402,10 +425,10 @@ announce(&amp;42);                      // T = i32, sized, also fine
 <span class="boring">}</span></code></pre>
 <p><code>?Sized</code> is the <em>only</em> <code>?Trait</code> relaxation in the language — it exists solely because <code>Sized</code> is the one bound applied by default.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> A fat pointer is what C++ programmers reconstruct by hand as <code>{T* ptr; size_t len}</code> for a span, or what a vtable-carrying pointer is under the hood for virtual dispatch. Rust makes both first-class and type-safe: <code>&amp;[T]</code> <em>is</em> the (ptr,len) pair, <code>&amp;dyn Trait</code> <em>is</em> the (ptr,vtable) pair, and the compiler tracks which kind of metadata each DST needs. The analogy to a C++ reference breaks down because a C++ <code>T&amp;</code> is always thin — there is no language-level notion of an unsized referent.</p>
+<p><strong>🦀 From your toolbox →</strong> In Java, Swift, and Python you never think about this because objects always live behind a reference and the runtime tracks their layout; the “pointer” is implicit and uniform. The closest hands-on touch is C: if you want to hand around a chunk of bytes whose length isn’t fixed, you carry a pointer <em>plus</em> a separate length (<code>{char* ptr; size_t len}</code>) by hand, and it’s on you to keep them in sync. A Rust <code>&amp;[T]</code> <em>is</em> exactly that pair, except the compiler bundles and tracks the length for you so you can’t desync them or read past the end. <code>&amp;dyn Trait</code> is the same trick with a method-table pointer instead of a length. The bridge from a plain C pointer breaks down because a C pointer is always just an address — there’s no language-level idea of “this pointee has no fixed size.”</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Computer Architecture &amp; OS.</em> <code>Sized</code> is the type-system surface of “how many bytes does this occupy on the stack frame.” A DST has no answer until runtime, so it cannot be a stack local; the pointer-plus-metadata representation is exactly the indirection you would hand-code to store variable-length data, lifted into the type checker so misuse is a compile error rather than a buffer overrun.</p>
+<p><strong>🎓 Tripos link →</strong> <em>Operating Systems / Computer Architecture.</em> <code>Sized</code> is the type-system shadow of a very concrete question from those courses: how many bytes does this value take in a stack frame? A <code>str</code> or <code>[T]</code> has no fixed answer until runtime, so it cannot be a plain stack local — you store it elsewhere and keep a pointer-plus-length to it, exactly the layout you’d hand-roll for variable-length data. Rust lifts that bookkeeping into the type checker, so getting it wrong is a compile error rather than a read off the end of a buffer.</p>
 </blockquote>
 <h2 id="function-pointers-vs-closures"><a class="header" href="#function-pointers-vs-closures">Function pointers vs closures</a></h2>
 <p>You can pass a <em>named function</em> where a value is expected; it coerces to the type <code>fn(...) -&gt; ...</code> — the <strong>function pointer</strong> (lowercase <code>fn</code>, distinct from the <code>Fn</code> closure traits).</p>
@@ -444,6 +467,18 @@ fn adder_boxed(n: i32) -&gt; Box&lt;dyn Fn(i32) -&gt; i32&gt; {   // dynamic: he
 // let v = vec![adder(1), adder_with_other_body(2)];
 <span class="boring">}</span></code></pre>
 <p>When you need a <em>homogeneous</em> collection of differently-bodied closures sharing a signature, erase to a trait object — <code>Box&lt;dyn Fn(i32) -&gt; i32&gt;</code> — which gives every element the same type at the cost of one heap box and a vtable hop.</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> you’re building a tiny command router or middleware stack: a <code>HashMap</code> from a command name to “the thing that handles it,” where each handler is a different closure capturing different state. They can’t share an <code>impl Fn</code> type (each is distinct), so you box them to a common trait-object type:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::collections::HashMap;
+let mut routes: HashMap&lt;&amp;str, Box&lt;dyn Fn(&amp;str) -&gt; String&gt;&gt; = HashMap::new();
+let prefix = String::from("hello, ");
+routes.insert("greet", Box::new(move |arg| format!("{prefix}{arg}")));
+routes.insert("shout", Box::new(|arg| arg.to_uppercase()));
+<span class="boring">}</span></code></pre>
+<p>Now every value in the map has the <em>same</em> static type, so they coexist in one collection. You accept one heap allocation and one indirect call per dispatch — the price of homogeneity. Use <code>impl Fn</code> when you return <em>one</em> closure from a function; reach for <code>Box&lt;dyn Fn&gt;</code> the moment you need several differently-bodied ones side by side.</p>
+</blockquote>
 <h2 id="a-look-further-const-generics-phantomdata-gats"><a class="header" href="#a-look-further-const-generics-phantomdata-gats">A look further: const generics, <code>PhantomData</code>, GATs</a></h2>
 <p><strong>Const generics</strong> let a type be generic over a <em>value</em>, most often an array length. This is what makes <code>[T; N]</code> uniformly usable:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -456,7 +491,7 @@ impl&lt;const N: usize&gt; Ring&lt;N&gt; {
 let r = Ring::&lt;8&gt; { buf: [0; 8], head: 0 };
 <span class="boring">}</span></code></pre>
 <p><code>N</code> is monomorphised exactly like a type parameter: <code>Ring&lt;8&gt;</code> and <code>Ring&lt;16&gt;</code> are separate types with separately-stamped code. This finally lets you write one <code>impl</code> covering arrays of every length, instead of the macro-generated per-size impls that predated stable const generics.</p>
-<p><strong><code>PhantomData&lt;T&gt;</code></strong> is a zero-sized marker that makes a type <em>act</em> as though it owns or borrows a <code>T</code> without storing one. You need it when a type parameter appears in a struct’s <em>logic</em> but not its fields — to drive variance, drop-check, and the <code>Send</code>/<code>Sync</code> auto-trait analysis correctly:</p>
+<p><strong><code>PhantomData&lt;T&gt;</code></strong> is a zero-sized marker that makes a type <em>act</em> as though it owns or borrows a <code>T</code> without storing one. You need it when a type parameter appears in a struct’s <em>logic</em> but not its fields — to keep the compiler’s ownership, borrow, and <code>Send</code>/<code>Sync</code> analysis honest:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::marker::PhantomData;
@@ -471,34 +506,34 @@ struct Id&lt;T&gt; { raw: u64, _marker: PhantomData&lt;T&gt; }   // an Id&lt;Use
     fn get&lt;'a&gt;(&amp;'a self) -&gt; Self::Item&lt;'a&gt;;
 }
 <span class="boring">}</span></code></pre>
-<p>GATs were stabilised relatively late because the borrow-checking and well-formedness rules around a lifetime-parameterised type member are subtle (note the <code>where Self: 'a</code> obligation, which says the borrow cannot outlive <code>Self</code>). You will rarely <em>write</em> one, but you will see them in iterator and async-trait libraries. The advanced corners of this — variance, drop-check, the soundness conditions PhantomData feeds — live in <a href="16-unsafe-and-ffi.html">unsafe Rust</a>.</p>
+<p>GATs were stabilised relatively late because the borrow-checking and well-formedness rules around a lifetime-parameterised type member are subtle (note the <code>where Self: 'a</code> obligation, which says the borrow cannot outlive <code>Self</code>). You will rarely <em>write</em> one, but you will see them in iterator and async-trait libraries. The advanced corners of this — how <code>PhantomData</code> feeds the ownership and soundness analysis — live in <a href="16-unsafe-and-ffi.html">unsafe Rust</a>.</p>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
 <li><strong>Associated type vs generic parameter</strong>: associated type when the <em>implementor</em> determines it (one impl, no annotation — <code>Iterator::Item</code>); generic parameter when the <em>caller</em> varies it (many impls — <code>Add&lt;Rhs&gt;</code>). Default type params (<code>Rhs = Self</code>) make the common case annotation-free.</li>
 <li><strong>Newtype</strong> = single-field tuple struct, zero runtime cost: it defeats the orphan rule, encodes units/invariants/typestate, and hides representation. A <code>type</code> alias does <em>none</em> of this — it is a transparent synonym for shortening verbose types. Choose by whether you want the compiler to forbid mix-ups.</li>
-<li><strong><code>!</code></strong> is the empty type; it coerces into any type, which is <em>why</em> <code>match</code> arms ending in <code>panic!</code>/<code>continue</code>/<code>return</code> type-check (Curry–Howard: ⊥ ⊢ anything).</li>
+<li><strong><code>!</code></strong> is the empty type; it coerces into any type, which is <em>why</em> <code>match</code> arms ending in <code>panic!</code>/<code>continue</code>/<code>return</code> type-check (a branch that can never produce a value can’t disagree with the one that does).</li>
 <li><strong>DSTs</strong> (<code>str</code>, <code>[T]</code>, <code>dyn Trait</code>) have no compile-time size, so they live only behind <strong>fat pointers</strong> carrying length or a vtable. <code>Sized</code> is an implicit bound on every generic; <code>?Sized</code> (the only <code>?Trait</code> form) opts out, forcing a <code>&amp;T</code> receiver.</li>
 <li><strong><code>fn</code> pointers</strong> are thin, <code>Copy</code>, FFI-safe, and implement all <code>Fn*</code> traits; closures with captures do not coerce to <code>fn</code>. Return closures with <code>impl Fn</code> (opaque, free) unless you need heterogeneous ones in one collection, then <code>Box&lt;dyn Fn&gt;</code>.</li>
 </ul>
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Define <code>trait Producer { type Output; fn make(&amp;self) -&gt; Self::Output; }</code> and implement it twice for one struct returning different <code>Output</code> types. Read the error, then explain in one sentence why the associated-type design forbids what a generic <code>Producer&lt;T&gt;</code> would have allowed.</p>
+<p>You have <code>fn parse_pairs&lt;I: Iterator&lt;Item = (String, i32)&gt;&gt;(it: I)</code>. A colleague proposes redesigning <code>Iterator</code> so <code>Item</code> is a generic parameter — <code>trait Iterator&lt;Item&gt;</code> — arguing it’s “more flexible.” Sketch the call site that would now be ambiguous (hint: <code>nums.next()</code> when <code>nums</code> could implement <code>Iterator&lt;i32&gt;</code> <em>and</em> <code>Iterator&lt;String&gt;</code>), and say in one sentence what extra annotation the caller would suddenly need everywhere.</p>
 </li>
 <li>
-<p>Implement <code>std::ops::Mul&lt;f64&gt; for Vec2</code> (scalar scaling) <em>and</em> <code>Mul&lt;Vec2&gt; for Vec2</code> (component-wise). Confirm both <code>v * 2.0</code> and <code>v * w</code> compile. Then try adding a <em>second</em> <code>impl Mul&lt;f64&gt; for Vec2</code> and identify the coherence error by code.</p>
+<p>You’re modelling money and want <code>Cents + Cents</code> to work but <code>Cents + Dollars</code> to be a compile error unless you opt in. Given <code>struct Cents(i64)</code> and <code>struct Dollars(i64)</code>, decide: do you implement <code>Add</code> with the default <code>Rhs</code>, or <code>Add&lt;Dollars&gt;</code>, or both? Justify which combination gives you exactly “same-unit addition is allowed, cross-unit addition is rejected by default.”</p>
 </li>
 <li>
-<p>Write <code>struct Email(String)</code> with a private field and a <code>fn parse(s: &amp;str) -&gt; Option&lt;Email&gt;</code> constructor in its own module. From <code>main</code>, attempt <code>Email("x".into())</code> directly. Which error fires, and what does that prove about every value of type <code>Email</code> reaching the rest of your program?</p>
+<p>Predict which of these compile, and explain each in one line: (a) <code>let x: u8 = if flag { 1 } else { return; };</code> inside a <code>fn -&gt; ()</code>; (b) the same but inside a <code>fn -&gt; u8</code>; (c) <code>let x: u8 = if flag { 1 } else { 256 };</code>. Tie your answers to how the <code>else</code> arm’s type relates to <code>u8</code>.</p>
 </li>
 <li>
-<p>The expression <code>let x: i32 = if cond { 5 } else { panic!() };</code> compiles. Replace <code>panic!()</code> with <code>0i64</code> and explain the new error in terms of arm unification and why <code>!</code> succeeded where <code>i64</code> failed.</p>
+<p>You have an API <code>fn log_all&lt;T: std::fmt::Display&gt;(items: &amp;[T])</code>. A user wants to call it with a <code>&amp;[&amp;str]</code> and separately wants a sibling function that accepts a single <code>&amp;dyn Display</code>. For each, decide whether you need to add <code>?Sized</code> and to which type parameter — and name the specific type in play that is not <code>Sized</code>.</p>
 </li>
 <li>
-<p>(★) Write <code>fn longest&lt;T: ?Sized + AsRef&lt;str&gt;&gt;(a: &amp;T, b: &amp;T) -&gt; &amp;T</code>. Call it once with <code>&amp;str</code> arguments and once with <code>&amp;String</code>. Then remove <code>?Sized</code> and explain precisely which call breaks and why the implicit <code>Sized</code> bound was the culprit (name the type that is not <code>Sized</code>).</p>
+<p>Compare two designs for a plugin registry: <code>Vec&lt;fn(&amp;str) -&gt; String&gt;</code> versus <code>Vec&lt;Box&lt;dyn Fn(&amp;str) -&gt; String&gt;&gt;</code>. Give one concrete handler each design accepts that the other rejects, and state when you’d pick the <code>fn</code>-pointer version over the boxed-closure version.</p>
 </li>
 <li>
-<p>(★) Write two functions both returning <code>impl Fn(u32) -&gt; u32</code> with different bodies, then try to put their results in one <code>Vec</code>. Read <code>error[E0308]</code> about distinct opaque types. Fix it with <code>Box&lt;dyn Fn&gt;</code> and explain what changed about the elements’ static type — and what runtime cost you just accepted.</p>
+<p>(★) You write <code>fn make_step(scale: f64) -&gt; impl Fn(f64) -&gt; f64 { move |x| x * scale }</code> and it compiles. Then you add a branch — <code>if scale &gt; 0.0 { move |x| x * scale } else { move |x| -x }</code> — and it stops compiling. Explain the error in terms of opaque types, then give the minimal change to the return type that fixes it and the runtime cost that change introduces.</p>
 </li>
 </ol>
 
@@ -537,22 +572,6 @@ struct Id&lt;T&gt; { raw: u64, _marker: PhantomData&lt;T&gt; }   // an Id&lt;Use
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

@@ -2,23 +2,23 @@
 
 This is the chapter the rest of the book pivots on. Ownership is the single mechanism by which Rust statically guarantees memory safety and freedom from data races without a garbage collector and without manual `free`. Everything later — [references](03-references-and-borrowing.md), [lifetimes](04-lifetimes.md), [smart pointers](15-smart-pointers.md), [fearless concurrency](13-fearless-concurrency.md) — is a refinement of, or an escape valve around, the rules introduced here.
 
-You already know two extreme answers to the question *"when does this allocation get freed?"*. The garbage-collected answer (Java, OCaml, Python, JS): a runtime traces reachability and frees whenever it likes, at a cost in latency and determinism. The manual answer (C): you call `free` yourself, and the compiler does not check that you do it exactly once at the right moment. Rust takes a third position: the *type system* tracks who is responsible for each value, and the compiler inserts the deallocation for you at a statically known point. No tracing, no manual `free`, no leaks-by-default, and — crucially — it is all proven at compile time, so there is zero runtime overhead.
+You already know two extreme answers to the question *"when does this allocation get freed?"*. The garbage-collected answer (Java, Python, JS): a runtime traces reachability and frees whenever it likes, at a cost in latency and determinism. The reference-counted answer (Swift's ARC, CPython's refcounting): the runtime keeps a count and frees when it hits zero, paying for the counting and the bookkeeping at run time. The manual answer (a C handle you must `free` by hand): you call `free` yourself, and the compiler does not check that you do it exactly once at the right moment. Rust takes a different position: the *type system* tracks who is responsible for each value, and the compiler inserts the deallocation for you at a statically known point. No tracing, no reference counts in the common case, no manual `free`, no leaks-by-default, and — crucially — it is all decided at compile time, so there is zero runtime overhead.
 
-## Ownership is an affine type discipline
+## Ownership: a value you can use at most once
 
-> **🎓 Tripos link →** In *Semantics of Programming Languages* and *Logic and Proof* you met linear logic, where a hypothesis must be used *exactly once*. Rust's ownership is the slightly weaker **affine** discipline: a value may be used *at most once* (zero uses is fine — the value is just dropped unused). A binding to a non-`Copy` value is a resource; "using" it by move consumes it. Curry–Howard gives you the framing precisely: the type `String` is not a proposition you may reuse freely; it is a resource whose proof of ownership is spent when you pass it on. This is why `let s2 = s1;` invalidates `s1` — the resource has moved, and the affine logic forbids a second use of the spent hypothesis.
+> **🦀 From your toolbox →** Think about a Swift `class` instance under ARC, or a Python object: many variables can point at the same object, and the runtime counts how many before freeing. Rust flips this default on its head. For a value that owns a resource (like a `String`), there is at any moment exactly **one** binding responsible for it, and you can hand that responsibility on but never silently duplicate it. The closest everyday intuition: a value you can **use at most once** — once you pass it somewhere, it's "used up" and the original name no longer refers to anything live. Where the analogy *breaks down*: in Swift and Python you can freely make a second variable point at the same object and both stay valid; in Rust that second binding *takes over* and the first becomes unusable. Sharing in Rust is opt-in (you borrow, or you reach for `Rc`/`Arc`), not the default.
 
-The three rules, stated formally enough to reason with:
+The three rules, stated precisely enough to reason with:
 
 1. **Every value has exactly one owning binding.**
 2. **There is exactly one owner at a time** (ownership can transfer, but not duplicate, for non-`Copy` types).
 3. **When the owner goes out of scope, the value is *dropped*** — its destructor runs and its resources are released.
 
-Rule 3 is the deterministic-destruction rule, and it is the one your C++ instincts will recognise immediately.
+Rule 3 is the deterministic-destruction rule.
 
-## Scope-bound destruction is RAII without the footguns
+## Scope-bound destruction: cleanup runs automatically at end of scope
 
-> **🦀 From your toolbox →** This is C++ RAII. A `String` is morally a `std::string`: it owns a heap buffer, and when it leaves scope its destructor frees that buffer. Where the analogy *breaks*: in C++ you must hand-write the destructor, copy constructor, move constructor, and assignment operators (the "rule of five") to get this right, and a forgotten or wrong one is a silent leak or double-free. In Rust the compiler synthesises the drop *glue* for every type by recursively dropping its fields; you only write a destructor when you have something special to release. And there is no copy constructor at all — copying is never implicit for owning types (see moves, below).
+> **🦀 From your toolbox →** The mental model is closest to Python's `with`-block or Java's try-with-resources, except it's automatic and applies to *every* owning value, not just things you remember to wrap. A `String` owns a heap buffer; when it leaves scope, that buffer is freed for you — like a `__del__` or a `close()` that the language guarantees will fire, deterministically, at a point you can see in the source. The light C++ touch: it's the "a destructor runs at scope end" idea, but you almost never write the destructor yourself. Where the analogy *breaks down*: Python's `__del__` fires whenever the garbage collector gets around to it (and may never, on a reference cycle); Java finalizers are worse and effectively deprecated. Rust's drop point is fixed at compile time — the closing brace — so cleanup is both guaranteed and punctual.
 
 ```rust
 {
@@ -27,13 +27,13 @@ Rule 3 is the deterministic-destruction rule, and it is the one your C++ instinc
 }                                       // `}`: drop(buf) runs, heap memory freed
 ```
 
-The compiler does not insert a runtime check to decide whether to free. The closing brace is a *statically known* program point, so `rustc` emits the deallocation call right there, exactly once. This is the heart of "no overhead": the drop is as cheap as the `free` you would have written by hand in C, minus the bugs.
+The compiler does not insert a runtime check to decide whether to free. The closing brace is a *statically known* program point, so `rustc` emits the deallocation call right there, exactly once. This is the heart of "no overhead": the drop is as cheap as the `free` you would have written by hand in C, minus the bugs. Where Java would let the GC reclaim the memory at some unpredictable later moment, and Swift would decrement a reference count at run time, Rust has already decided at compile time exactly where the free happens.
 
 > **⚙️ Under the hood →** For a `String`, the compiler-generated drop calls the allocator's `dealloc` on the owned pointer. For a struct, drop glue runs any explicit `Drop::drop` first, then recursively drops each field. The compiler tracks, per code path, whether a value has been moved out; if a move *might* have happened on some paths but not others, it inserts a hidden boolean **drop flag** on the stack to decide at runtime whether to drop. Straight-line code with no conditional moves needs no flag — drop points are fully static.
 
 ## Stack and heap, and why Rust makes you care
 
-You know the mechanics from *Computer Architecture & OS*: the stack is a contiguous, LIFO region tied to call frames; the heap is a general allocator you request blocks from and must return. What is new is that Rust surfaces this distinction *in the type system*, because it determines move behaviour.
+You know the mechanics from *Operating Systems / Computer Architecture*: the stack is a contiguous, LIFO region tied to call frames; the heap is a general allocator you request blocks from and must return. What is new is that Rust surfaces this distinction *in the type system*, because it determines move behaviour.
 
 A value whose size is known at compile time and contains no owned resources — `i32`, `bool`, `char`, `f64`, a fixed array of such, a tuple of such — lives entirely on the stack (or in a register). Duplicating it is a `memcpy` of a fixed number of bytes; there is nothing to free and no aliasing hazard.
 
@@ -50,7 +50,7 @@ A `String` or a `Vec<T>` is different. The *handle* — three words: `(pointer, 
 
 `len` is the bytes currently used; `cap` is the bytes the allocator handed out. The handle is `Copy`-able bit-for-bit, but the *buffer* is not — and that asymmetry is what forces the move rule.
 
-> **🦀 From your toolbox →** This handle is exactly `std::vector`'s `{begin, end, end_of_storage}` or a `std::string`'s small layout, and the `(ptr, len, cap)` triple is the same idea as a Swift `Array`'s storage reference or an OCaml `Bytes.t` boxed behind a pointer. The difference is purely *who frees the buffer and when*, and Rust answers that with ownership rather than ARC (Swift) or the GC (OCaml/Java).
+> **🦀 From your toolbox →** This is exactly the shape of a Java `ArrayList` (a small object holding a reference to a backing array plus a `size`), a Swift `Array` (a struct holding a reference to heap storage plus a count), or a Python `list` (a header pointing at a growable array of element pointers). In all three the small front-object is cheap to copy around but the backing storage is shared or managed by the runtime. The difference is purely *who frees the buffer and when*: Java's GC, Swift's ARC, and Python's refcounting all decide at run time, whereas Rust answers it with ownership decided at compile time.
 
 ## Move semantics: assignment transfers the handle, then poisons the source
 
@@ -66,9 +66,17 @@ let s2 = s1;            // the handle is moved from s1 into s2
 
 There is no flag set at runtime, no nulling-out of `s1`. The *compiler* simply refuses to let you read `s1` again. The move is a "destructive memcpy of the handle": the bytes are copied, the source binding ceases to exist as far as the type checker is concerned, and there is no leftover moved-from object.
 
-> **🦀 From your toolbox →** This is the decisive break from C++. A C++ move (`std::string s2 = std::move(s1);`) runs a *move constructor* that leaves `s1` in a "valid but unspecified" state — you may still call methods on it, assign to it, and its destructor *will still run*. That residual moved-from state is a class of bugs (use-after-move that compiles cleanly and does something subtly wrong). Rust has no move constructor and no moved-from state: a moved-from binding is *gone*, and touching it is a **compile error**, not undefined behaviour. Consequently every Rust move is a trivial `memcpy` — the type author never writes move logic, and the compiler is free to elide the copy entirely.
+> **🦀 From your toolbox →** Contrast this with what you're used to. In Java or Python, `s2 = s1` makes `s2` a second reference to the *same* object, and both keep working — the runtime's GC/refcounting sorts out freeing later. In Swift the same is true for a class instance (ARC bumps the count) and for a value-type like `Array` you'd get copy-on-write semantics, but in every case the original variable stays usable. Rust deliberately does *not* leave you with two usable names for one resource: after `let s2 = s1;` the name `s1` is gone, and touching it is a **compile error**, not a silent shared reference. That's the price of having no runtime counting or tracing — there can only ever be one owner, so the compiler retires the old name.
 
 > **⚠️ Pitfall →** Reading a moved-from value gives `error[E0382]: borrow of moved value: 's1'`, with the note *"move occurs because 's1' has type 'String', which does not implement the 'Copy' trait"*. The compiler usually suggests `s1.clone()`. The right fix depends on intent: if you genuinely need two independent owners, clone; if you only needed to *read* `s1`, borrow it with `&s1` (see [References & Borrowing](03-references-and-borrowing.md)) and never move at all.
+
+> **🔧 In practice →** This shows up the first time you build any pipeline. Say you read a request body into a `String` and want to both log it and parse it:
+> ```rust
+> let body = read_body();          // String
+> log_request(body);               // moves body away...
+> let parsed = parse(body);        // ERROR: body was moved into log_request
+> ```
+> The compiler stops you before this becomes a bug. The fix you'll reach for 90% of the time is *don't move at all* — make `log_request(&body)` borrow, so `body` is still yours to `parse`. You only `clone()` when both callees genuinely need to *own* an independent copy (e.g. you hand one copy to a background thread and keep one locally). The error is Rust nudging you to decide: borrow, or pay for a copy on purpose.
 
 ### Assigning over a live binding drops the old value
 
@@ -106,11 +114,11 @@ The design principle is visibility: Rust *never* deep-copies your data implicitl
 
 > **⚙️ Under the hood →** `Copy` and `Clone` are a supertrait pair: `Copy: Clone`, so every `Copy` type is also `Clone`. `Copy` carries no method; it is a flag the compiler reads to decide whether a `let`/argument bind is a non-destructive copy or a destructive move. `Clone::clone(&self) -> Self` is an ordinary method call you can override. You typically write `#[derive(Clone, Copy)]`; the derive generates a field-wise clone and, for `Copy`, simply asserts every field is `Copy`.
 
-> **🦀 From your toolbox →** Map this onto C++: `Copy` is roughly a trivially-copyable type with an implicit copy constructor that is a `memcpy`; `Clone` is an explicit, user-defined copy you must *call by name*. The break: C++ copy constructors fire implicitly on every pass-by-value, which is why accidental deep copies are a classic C++ performance trap. Rust makes the expensive case syntactically loud (`clone()`) and the cheap case the only implicit one.
+> **🦀 From your toolbox →** This maps cleanly onto a distinction you already feel in Java and Swift. `Copy` is like Java's primitives (`int`, `double`) or Swift's small value-types: assigning them just duplicates the bits and both sides are independent and valid. `Clone` is like calling `.clone()` on a Java object or writing an explicit deep copy in Swift — it's a method you invoke *by name*, and it can do real work. The point Rust adds is that the expensive case is *never* implicit: there's no silent deep copy hiding behind an assignment, so a `.clone()` in the source is the only place a heap copy can happen, and you can see (and grep for) every one of them.
 
 ## `Copy` and `Drop` are mutually exclusive — and that is not arbitrary
 
-You cannot implement both `Copy` and `Drop` for the same type; the compiler rejects it. The reason follows directly from the affine model. `Copy` says "a bitwise duplicate is a complete, independent value." `Drop` says "this value owns something that needs cleanup." If a type were both, then copying it would produce two values, each of which would run its destructor — two cleanups for one logical resource, i.e. a double-free or double-close. So `Copy` is exactly the set of types for which "duplicate freely, never run special cleanup" is sound, and `Drop` is exactly the set for which it is not.
+You cannot implement both `Copy` and `Drop` for the same type; the compiler rejects it. The reason follows directly from the model. `Copy` says "a bitwise duplicate is a complete, independent value." `Drop` says "this value owns something that needs cleanup." If a type were both, then copying it would produce two values, each of which would run its destructor — two cleanups for one logical resource, i.e. a double-free or double-close. So `Copy` is exactly the set of types for which "duplicate freely, never run special cleanup" is sound, and `Drop` is exactly the set for which it is not.
 
 ## Ownership flows through function boundaries
 
@@ -169,7 +177,16 @@ fn main() {
 
 `Drop::drop` takes `&mut self`, not `self` — you are *finalising* the value in place, not consuming it (the value is already being destroyed; if `drop` took `self` by value it would need to drop *that*, recursing forever). `Drop` is in the prelude, so no import is needed.
 
-> **🎓 Tripos link →** This is exactly the resource-cleanup obligation that *Concurrent and Distributed Systems* drills into you for locks: every `acquire` needs a matching `release` on every path, including exceptional ones. Rust encodes the release as the `Drop` impl of a guard type ([smart pointers](15-smart-pointers.md) covers `MutexGuard`), so the lock is released the instant the guard leaves scope — no manual `unlock`, no path you forgot, no lock leak on early return.
+> **🔧 In practice →** `Drop` is how you make "this always gets cleaned up, on every exit path" a property of the *type* rather than something every caller has to remember. The canonical real-world case is a lock guard: you lock a `Mutex`, get back a guard, and the moment that guard leaves scope — whether you returned normally, hit an early `return`, or bailed out with `?` — the lock is released. You never write the unlock.
+> ```rust
+> fn transfer(accounts: &Mutex<Ledger>, from: u32, to: u32, amt: u64) -> Result<(), Error> {
+>     let mut ledger = accounts.lock().unwrap();   // guard acquired
+>     ledger.debit(from, amt)?;   // if this returns Err, `?` exits early...
+>     ledger.credit(to, amt)?;    // ...and the guard's Drop still unlocks the Mutex
+>     Ok(())
+> }   // guard drops here on the happy path
+> ```
+> This is the same trick behind temp-file cleanup, closing sockets, flushing buffered writers, and decrementing metrics counters. If you've ever leaked a lock in Java because an exception skipped your `finally`, this is the structural fix: cleanup is welded to scope exit and the compiler won't let you forget it. ([Smart pointers](15-smart-pointers.md) covers `MutexGuard` in detail.)
 
 ### Drop order is defined, deterministic, and worth memorising
 
@@ -216,28 +233,31 @@ Step back and the rules collapse into a single invariant the compiler is enforci
 - A moved-from binding must be unusable ⇒ otherwise two bindings could both try to free.
 - `Copy` is precisely the types where "duplicate, both valid" is sound (no owned resource) ⇒ those don't move.
 - `Drop` + `Copy` is unsound ⇒ they're mutually exclusive.
-- Drop runs exactly once at the owner's scope exit ⇒ deterministic RAII, no GC, no manual `free`.
+- Drop runs exactly once at the owner's scope exit ⇒ deterministic cleanup, no GC, no manual `free`.
 
-The cost is that you cannot freely share an owned value the way you would pass a Java object reference around. The escape from "move everything" — using a value without consuming it — is [borrowing](03-references-and-borrowing.md): take a `&T` or `&mut T`, which lends access for a bounded region without transferring ownership. That is the next chapter, and it is what makes the ownership model ergonomic rather than merely safe.
+The cost is that you cannot freely share an owned value the way you would pass a Java object reference or a Python object around. The escape from "move everything" — using a value without consuming it — is [borrowing](03-references-and-borrowing.md): take a `&T` or `&mut T`, which lends access for a bounded region without transferring ownership. That is the next chapter, and it is what makes the ownership model ergonomic rather than merely safe.
 
 ## Mental-model recap
 
-- Ownership is an **affine** discipline: each non-`Copy` value has one owner, may be moved (used) at most once, and is **dropped** deterministically when its owner leaves scope — RAII with compiler-synthesised, leak-free, zero-overhead destruction.
-- A move is a **destructive `memcpy` of the handle** that statically invalidates the source. Unlike C++, there is no move constructor and no valid moved-from state; use-after-move is a *compile* error (`E0382`), never UB.
+- Ownership means each non-`Copy` value has **one owner**, may be moved (used) **at most once**, and is **dropped** deterministically when its owner leaves scope — automatic, leak-free, zero-overhead cleanup at a compile-time-fixed point, unlike Java's GC, Swift's ARC, or Python's refcounting that all decide at run time.
+- A move is a **destructive `memcpy` of the handle** that statically invalidates the source. Unlike a Java/Python reference assignment, you are not left with two usable names for one resource; use-after-move is a *compile* error (`E0382`), never a silent shared alias or UB.
 - `Copy` (implicit, cheap, bitwise, source stays valid) is for stack-only resource-free types; `Clone` (explicit, named, possibly a heap allocation) is the only way to deep-copy. Implicit duplication is therefore always cheap.
 - `Copy` and `Drop` are mutually exclusive: a type with cleanup cannot be silently duplicated, or you'd double-free.
 - Drop order is defined: **variables reverse-of-declaration, struct fields forward-of-declaration**. You can't call `.drop()` (`E0040`); force early cleanup with `std::mem::drop(x)`, which works purely by *moving* `x` in.
 
 ## Exercises
 
-1. Write a function `fn first_word(s: String) -> usize` that returns the index of the first space (or the length if none). Call it, then try to print the original `String` afterwards. Read the `E0382` error carefully, then fix it *two* ways: (a) by cloning at the call site, (b) by changing the signature to borrow. Which is idiomatic and why?
+1. **Predict the error, then choose the fix.** You have `let cfg = load_config();` (a `String`), and you want to call `validate(cfg)` and then `apply(cfg)`, both of which currently take `String` by value. Before touching the code, state which call fails and the error code you'll see. Now you have three options: clone for the first call, change one signature to borrow, or change both to borrow. Which do you pick, and what would have to be true about `validate`/`apply` for cloning to be the *right* choice rather than a workaround?
 
-2. Declare four `Loud` values (the noisy-`Drop` struct from this chapter) in a single scope, two of them inside a nested `{ }` block. Predict the exact print order *before* compiling, then verify. Explain the order using the reverse-declaration and nested-scope rules.
+2. **Which of these compiles?** Without running them, decide for each whether it builds, and why:
+   (a) `let a = 5; let b = a; println!("{a} {b}");`
+   (b) `let a = String::from("hi"); let b = a; println!("{a} {b}");`
+   (c) `let a = (1_i32, 2_i32); let b = a; println!("{a:?} {b:?}");`
+   (d) `let a = (String::from("hi"), 2); let b = a; println!("{b:?}");` — and would adding `println!("{a:?}")` change the answer?
+   State the single rule that decides each case.
 
-3. Define `struct Pair { a: Loud, b: Loud }` where `Loud` has a noisy `Drop`, and give `Pair` itself a noisy `Drop` too. Predict and then verify the order of all three messages when a `Pair` leaves scope. (★) Now swap the declaration order of `a` and `b` and explain what changed and what didn't.
+3. **Predict the print order.** Declare four `Loud` values in one scope, with two of them inside a nested `{ }` block, then declare one more after the block closes. Write down the exact output *before* compiling, then verify. Explain the order using the reverse-declaration rule and what the nested scope's closing brace does.
 
-4. Try to put `#[derive(Copy, Clone)]` on a struct that contains a `String` field. Read the error, and explain in one sentence — in terms of ownership of the heap buffer — why the compiler is right to reject it.
+4. **Make a design decision.** You're writing a `Connection` type that holds an OS socket handle that must be closed exactly once. Should `Connection` be `Copy`, `Clone`, both, or neither — and should it implement `Drop`? Justify each choice in terms of "how many owners can be responsible for closing the socket," and explain why the compiler would reject one of the combinations outright.
 
-5. (★) Write a `Guard` struct holding a `&'static str` name with a noisy `Drop`. In `main`, create one, then use `std::mem::drop` to finalise it early, then attempt to use it again on the next line. Predict both the runtime output *and* the compile error you'll get from the post-drop use, and explain how the move rule guarantees the destructor runs exactly once.
-
-6. Given `let v = vec![String::from("x"), String::from("y")];`, write a `for` loop that moves each `String` out and passes it to a consuming function. Then try to use `v` after the loop. Explain why `into_iter()` is what makes the per-element move legal and why the binding `v` is unusable afterwards.
+5. (★) **Adapt the early-drop pattern.** Using a `Guard` struct that holds a `&'static str` name and prints in its `Drop`, you want the guard finalised *before* a long computation runs (imagine it holds a lock you want to release early). Write the few lines that achieve this with `std::mem::drop`, then predict: what is the runtime output order relative to a "computation done" print, and what error (and code) do you get if you reference the guard after the early drop? Explain how the move rule guarantees the destructor still runs exactly once and not twice.

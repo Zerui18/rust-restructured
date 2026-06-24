@@ -44,9 +44,9 @@ enum FetchLen<'a> {
 }
 ```
 
-Each `.await` is a possible suspension point. By liveness analysis across those points, the compiler computes exactly which locals are still live at each one and stores precisely those in the corresponding variant. This is a **continuation-passing-style transform**: it carves the linear body into segments delimited by `.await`, and the variant you are "in" *is* the saved continuation.
+Each `.await` is a possible suspension point. The compiler chops the linear body into segments delimited by `.await`, figures out exactly which local variables are still needed when execution is paused at each suspension point, and stores precisely those in the corresponding variant. The variant you are currently "in" *is* the saved progress: it records where you stopped and everything you need to pick up from there.
 
-> **🎓 Tripos link →** This is the CPS transformation from Compiler Construction, materialised as a data structure instead of a closure. Where a CPS compiler heap-allocates a closure capturing the live environment at each yield, rustc lays out a *flat enum* whose largest variant bounds the whole future's size — no per-suspension allocation. The liveness analysis deciding what each variant stores is the same dataflow analysis you saw for register allocation, run over `.await` boundaries instead of basic blocks.
+> **🎓 Tripos link →** From Compiler Construction: this body-chopping is a code transformation rustc applies, and deciding which locals each variant must store is the same "which variables are still live at this point?" dataflow analysis you saw used for register allocation — here run over `.await` boundaries instead of basic blocks. The payoff is that rustc lays out a *flat enum* whose largest variant bounds the whole future's size, so there is no separate allocation per suspension point.
 
 ### The `Future` trait
 
@@ -79,11 +79,21 @@ loop {
 
 The crucial line is `Pending => return Pending`. When an inner future isn't ready, control doesn't block — it returns all the way up through every enclosing future to the runtime, which is then free to poll a *different* task. That bubbling-up is the cooperative yield. Everything *between* two `.await` points runs straight through, synchronously.
 
-> **🦀 From your toolbox →** A `Future` is morally a reified continuation — like CPS-converting an OCaml function by hand, except the compiler does it and packs the environment into a struct. The `poll` signature `Poll<T>` from `&mut self` should also remind you of `Iterator::next(&mut self) -> Option<T>`: both pull-based, both driven by repeated calls, both threading state through `&mut self`. `for` desugars to `Iterator`; `.await`/`async` desugars to `Future`. The analogy breaks at *who drives*: you drive an iterator with a loop you wrote; a runtime drives a future, and only re-polls when told it *might* now progress (the waker, below) — it does not spin.
+> **🦀 From your toolbox →** The `poll` signature — `Poll<T>` produced from `&mut self`, driven by repeated calls — should remind you of `Iterator::next(&mut self) -> Option<T>` (Java's `Iterator`, Python's iterator protocol, Swift's `IteratorProtocol`): both pull-based, both advanced by calling them again, both threading state through `&mut self`. `for` desugars to `Iterator`; `.await`/`async` desugars to `Future`. The closest single-language analogue is a Swift or Python generator function: writing it linearly, but the compiler/runtime secretly turns the suspension points into resumable state. The analogy breaks at *who drives*: you drive an iterator with a loop you wrote; a runtime drives a future, and only re-polls when told it *might* now progress (the waker, below) — it does not spin.
+
+> **🔧 In practice →** You're writing a web request handler that must do two slow things — read the user's row from the database, then call a billing API — before it can reply. Written as a plain `async fn`, each `.await` is a place the handler can step aside so the same OS thread serves *other* in-flight requests while this one waits on the network:
+> ```rust
+> async fn handle(req: Request) -> Response {
+>     let user = db.load_user(req.user_id).await;   // step aside while DB answers
+>     let bill = billing.charge(&user).await;       // step aside while billing answers
+>     Response::ok(bill.receipt_id)
+> }
+> ```
+> With OS threads you'd dedicate one whole thread (and its stack) to each request, most of it spent blocked on I/O. Here one thread juggles thousands of half-finished handlers, each parked at whichever `.await` it's currently stuck on. This is the bread-and-butter shape of every async server you'll write.
 
 ### Futures are inert until polled — unlike JS Promises
 
-If you come from TypeScript, internalise this now. A JavaScript `Promise` is **eager**: calling an `async function` starts its body executing up to the first `await`, scheduling work on the event loop *whether or not anyone ever `.then`s it*. A Rust future is **lazy**: calling an `async fn` runs *zero* of its body, handing you an inert state machine in its `Start` state. Nothing happens until a runtime polls it — because you `.await`ed it, or handed it to the runtime to drive.
+A JavaScript `Promise` is **eager**: calling an `async function` starts its body executing up to the first `await`, scheduling work on the event loop *whether or not anyone ever `.then`s it*. A Rust future is **lazy**: calling an `async fn` runs *zero* of its body, handing you an inert state machine in its `Start` state. Nothing happens until a runtime polls it — because you `.await`ed it, or handed it to the runtime to drive. (If you've touched TypeScript, this is the one habit to unlearn first.)
 
 ```rust
 let fut = fetch_len("https://example.com"); // NOTHING has happened. No request sent.
@@ -91,7 +101,7 @@ let fut = fetch_len("https://example.com"); // NOTHING has happened. No request 
 let n = fut.await;                            // NOW it runs (when the surrounding task is polled).
 ```
 
-The compiler enforces awareness of this: an unused future raises a `#[must_use]` warning, because constructing a future and never awaiting it is almost always a bug — the dead giveaway of a TS habit applied to Rust.
+The compiler enforces awareness of this: an unused future raises a `#[must_use]` warning, because constructing a future and never awaiting it is almost always a bug.
 
 > **⚠️ Pitfall →** `warning: unused implementer of `Future` that must be used` — `note: futures do nothing unless you `.await` or poll them`. You wrote `something_async();` expecting a fire-and-forget side effect, as you would in JS. In Rust that line constructs a future and immediately drops it, doing nothing. The fix: `.await` it, or hand it to the runtime with `spawn` (below) if you genuinely want it to run independently.
 
@@ -164,6 +174,15 @@ async fn timeout<F: Future>(work: F, limit: Duration) -> Result<F::Output, Durat
 
 A timeout is *just composition*: two futures, first to finish wins. That is the payoff of futures being first-class values — `timeout`, `retry`, `throttle` are ordinary functions over futures, not built-in keywords.
 
+> **🔧 In practice →** You're calling a flaky third-party API and refuse to let one slow call hang a request handler forever. Because a future is just a value, you don't need a special "timeout API" — you race your real call against a timer and take whichever finishes first:
+> ```rust
+> match timeout(fetch_quote(&symbol), Duration::from_millis(500)).await {
+>     Ok(quote) => render(quote),
+>     Err(_)    => render_stale_cache(&symbol),   // the timer won the race
+> }
+> ```
+> If `fetch_quote` is still `Pending` when the 500 ms `sleep` resolves, `select!` returns the `Err` arm and *drops* the in-flight request future (which cancels it). The same `select!` building block gives you "first response from any of three replica servers" or "user pressed cancel, so abandon this upload" — all just races between futures.
+
 **`spawn` — hand a task to the runtime to drive independently.** `join!` and `select!` keep everything in *one* task; the futures share that task's poll budget and cannot outlive the `join!`. `tokio::spawn` is different: it submits a future as a *new top-level task* the executor schedules independently, possibly on another OS thread (tokio's default runtime is multithreaded and **work-stealing**). It returns a `JoinHandle`, itself a future you `.await` for the result.
 
 ```rust
@@ -176,7 +195,7 @@ async fn run() {
 }
 ```
 
-> **🦀 From your toolbox →** `join!` is like interleaving two coroutines on the *same* thread yourself — structured, scoped, no shared-thread escape. `tokio::spawn` is like `std::thread::spawn` from [chapter 13](13-fearless-concurrency.md): fire-it-and-get-a-handle, may land on a different OS thread, hence requires `Send` (next section). The analogy to threads breaks on *cost and number*: spawning a task is a small heap box plus a queue push (microseconds, kilobytes), so 100,000 tasks is routine where 100,000 threads is not.
+> **🦀 From your toolbox →** `join!` is like running two pieces of work interleaved on the *same* thread under your control — structured, scoped, neither escapes onto another thread. `tokio::spawn` is the analogue of `std::thread::spawn` from [chapter 13](13-fearless-concurrency.md), or of submitting a task to a Java `ExecutorService` and getting a `Future` back: fire-it-and-get-a-handle, may land on a different OS thread, hence requires `Send` (next section). The analogy to threads breaks on *cost and number*: spawning a task is a small heap box plus a queue push (microseconds, kilobytes), so 100,000 tasks is routine where 100,000 OS threads is not — closer in spirit to how Java's virtual threads or Swift's lightweight tasks are meant to be cheap and plentiful.
 
 ### Tasks vs threads vs futures: the M:N picture
 
@@ -188,7 +207,7 @@ Three nested units of concurrency:
 
 This is an **M:N model**: M tasks scheduled onto N OS threads (N ≈ core count). Work-stealing lets an idle worker steal tasks from a busy worker's queue, balancing load transparently. A task can migrate between threads at `.await` points — precisely why spawned futures must be `Send`.
 
-> **🎓 Tripos link →** M:N user-level threading is the green-threads / user-level-scheduling design from Concurrent and Distributed Systems. The classic green-thread problem — one blocking syscall stalls the whole scheduler thread — is dodged because async futures *never* make a blocking syscall at an `.await`; they register a waker and yield. For genuinely blocking work, `spawn_blocking` moves it to a dedicated thread pool so it can't stall the cooperative scheduler.
+> **🎓 Tripos link →** Multiplexing many lightweight tasks onto a few OS threads (the M:N model) is the user-level / green-threads scheduling design from Concurrent and Distributed Systems. The classic green-thread pitfall — one blocking syscall stalls the whole scheduler thread — is dodged because async futures *never* make a blocking syscall at an `.await`; they register a waker and yield. For genuinely blocking work, `spawn_blocking` moves it to a dedicated thread pool so it can't stall the cooperative scheduler.
 
 ## The starvation trap: only `.await` yields
 
@@ -234,7 +253,7 @@ async fn bad() {
 //   note: future is not `Send` as this value is used across an await
 ```
 
-The compiler tracks, per `.await`, exactly which locals are live (the liveness analysis from the desugaring). If a `!Send` value is live across an `.await`, the whole future is `!Send` and can't be spawned on a multithreaded runtime. The fix is usually to make the value `Send` (`Arc` not `Rc`) — or, tellingly, to *not hold it across the await*: drop it in an inner scope first, and the future stays `Send`.
+The compiler tracks, per `.await`, exactly which locals are live. If a `!Send` value is live across an `.await`, the whole future is `!Send` and can't be spawned on a multithreaded runtime. The fix is usually to make the value `Send` (`Arc` not `Rc`) — or, tellingly, to *not hold it across the await*: drop it in an inner scope first, and the future stays `Send`.
 
 ```rust
 async fn good() {
@@ -245,6 +264,8 @@ async fn good() {
     do_io().await;                   // nothing !Send is live across this point
 }
 ```
+
+> **🦀 From your toolbox →** `Rc` vs `Arc` is the exact distinction you'd want if you could choose Swift's reference-counting (`ARC`) to be either single-thread-only or thread-safe: `Rc` is a cheap, non-atomic refcount (fine on one thread); `Arc` uses atomic increments so it's safe to hand a shared object to another thread — the price being the atomic operation, the same kind of cost a thread-safe refcount or a synchronized Java reference pays. Python's GIL hides this choice from you entirely (its refcount is always under one global lock). Here Rust makes you pick, and `spawn`'s `Send` bound enforces the pick: hold an `Rc` across an `.await` in a spawned task and the compiler refuses, because that object could otherwise cross threads without atomic protection.
 
 > **⚙️ Under the hood →** "Held across an `.await`" is a dataflow notion, not a lexical one. The compiler asks: at each suspension point, is this variable in the live set? A value constructed, used, and dropped *between* two awaits never appears in any variant, so it never affects `Send`-ness. That is why the inner-scope trick works: ending the scope kills the liveness, so the variable isn't stored in the variant straddling the next `.await`.
 
@@ -278,6 +299,17 @@ async fn consume(mut stream: impl Stream<Item = i32> + Unpin) {
 
 Note the loop shape: `while let Some(v) = stream.next().await`, not `for v in stream`. Rust has no `for await` syntax (yet); `while let` over `.next().await` is the idiom. Each iteration hits an `.await`, so each is a cooperative yield point — a stream consumer interleaves naturally with other tasks.
 
+> **🔧 In practice →** You're handling a chat WebSocket: messages arrive one at a time, indefinitely, and you want to react to each as it lands without blocking the connection. That's a `Stream`, consumed exactly like an async loop:
+> ```rust
+> async fn pump(mut socket: impl Stream<Item = Msg> + Unpin) {
+>     while let Some(msg) = socket.next().await {   // park here until the next msg arrives
+>         broadcast(msg).await;
+>     }
+>     // stream ended (client disconnected) -> None breaks the loop
+> }
+> ```
+> Each `.await` parks the task until the next message is ready, so one thread can pump thousands of these chat connections at once. The same shape covers reading lines from a network socket, draining a job queue, or following a database change feed — anywhere items trickle in over time rather than all at once.
+
 > **⚠️ Pitfall →** `error[E0599]: no method named `next` found for ...`, `StreamExt is not in scope`. You have a `Stream` but called `.next()` without `use futures::StreamExt;` (or the runtime's re-export, `tokio_stream::StreamExt`). The method-providing trait must be imported — the same in-scope rule as any extension trait, in spirit identical to needing `Iterator` in scope.
 
 ## Pin and Unpin: the self-referential-future problem
@@ -294,7 +326,7 @@ async fn selfref() {
 
 Both `buf` and `slice` must be saved in the state-machine variant straddling that `.await`, but `slice` points *into* `buf`, and both now live in the *same* struct. The future is **self-referential**: a field holds a pointer to another field of the same struct.
 
-Self-referential structs are catastrophic to *move*. A move in Rust is a bitwise copy of bytes to a new address (recall [moves](02-ownership-and-moves.md)), and Rust does **not** fix up internal pointers. After the move, `slice` still holds the *old* address of `buf`, now garbage — dereferencing it is a use-after-free. This is exactly why the borrow checker normally forbids moving a value while a reference into it is live; but here the reference is *inside* the value being moved, so the usual rule can't apply.
+Self-referential structs are catastrophic to *move*. A move in Rust is a bitwise copy of bytes to a new address (recall [moves](02-ownership-and-moves.md)), and Rust does **not** fix up internal pointers. After the move, `slice` still holds the *old* address of `buf`, now garbage — dereferencing it is a use-after-free, the C-style dangling-pointer bug Rust exists to prevent. This is exactly why the borrow checker normally forbids moving a value while a reference into it is live; but here the reference is *inside* the value being moved, so the usual rule can't apply.
 
 The fix is **`Pin`**. `Pin<P>` wraps a pointer `P` (`&mut T`, `Box<T>`, …) and statically guarantees the *pointee* never moves again until dropped. Look back at the trait: `poll` takes `self: Pin<&mut Self>`, not `&mut self`. That is the whole point — to poll a future (and drive its self-references forward) you must first pin it, promising it won't move out from under its own pointers. A pinned future has a stable address, so its self-references stay valid. Pinning the *pointer* is fine: you can move a `Pin<Box<Fut>>` freely, because moving the `Box` doesn't move the heap allocation the `Fut` lives in. What's pinned is the pointee at its address.
 
@@ -320,9 +352,7 @@ let futures: Vec<Pin<&mut dyn Future<Output = ()>>> = vec![a, b];
 trpl::join_all(futures).await;
 ```
 
-> **🎓 Tripos link →** `Pin` is a *type-system encoding of an address-stability invariant* — Curry-Howard flavour from Logic and Proof. The invariant "this value's address never changes after pinning" can't be checked at runtime, so it's lifted into a type whose API makes violating it impossible in safe code (you can't get `&mut T` out of `Pin<&mut T>` unless `T: Unpin`). The proof obligation discharged when you *do* go through `unsafe` (a manual `Future` impl) is precisely "I uphold the pin contract."
-
-> **⚙️ Under the hood →** Why not have the compiler patch internal pointers on every move, like a moving GC? Because that taxes *every* move of *every* type to fix a problem only self-referential types have, and Rust's moves are meant to be trivial `memcpy`s with no hidden code. `Pin` instead makes the *minority* (self-referential futures) bear the cost via a restrictive API, while `Unpin` exempts the overwhelming majority at zero cost.
+> **⚙️ Under the hood →** Why not have the compiler patch internal pointers on every move, like a moving garbage collector does when it relocates objects? Because that would tax *every* move of *every* type to fix a problem only self-referential types have, and Rust's moves are meant to be trivial `memcpy`s with no hidden code. `Pin` instead makes the *minority* (self-referential futures) bear the cost via a restrictive API, while `Unpin` exempts the overwhelming majority at zero cost.
 
 ## `async` in traits: the current status
 
@@ -346,11 +376,11 @@ Async is not free and not always the answer:
 - **CPU-bound, parallelisable** (image processing, numerical kernels): use threads (`rayon`, a thread pool). Async gives you *nothing* here — it structures concurrency, it is not a parallelism primitive, and CPU work in an `async fn` just starves the scheduler.
 - **Both**: combine them. Encode video on a dedicated thread pool, notify the async network layer via a channel. `tokio::spawn_blocking` exists precisely to bridge blocking/CPU work into an async program without stalling the executor.
 
-The costs of going async: a steeper type-level curve (`Pin`, `Send`-across-await, lifetimes in futures), longer compiles and larger binaries (every distinct future is a monomorphised state machine), worse backtraces (the stack is a state machine, not a real stack), and the ever-present starvation footgun. The reward, when the workload fits, is C10k-and-beyond on a handful of threads with statically-guaranteed data-race freedom — something thread-per-connection cannot afford.
+The costs of going async: a steeper type-level curve (`Pin`, `Send`-across-await, lifetimes in futures), longer compiles and larger binaries (every distinct future is a separate state machine the compiler stamps out per concrete type), worse backtraces (the stack is a state machine, not a real stack), and the ever-present starvation footgun. The reward, when the workload fits, is C10k-and-beyond on a handful of threads with statically-guaranteed data-race freedom — something thread-per-connection cannot afford.
 
 ## Mental-model recap
 
-- `async fn`/`async {}` compile to an anonymous **state machine** implementing `Future`; `.await` carves the body at suspension points (a compiler CPS transform). `.await` = "poll the inner future; if `Pending`, register the waker and yield `Pending` up to the runtime."
+- `async fn`/`async {}` compile to an anonymous **state machine** implementing `Future`; `.await` carves the body at suspension points (the compiler chops the body and saves the live locals at each cut). `.await` = "poll the inner future; if `Pending`, register the waker and yield `Pending` up to the runtime."
 - Futures are **lazy/inert**: calling an `async fn` runs none of its body and allocates nothing; only polling runs it. The opposite of eager JS Promises, and the source of zero-cost composition.
 - Rust ships **no runtime** — the executor is a pluggable crate (`tokio` etc.) matched to the workload, from 64-core servers to heapless microcontrollers. `block_on` is where you cross from sync to async.
 - Three nested units in an **M:N** model: futures (concurrency *within* a task via `join!`/`select!`), tasks (scheduled by the runtime, `spawn`), threads (the few OS threads tasks multiplex onto, work-stealing). Async yields **only** at `.await`, so blocking/CPU code between awaits *starves* the scheduler.
@@ -358,14 +388,44 @@ The costs of going async: a steeper type-level curve (`Pin`, `Send`-across-await
 
 ## Exercises
 
-1. Write an `async fn` that constructs a future with `let f = some_async_call();`, never `.await`s it, and returns. Predict the compiler diagnostic, then confirm it. Explain in one sentence why this is a warning and not an error, and why the equivalent JS code *would* perform the side effect.
+1. Two functions differ only in *where* a future is awaited:
+   ```rust
+   async fn eager_ish() {
+       let a = fetch_len("https://a.com").await;   // awaited immediately
+       let b = fetch_len("https://b.com").await;
+       use_both(a, b);
+   }
+   async fn concurrent() {
+       let (a, b) = join!(fetch_len("https://a.com"), fetch_len("https://b.com"));
+       use_both(a, b);
+   }
+   ```
+   If each fetch takes ~100 ms of network wait, predict the wall-clock time of each function and explain the difference in terms of *when* each future actually starts doing I/O. (Hint: recall that the future returned by the first `fetch_len` call doesn't start running just because you constructed it.)
 
-2. Build a `retry` combinator: `async fn retry<F, Fut, T, E>(mut make: F, attempts: u32) -> Result<T, E>` where `F: FnMut() -> Fut` and `Fut: Future<Output = Result<T, E>>`. It calls `make()` to get a fresh future each attempt (why must you re-call `make` rather than `.await` the same future twice — what does the note about polling-after-`Ready` say?), awaits it, and retries on `Err` up to `attempts` times.
+2. You're given two ways to run a background job and grab its result later:
+   ```rust
+   // (A)
+   let h = tokio::spawn(do_job());
+   other_work().await;
+   let r = h.await.unwrap();
 
-3. Take the `bad()`/`good()` `Rc`-across-await example. Without changing `Rc` to `Arc`, make the future `Send`-spawnable purely by restructuring scopes. Then explain, in terms of the state-machine variant straddling the `.await`, exactly *why* your version is `Send` and the original is not.
+   // (B)
+   let fut = do_job();
+   other_work().await;
+   let r = fut.await;
+   ```
+   Does `do_job` make progress *during* `other_work().await` in (A)? In (B)? Explain the difference, and name one situation where you'd specifically *want* (B) over (A) even though it's "less concurrent."
 
-4. You have a `tokio` runtime and inside an `async fn` you write `std::thread::sleep(Duration::from_secs(1));` in a loop that's supposed to run concurrently with another task via `join!`. Describe the observed behaviour, why there is *no* compiler error, and give two distinct correct fixes (one if the sleep is a real wait, one general one for an unavoidable blocking call).
+3. Here are three function bodies. Which can be passed to `tokio::spawn` on a multithreaded runtime, and which are rejected? For each rejection, name the offending value and the one-line fix.
+   ```rust
+   // (a)
+   async fn one() { let s = String::from("hi"); do_io().await; println!("{s}"); }
+   // (b)
+   async fn two() { let r = std::rc::Rc::new(0); do_io().await; println!("{r}"); }
+   // (c)
+   async fn three() { { let r = std::rc::Rc::new(0); println!("{r}"); } do_io().await; }
+   ```
 
-5. (★) Hand-write a type `Countdown { remaining: u32 }` that implements `Future<Output = ()>` directly (no `async`): each `poll` decrements `remaining`, and returns `Pending` (after re-waking via `cx.waker().wake_by_ref()`) until it hits zero, then `Ready(())`. Then explain why `Countdown` is `Unpin` even though it implements `Future` by hand, whereas a compiler-generated `async {}` future generally is not.
+4. You want "do this work, but give up after 2 seconds." You have `timeout(work, limit)` from the chapter (built on `select!`). Sketch how you'd use it, then answer: when the timer wins the race, what happens to the half-finished `work` future? Why is that the *correct* default for a network request, but a footgun if `work` was halfway through writing to a file?
 
-6. (★) `trpl::join_all(vec![Box::new(fut_a), Box::new(fut_b)])` fails with `the trait Unpin is not implemented for dyn Future`. Explain the error in terms of what `join_all` must do to each future, why `await`ing a single future directly does *not* trigger this, and fix it two ways: with `Box::pin` and with the `std::pin::pin!` macro. State the difference in *where* each pins the future (heap vs stack) and when you'd prefer each.
+5. (★) `yield_now().await` and `tokio::time::sleep(Duration::ZERO).await` both "give other tasks a turn." A colleague claims they're interchangeable. Predict whether a tight loop calling each one a million times behaves the same, and explain the difference in terms of what each future registers with the runtime before returning `Pending` (one re-queues its own waker immediately; the other involves the timer/reactor). Which would you reach for in the `polite()` CPU loop, and why?

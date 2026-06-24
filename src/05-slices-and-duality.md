@@ -6,7 +6,7 @@ Slices are where the ownership model stops being an abstract discipline and star
 
 ## The `(ptr, len)` idiom, but checked
 
-You have written `void process(const int *data, size_t len);` in C a hundred times. The pair `(ptr, len)` *is* a slice — a view into someone else's array. C just refuses to enforce anything about it: nothing stops `len` outliving the allocation `data` points into, nothing bounds-checks `data[i]`, nothing stops a caller passing `len` of 50 for a buffer of 10. The convention lives entirely in your head and in the comments.
+If you have ever passed an array to a function in a lower-level language, you have passed a pointer and a length side by side — `process(data, len)` — and trusted the caller and callee to agree about them. That pair `(ptr, len)` *is* a slice: a view into someone else's array. The low-level version refuses to enforce anything about it: nothing stops `len` outliving the allocation `data` points into, nothing bounds-checks `data[i]`, nothing stops a caller passing `len` of 50 for a buffer of 10. The convention lives entirely in your head and in the comments.
 
 A Rust slice is exactly that pair — a pointer and a length — promoted to a first-class type whose two invariants the compiler enforces:
 
@@ -20,9 +20,9 @@ let view = &a[1..3];          // type &[i32], points at a[1], length 2
 assert_eq!(view, &[2, 3]);
 ```
 
-The range `1..3` is half-open: start inclusive, end exclusive, length `3 - 1 = 2`. Indexing `view[i]` is bounds-checked against that length; the lifetime of `view` is tied by the borrow checker to `a`, so the view can never outlive its backing storage. The two failure modes you debugged for years in C are now a compile error and a panic, respectively, instead of silent corruption.
+The range `1..3` is half-open: start inclusive, end exclusive, length `3 - 1 = 2`. Indexing `view[i]` is bounds-checked against that length; the lifetime of `view` is tied by the borrow checker to `a`, so the view can never outlive its backing storage. The two failure modes you would otherwise debug by hand — an index past the end, and a view that survives its data — are now a panic and a compile error respectively, instead of silent corruption.
 
-> **🦀 From your toolbox →** This is C's `(ptr, len)` argument pair, or C++'s `std::span<T>` / `std::string_view`, made memory- and lifetime-safe. The analogy to `span`/`string_view` is close enough to be dangerous: those C++ types are *also* non-owning views, but they carry no lifetime — a dangling `string_view` compiles fine and is a classic use-after-free. `&[T]` carries its lifetime in the type system, so the dangle is rejected statically.
+> **🦀 From your toolbox →** A slice is the "pass an array plus its length" pattern made safe. In Java you would pass the `int[]` itself (the array object carries its own `.length` and every access is bounds-checked) or, since Java 9, a `List` view; in Swift you would pass an `ArraySlice<Int>` or just the `Array`; in Python a list (and `a[1:3]` *copies* a sub-list). Rust's `&[i32]` gives you Java-and-Swift-style bounds safety, but unlike all three it is a genuine *non-owning window* into the original buffer — no copy, no separate object, no garbage collector keeping the backing array alive. Where the analogy breaks down: a Python or Swift slice keeps its source alive by reference counting; Rust instead ties the view's *lifetime* to the source at compile time, so the view simply cannot outlive what it points into. (If you have met C++'s `string_view` / `span`: same idea, but those carry no lifetime, so a dangling one compiles and is a classic use-after-free — Rust rejects that statically.)
 
 > **⚙️ Under the hood →** `&[T]` and `&str` are **fat pointers**: two machine words, `(*const T, usize)` for the data pointer and the element count. On 64-bit, `size_of::<&[i32]>() == 16` and `size_of::<&str>() == 16`, versus `size_of::<&i32>() == 8` for an ordinary thin reference. The length lives in the pointer, not in the pointee — which is the whole trick: a slice of a heap `Vec`, a stack array, or a `&str` baked into the binary all have the identical runtime representation, because the metadata travels with the reference rather than the data. We will see in [smart pointers](15-smart-pointers.md) that this is the general mechanism for *dynamically sized types* (DSTs): `[T]` and `str` have no statically known size, so you can only ever hold them behind a fat pointer (`&[T]`, `Box<[T]>`, `&str`, …) that supplies the missing length.
 
@@ -50,7 +50,7 @@ line.clear();                      // line is now ""
 // `end` is still 5, now pointing past the end of an empty string
 ```
 
-This is the same class of error as a dangling pointer or an iterator invalidated by a container mutation (Java's `ConcurrentModificationException` catches a cousin of it — at runtime, on a good day). A slice fixes it by *fusing the index range into a borrow*:
+This is the same class of error as a dangling pointer, or as an index into a Python list after you have `del`-ed elements out from under it, or Java's `ConcurrentModificationException` — a stored position that the container has silently moved out from under you (Java catches its cousin at runtime, on a good day). A slice fixes it by *fusing the index range into a borrow*:
 
 ```rust
 fn first_word(text: &str) -> &str {
@@ -72,9 +72,17 @@ line.clear();                   // wants &mut line — ERROR
 println!("{word}");             // borrow still live here
 ```
 
+> **🔧 In practice →** This is exactly how you write a tokenizer or a parser without copying. Say you are reading a log line `"2026-06-24 ERROR disk full"` and want the level field. You return `&line[11..16]` — a `&str` pointing straight into the original buffer — and pass it around, compare it, match on it, all with zero allocation. The borrow checker guarantees you cannot accidentally free or overwrite `line` while any token still points into it, which is the bug that makes hand-rolled C parsers leak and crash. A real sketch:
+> ```rust
+> fn parse_level(line: &str) -> Option<&str> {
+>     line.split_whitespace().nth(1)   // borrows from `line`, no copy
+> }
+> ```
+> The returned `Option<&str>` is alive only as long as `line` is — try to drop `line` while you still hold the level and the compiler stops you.
+
 > **⚠️ Pitfall →** The above is `error[E0502]: cannot borrow `line` as mutable because it is also borrowed as immutable`. `String::clear` needs `&mut self`, but `word` holds a live `&` into the same string, and the [borrowing](03-references-and-borrowing.md) rules forbid a mutable and an immutable borrow coexisting. The fix is not a workaround — it is the point. The compiler has proved that mutating the string while a view into it is alive would invalidate the view, exactly the bug the index version hid. Finish using `word` first, or compute an owned `String` if you genuinely need to outlive the source.
 
-> **🎓 Tripos link →** This is the regions discipline from *Semantics of Programming Languages* applied to interior pointers. The slice's lifetime is a region; the type rule "a `&mut` borrow may not overlap any `&` borrow of the same place" is precisely what makes the operational step `clear()` ill-typed while `word` is in scope. The index-returning version type-checks but is *unsound at the level of program logic* — the type was too weak to capture the invariant. The slice strengthens the type until well-typed implies the invariant holds, which is type-safety doing real work rather than ceremony.
+> **🎓 Tripos link →** The intuition here connects to *Semantics of Programming Languages*: a value's type can be made strong enough to carry an invariant the program must respect. The index-returning version type-checks but the type was too weak — it said "this is a number", not "this number is only valid while *that* string is unchanged". The slice strengthens the type until "it compiles" implies "the view is still valid", so the `clear()` call becomes a compile error rather than a silent bug. That is the type system doing real work, not ceremony — the same lifetime/region reasoning you saw in [lifetimes](04-lifetimes.md), now applied to a pointer into the *middle* of a value.
 
 ## The owned/borrowed pair
 
@@ -102,7 +110,7 @@ fn sum(xs: &[i32]) -> i32 { /* ... */ }           // not &Vec<i32>
 
 A `&str` parameter accepts *both* an owned `String` (via the deref coercion below) and a borrowed `&str`, including string literals and sub-slices. A `&[i32]` accepts a whole `Vec`, a stack array, or any sub-slice of either. Taking `&String` or `&Vec<T>` is a beginner tell: it needlessly narrows your callers to one of the two halves and buys you nothing — `&String` gives you no capability over a string that `&str` does not.
 
-> **🦀 From your toolbox →** In Java you would overload on `CharSequence`, or in C++ template on `Range`, to accept "anything string-like". The owned/borrowed pair achieves the same generality with a *single concrete type and no genericity*, because the owned type is built to hand out a borrow of exactly the view type. The closest OCaml analogy is weak: OCaml `string` is immutable and `bytes` is mutable, but neither is a borrowed view — there is no sub-string-without-copy because there are no interior references to bound by a lifetime.
+> **🦀 From your toolbox →** In Java you reach for the widest interface that still does the job — you type a parameter as `CharSequence` or `List<T>` rather than `String` or `ArrayList<T>`, so any conforming implementation can be passed. In Swift you would write against a protocol like `StringProtocol` or `Collection` for the same reason. The owned/borrowed pair achieves that same "accept anything string-like / array-like" generality, but with a *single concrete type and no genericity at all*, because the owned type is built to hand out a borrow of exactly the view type. Where it differs: Java's `CharSequence` and Swift's `StringProtocol` are abstractions over *many implementations*; `&str` is one concrete type that every owner narrows down to. (The OCaml angle is weak here — OCaml `string` is immutable and `bytes` is mutable, but neither is a borrowed window: there is no substring-without-copy because there are no interior references for a lifetime to bound.)
 
 ## Deref coercion: why `&String` becomes `&str`
 
@@ -148,7 +156,7 @@ assert_eq!(s.bytes().count(), 4);    // bytes again
 
 There is a second reason beyond ambiguity: indexing is expected to be O(1), but locating the *n*-th scalar value in UTF-8 requires scanning from the start. Rust will not let an operator silently hide a linear scan behind `[]` syntax. If you genuinely want the *n*-th scalar value, you write the cost explicitly: `s.chars().nth(n)`.
 
-> **🦀 From your toolbox →** Every language you know lies about strings, just differently. C: `char*` is NUL-terminated bytes with no encoding guarantee and `strlen` is O(n). Java/JavaScript: `String` is a sequence of UTF-16 code units, so `.length` and `charAt` count *code units* — an emoji or astral-plane character is two units and `charAt` can hand you a lone surrogate (the same class of "you got half a character" bug, just relocated). OCaml: `string` is immutable bytes, `String.length` is bytes, no Unicode awareness at all. Rust's choice — UTF-8 bytes, no integer indexing, explicit `.chars()`/`.bytes()` — is the only one of these that forces you to name the granularity, which is why it feels obstructive coming from the others and correct after a week.
+> **🦀 From your toolbox →** Every language you know lies about strings, just differently. Python 3: `str` is a sequence of Unicode scalar values, so `s[0]` and `len(s)` count *code points* — convenient, but the underlying storage and the cost model are hidden from you, and you silently pay for the abstraction. Java (and JavaScript): `String` is a sequence of UTF-16 code units, so `.length()` and `charAt` count *code units* — an emoji or other astral-plane character is two units and `charAt` can hand you a lone surrogate (the same "you got half a character" bug, just relocated). Swift gets closest to honest: `String` is a collection of *grapheme clusters* (`Character`), so `count` matches human intuition — but it deliberately drops integer subscripting (you index with `String.Index`, not `Int`) for the very reason Rust does: there is no O(1) answer. Rust's choice — UTF-8 bytes, no integer indexing, explicit `.chars()`/`.bytes()` — forces you to name the granularity, which is why it feels obstructive coming from Python and correct after a week.
 
 You *can* slice a string by **byte** range, and it yields a `&str` — but the range bounds must fall on UTF-8 character boundaries or the program **panics at runtime**:
 
@@ -195,9 +203,24 @@ if let [head, tail @ ..] = &nums[..] {
 }
 ```
 
-> **🦀 From your toolbox →** This is OCaml's `match xs with | [] -> ... | x :: rest -> ...` from *Foundations of Computer Science*, but on a contiguous random-access slice instead of a cons list — so `[first, .., last]` (front *and* back at once) is O(1), which the linked-list version cannot express without a traversal. Unlike OCaml lists, a fixed-length pattern like `[a, b, c]` is *refutable* against `&[T]` (the length is a runtime fact), so the compiler forces you to handle the non-matching lengths — there is no fall-through to undefined behaviour the way a C `switch` on `len` would permit.
+> **🦀 From your toolbox →** This is OCaml's `match xs with | [] -> ... | x :: rest -> ...` from *Foundations of Computer Science* — and the same head/tail destructuring you would write in Swift with `if case let` on an enum, or fake in Python with `head, *tail = xs`. The crucial win over the OCaml/Python list version: a slice is a contiguous random-access window, so `[first, .., last]` (front *and* back at once) is O(1), which a cons list or a Python list-with-star-unpack cannot do without walking or copying. And unlike OCaml lists, a fixed-length pattern like `[a, b, c]` is *refutable* against `&[T]` (the length is a runtime fact), so the compiler forces you to handle the other lengths — there is no silent fall-through.
 
-> **⚙️ Under the hood →** `tail @ ..` does not copy. It produces a new fat pointer `(ptr + 1, len - 1)` aliasing the same backing buffer — pure pointer arithmetic, no allocation. The match on `[]` / `[only]` / `[first, .., last]` compiles to a length comparison plus offset loads, the same code you would hand-write in C from `(ptr, len)`, but with the bounds proven correct by the pattern's exhaustiveness rather than by you.
+> **🔧 In practice →** Slice patterns shine when you are dispatching on a parsed command. You split a line into arguments and match on the shape directly, instead of indexing-and-hoping:
+> ```rust
+> fn run(args: &[&str]) -> Result<(), String> {
+>     match args {
+>         []                 => Err("no command".into()),
+>         ["help"]           => { print_help(); Ok(()) }
+>         ["add", item]      => { add(item); Ok(()) }
+>         ["mv", from, to]   => { rename(from, to); Ok(()) }
+>         ["add", rest @ ..] => Err(format!("add takes 1 arg, got {}", rest.len())),
+>         [cmd, ..]          => Err(format!("unknown command: {cmd}")),
+>     }
+> }
+> ```
+> The arity of each command is checked by the pattern itself — wrong number of arguments falls through to a real error arm instead of panicking on an out-of-bounds index. This is how you would route subcommands in a small CLI tool.
+
+> **⚙️ Under the hood →** `tail @ ..` does not copy. It produces a new fat pointer `(ptr + 1, len - 1)` aliasing the same backing buffer — pure pointer arithmetic, no allocation. The match on `[]` / `[only]` / `[first, .., last]` compiles to a length comparison plus offset loads, the same code you would hand-write from a `(ptr, len)` pair, but with the bounds proven correct by the pattern's exhaustiveness rather than by you.
 
 ## String literals are `&'static str`
 
@@ -205,7 +228,7 @@ The type of `"hello"` is `&'static str`: a slice pointing into a read-only regio
 
 ## Mental-model recap
 
-- A slice is C's `(ptr, len)` pair as a checked, lifetime-bearing **fat pointer** (two words). `&[T]` and `&str` own nothing; they are *views* whose lifetime the borrow checker ties to the backing storage, killing dangling-view and index-out-of-sync bugs at compile time.
+- A slice is the `(ptr, len)` pair as a checked, lifetime-bearing **fat pointer** (two words). `&[T]` and `&str` own nothing; they are *views* whose lifetime the borrow checker ties to the backing storage, killing dangling-view and index-out-of-sync bugs at compile time.
 - The **owned/borrowed pair** is a standard-library design law: `String`/`&str`, `Vec<T>`/`&[T]`, `PathBuf`/`&Path`. Write parameters against the *borrowed* half (`&str`, `&[T]`) — it accepts both callers and grants every capability `&Owned` would.
 - **Deref coercion** (`String: Deref<Target=str>`) is what auto-narrows `&String -> &str` and `&Vec<T> -> &[T]` at compile time; it is also why `s1 + &s2` and `&v[..]` Just Work.
 - A `String` is UTF-8 **bytes**, not a `char` array: no integer indexing (it would be ambiguous *and* not O(1)). Choose your granularity explicitly with `.bytes()`, `.chars()`, or a grapheme crate. `s.len()` counts bytes.
@@ -213,28 +236,38 @@ The type of `"hello"` is `&'static str`: a slice pointing into a read-only regio
 
 ## Exercises
 
-1. Write `fn longest_word(text: &str) -> &str` returning the longest whitespace-delimited word (ties: the first). Use `split_whitespace()` and return a sub-slice, not a new `String`. Confirm the returned `&str` borrows from `text` by trying to mutate `text` while the result is live and reading the error.
-
-2. Take this and explain the borrow-checker error, then fix it *without* cloning:
+1. **Predict the errors.** Here are three call sites against `fn first_word(text: &str) -> &str`. Decide which compile and which do not, and for each rejection name the borrow that conflicts and roughly where it ends:
    ```rust
-   let mut s = String::from("alpha beta");
+   // (a)
+   let s = String::from("alpha beta");
    let w = first_word(&s);
-   s.push_str(" gamma");
+   println!("{w}");
+   drop(s);
+
+   // (b)
+   let s = String::from("alpha beta");
+   let w = first_word(&s);
+   let n = s.len();          // another shared borrow
+   println!("{w} {n}");
+
+   // (c)
+   let s = String::from("alpha beta");
+   let w = first_word(&s);
+   s.push_str(" gamma");     // wants &mut s
    println!("{w}");
    ```
-   Which exact lines constitute the conflicting borrows, and what is the lifetime of `w`?
+   Why does (b) compile even though `w` is still live, while (c) does not?
 
-3. Predict the output of each, then run it:
+2. **Choose the signature.** You are writing `fn count_vowels(?) -> usize`. A teammate proposes `&String`; you propose `&str`. Give one concrete caller that compiles against `&str` but *not* against `&String`, and explain why the reverse direction (a `&str` caller against a `&String` parameter) never even comes up. Then state the one situation in which taking `String` *by value* would actually be the right choice.
+
+3. **Adapt the parser.** Starting from `parse_level` in the "In practice" callout (returns `Option<&str>`), write `fn fields(line: &str) -> Option<(&str, &str, &str)>` that returns the date, level, and the *rest of the message* of a log line like `"2026-06-24 ERROR disk full"`, all as sub-slices of `line` with no allocation. Then explain: what is the lifetime relationship between the three returned `&str`s and `line`, and why can none of them outlive it?
+
+4. **Slice patterns vs. owning.** Implement `fn split_last<T>(xs: &[T]) -> Option<(&[T], &T)>` with a slice pattern (`None` for empty). Give the `ptr`/`len` of the returned `&[T]` relative to `xs`, and confirm it allocates nothing. Now suppose you instead needed to return the elements *reversed* — argue why that return type cannot stay `&[T]` and must become `Vec<T>`.
+
+5. **The non-ASCII trap.** This function looks reasonable but can panic:
    ```rust
-   let s = "café";          // 'é' is 2 bytes in UTF-8
-   println!("{}", s.len());
-   println!("{}", s.chars().count());
-   let bad = &s[0..3];      // ?
+   fn first_three(s: &str) -> &str { &s[0..3] }
    ```
-   Why does the third line behave differently from `&s[0..2]`? Rewrite it to take the first three *scalar values* safely.
+   Give one input on which it returns a correct `&str` and one (non-ASCII) input on which it panics, quoting the kind of message you would get. Then rewrite it to return the first three *scalar values* safely (hint: `char_indices` or `chars`), and say what your new version returns for a string with only two scalar values.
 
-4. Implement `fn split_first<T>(xs: &[T]) -> Option<(&T, &[T])>` using a slice pattern, returning `None` for the empty slice. Then explain why the returned `&[T]` involves no allocation (what are its `ptr` and `len` relative to `xs`?).
-
-5. (★) `fn dedup_view(xs: &[i32]) -> Vec<i32>` must collapse consecutive duplicates (`[1,1,2,3,3,3]` → `[1,2,3]`). Now argue precisely why the return type cannot be `&[i32]`: what would such a slice have to be a view *into*, and which ownership rule forbids returning a borrow of a local? Contrast with exercise 4, where returning a borrow *is* fine.
-
-6. (★) The signature `fn join_first(a: &str, b: &str) -> &str` does not compile. State the elision-rule reason (recall [lifetimes](04-lifetimes.md): two input references, ambiguous output region). Give two distinct fixes — one that changes the return type to an owned `String`, and one that adds an explicit lifetime constraining the output to one specific input — and say when each is the right call.
+6. (★) **Why a borrow won't do.** Consider `fn dedup_view(xs: &[i32]) -> ???` that collapses consecutive duplicates (`[1,1,2,3,3,3]` → `[1,2,3]`). Explain precisely why the return type cannot be `&[i32]`: what would such a slice have to be a view *into*, and which ownership rule forbids returning it? Contrast with exercise 4's `split_last`, where returning a borrow *is* fine — what is structurally different about the two outputs? Then give the return type that does work, and say in one line what it costs that `split_last` did not.

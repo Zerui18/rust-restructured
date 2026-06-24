@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -178,21 +178,21 @@
                     <main>
                         <h1 id="2-ownership--moves"><a class="header" href="#2-ownership--moves">2. Ownership &amp; Moves</a></h1>
 <p>This is the chapter the rest of the book pivots on. Ownership is the single mechanism by which Rust statically guarantees memory safety and freedom from data races without a garbage collector and without manual <code>free</code>. Everything later — <a href="03-references-and-borrowing.html">references</a>, <a href="04-lifetimes.html">lifetimes</a>, <a href="15-smart-pointers.html">smart pointers</a>, <a href="13-fearless-concurrency.html">fearless concurrency</a> — is a refinement of, or an escape valve around, the rules introduced here.</p>
-<p>You already know two extreme answers to the question <em>“when does this allocation get freed?”</em>. The garbage-collected answer (Java, OCaml, Python, JS): a runtime traces reachability and frees whenever it likes, at a cost in latency and determinism. The manual answer (C): you call <code>free</code> yourself, and the compiler does not check that you do it exactly once at the right moment. Rust takes a third position: the <em>type system</em> tracks who is responsible for each value, and the compiler inserts the deallocation for you at a statically known point. No tracing, no manual <code>free</code>, no leaks-by-default, and — crucially — it is all proven at compile time, so there is zero runtime overhead.</p>
-<h2 id="ownership-is-an-affine-type-discipline"><a class="header" href="#ownership-is-an-affine-type-discipline">Ownership is an affine type discipline</a></h2>
+<p>You already know two extreme answers to the question <em>“when does this allocation get freed?”</em>. The garbage-collected answer (Java, Python, JS): a runtime traces reachability and frees whenever it likes, at a cost in latency and determinism. The reference-counted answer (Swift’s ARC, CPython’s refcounting): the runtime keeps a count and frees when it hits zero, paying for the counting and the bookkeeping at run time. The manual answer (a C handle you must <code>free</code> by hand): you call <code>free</code> yourself, and the compiler does not check that you do it exactly once at the right moment. Rust takes a different position: the <em>type system</em> tracks who is responsible for each value, and the compiler inserts the deallocation for you at a statically known point. No tracing, no reference counts in the common case, no manual <code>free</code>, no leaks-by-default, and — crucially — it is all decided at compile time, so there is zero runtime overhead.</p>
+<h2 id="ownership-a-value-you-can-use-at-most-once"><a class="header" href="#ownership-a-value-you-can-use-at-most-once">Ownership: a value you can use at most once</a></h2>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> In <em>Semantics of Programming Languages</em> and <em>Logic and Proof</em> you met linear logic, where a hypothesis must be used <em>exactly once</em>. Rust’s ownership is the slightly weaker <strong>affine</strong> discipline: a value may be used <em>at most once</em> (zero uses is fine — the value is just dropped unused). A binding to a non-<code>Copy</code> value is a resource; “using” it by move consumes it. Curry–Howard gives you the framing precisely: the type <code>String</code> is not a proposition you may reuse freely; it is a resource whose proof of ownership is spent when you pass it on. This is why <code>let s2 = s1;</code> invalidates <code>s1</code> — the resource has moved, and the affine logic forbids a second use of the spent hypothesis.</p>
+<p><strong>🦀 From your toolbox →</strong> Think about a Swift <code>class</code> instance under ARC, or a Python object: many variables can point at the same object, and the runtime counts how many before freeing. Rust flips this default on its head. For a value that owns a resource (like a <code>String</code>), there is at any moment exactly <strong>one</strong> binding responsible for it, and you can hand that responsibility on but never silently duplicate it. The closest everyday intuition: a value you can <strong>use at most once</strong> — once you pass it somewhere, it’s “used up” and the original name no longer refers to anything live. Where the analogy <em>breaks down</em>: in Swift and Python you can freely make a second variable point at the same object and both stay valid; in Rust that second binding <em>takes over</em> and the first becomes unusable. Sharing in Rust is opt-in (you borrow, or you reach for <code>Rc</code>/<code>Arc</code>), not the default.</p>
 </blockquote>
-<p>The three rules, stated formally enough to reason with:</p>
+<p>The three rules, stated precisely enough to reason with:</p>
 <ol>
 <li><strong>Every value has exactly one owning binding.</strong></li>
 <li><strong>There is exactly one owner at a time</strong> (ownership can transfer, but not duplicate, for non-<code>Copy</code> types).</li>
 <li><strong>When the owner goes out of scope, the value is <em>dropped</em></strong> — its destructor runs and its resources are released.</li>
 </ol>
-<p>Rule 3 is the deterministic-destruction rule, and it is the one your C++ instincts will recognise immediately.</p>
-<h2 id="scope-bound-destruction-is-raii-without-the-footguns"><a class="header" href="#scope-bound-destruction-is-raii-without-the-footguns">Scope-bound destruction is RAII without the footguns</a></h2>
+<p>Rule 3 is the deterministic-destruction rule.</p>
+<h2 id="scope-bound-destruction-cleanup-runs-automatically-at-end-of-scope"><a class="header" href="#scope-bound-destruction-cleanup-runs-automatically-at-end-of-scope">Scope-bound destruction: cleanup runs automatically at end of scope</a></h2>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is C++ RAII. A <code>String</code> is morally a <code>std::string</code>: it owns a heap buffer, and when it leaves scope its destructor frees that buffer. Where the analogy <em>breaks</em>: in C++ you must hand-write the destructor, copy constructor, move constructor, and assignment operators (the “rule of five”) to get this right, and a forgotten or wrong one is a silent leak or double-free. In Rust the compiler synthesises the drop <em>glue</em> for every type by recursively dropping its fields; you only write a destructor when you have something special to release. And there is no copy constructor at all — copying is never implicit for owning types (see moves, below).</p>
+<p><strong>🦀 From your toolbox →</strong> The mental model is closest to Python’s <code>with</code>-block or Java’s try-with-resources, except it’s automatic and applies to <em>every</em> owning value, not just things you remember to wrap. A <code>String</code> owns a heap buffer; when it leaves scope, that buffer is freed for you — like a <code>__del__</code> or a <code>close()</code> that the language guarantees will fire, deterministically, at a point you can see in the source. The light C++ touch: it’s the “a destructor runs at scope end” idea, but you almost never write the destructor yourself. Where the analogy <em>breaks down</em>: Python’s <code>__del__</code> fires whenever the garbage collector gets around to it (and may never, on a reference cycle); Java finalizers are worse and effectively deprecated. Rust’s drop point is fixed at compile time — the closing brace — so cleanup is both guaranteed and punctual.</p>
 </blockquote>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -201,12 +201,12 @@
     // ... use buf ...
 }                                       // `}`: drop(buf) runs, heap memory freed
 <span class="boring">}</span></code></pre>
-<p>The compiler does not insert a runtime check to decide whether to free. The closing brace is a <em>statically known</em> program point, so <code>rustc</code> emits the deallocation call right there, exactly once. This is the heart of “no overhead”: the drop is as cheap as the <code>free</code> you would have written by hand in C, minus the bugs.</p>
+<p>The compiler does not insert a runtime check to decide whether to free. The closing brace is a <em>statically known</em> program point, so <code>rustc</code> emits the deallocation call right there, exactly once. This is the heart of “no overhead”: the drop is as cheap as the <code>free</code> you would have written by hand in C, minus the bugs. Where Java would let the GC reclaim the memory at some unpredictable later moment, and Swift would decrement a reference count at run time, Rust has already decided at compile time exactly where the free happens.</p>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> For a <code>String</code>, the compiler-generated drop calls the allocator’s <code>dealloc</code> on the owned pointer. For a struct, drop glue runs any explicit <code>Drop::drop</code> first, then recursively drops each field. The compiler tracks, per code path, whether a value has been moved out; if a move <em>might</em> have happened on some paths but not others, it inserts a hidden boolean <strong>drop flag</strong> on the stack to decide at runtime whether to drop. Straight-line code with no conditional moves needs no flag — drop points are fully static.</p>
 </blockquote>
 <h2 id="stack-and-heap-and-why-rust-makes-you-care"><a class="header" href="#stack-and-heap-and-why-rust-makes-you-care">Stack and heap, and why Rust makes you care</a></h2>
-<p>You know the mechanics from <em>Computer Architecture &amp; OS</em>: the stack is a contiguous, LIFO region tied to call frames; the heap is a general allocator you request blocks from and must return. What is new is that Rust surfaces this distinction <em>in the type system</em>, because it determines move behaviour.</p>
+<p>You know the mechanics from <em>Operating Systems / Computer Architecture</em>: the stack is a contiguous, LIFO region tied to call frames; the heap is a general allocator you request blocks from and must return. What is new is that Rust surfaces this distinction <em>in the type system</em>, because it determines move behaviour.</p>
 <p>A value whose size is known at compile time and contains no owned resources — <code>i32</code>, <code>bool</code>, <code>char</code>, <code>f64</code>, a fixed array of such, a tuple of such — lives entirely on the stack (or in a register). Duplicating it is a <code>memcpy</code> of a fixed number of bytes; there is nothing to free and no aliasing hazard.</p>
 <p>A <code>String</code> or a <code>Vec&lt;T&gt;</code> is different. The <em>handle</em> — three words: <code>(pointer, length, capacity)</code> — lives on the stack, but it points at a heap buffer it owns.</p>
 <pre><code class="language-text">  stack (the String handle)        heap (the owned buffer)
@@ -218,7 +218,7 @@
 </code></pre>
 <p><code>len</code> is the bytes currently used; <code>cap</code> is the bytes the allocator handed out. The handle is <code>Copy</code>-able bit-for-bit, but the <em>buffer</em> is not — and that asymmetry is what forces the move rule.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This handle is exactly <code>std::vector</code>’s <code>{begin, end, end_of_storage}</code> or a <code>std::string</code>’s small layout, and the <code>(ptr, len, cap)</code> triple is the same idea as a Swift <code>Array</code>’s storage reference or an OCaml <code>Bytes.t</code> boxed behind a pointer. The difference is purely <em>who frees the buffer and when</em>, and Rust answers that with ownership rather than ARC (Swift) or the GC (OCaml/Java).</p>
+<p><strong>🦀 From your toolbox →</strong> This is exactly the shape of a Java <code>ArrayList</code> (a small object holding a reference to a backing array plus a <code>size</code>), a Swift <code>Array</code> (a struct holding a reference to heap storage plus a count), or a Python <code>list</code> (a header pointing at a growable array of element pointers). In all three the small front-object is cheap to copy around but the backing storage is shared or managed by the runtime. The difference is purely <em>who frees the buffer and when</em>: Java’s GC, Swift’s ARC, and Python’s refcounting all decide at run time, whereas Rust answers it with ownership decided at compile time.</p>
 </blockquote>
 <h2 id="move-semantics-assignment-transfers-the-handle-then-poisons-the-source"><a class="header" href="#move-semantics-assignment-transfers-the-handle-then-poisons-the-source">Move semantics: assignment transfers the handle, then poisons the source</a></h2>
 <p>Consider:</p>
@@ -231,10 +231,20 @@ let s2 = s1;            // the handle is moved from s1 into s2
 <p><code>let s2 = s1;</code> does a bitwise copy of the <em>handle</em> (the three words) into <code>s2</code>. It does <strong>not</strong> copy the heap buffer. So momentarily both handles point at the same buffer — which would be a double-free waiting to happen when both go out of scope. Rust’s resolution: after the move, <code>s1</code> is statically marked invalid. The buffer now has exactly one owner, <code>s2</code>, and exactly one drop will run.</p>
 <p>There is no flag set at runtime, no nulling-out of <code>s1</code>. The <em>compiler</em> simply refuses to let you read <code>s1</code> again. The move is a “destructive memcpy of the handle”: the bytes are copied, the source binding ceases to exist as far as the type checker is concerned, and there is no leftover moved-from object.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is the decisive break from C++. A C++ move (<code>std::string s2 = std::move(s1);</code>) runs a <em>move constructor</em> that leaves <code>s1</code> in a “valid but unspecified” state — you may still call methods on it, assign to it, and its destructor <em>will still run</em>. That residual moved-from state is a class of bugs (use-after-move that compiles cleanly and does something subtly wrong). Rust has no move constructor and no moved-from state: a moved-from binding is <em>gone</em>, and touching it is a <strong>compile error</strong>, not undefined behaviour. Consequently every Rust move is a trivial <code>memcpy</code> — the type author never writes move logic, and the compiler is free to elide the copy entirely.</p>
+<p><strong>🦀 From your toolbox →</strong> Contrast this with what you’re used to. In Java or Python, <code>s2 = s1</code> makes <code>s2</code> a second reference to the <em>same</em> object, and both keep working — the runtime’s GC/refcounting sorts out freeing later. In Swift the same is true for a class instance (ARC bumps the count) and for a value-type like <code>Array</code> you’d get copy-on-write semantics, but in every case the original variable stays usable. Rust deliberately does <em>not</em> leave you with two usable names for one resource: after <code>let s2 = s1;</code> the name <code>s1</code> is gone, and touching it is a <strong>compile error</strong>, not a silent shared reference. That’s the price of having no runtime counting or tracing — there can only ever be one owner, so the compiler retires the old name.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚠️ Pitfall →</strong> Reading a moved-from value gives <code>error[E0382]: borrow of moved value: 's1'</code>, with the note <em>“move occurs because ‘s1’ has type ‘String’, which does not implement the ‘Copy’ trait”</em>. The compiler usually suggests <code>s1.clone()</code>. The right fix depends on intent: if you genuinely need two independent owners, clone; if you only needed to <em>read</em> <code>s1</code>, borrow it with <code>&amp;s1</code> (see <a href="03-references-and-borrowing.html">References &amp; Borrowing</a>) and never move at all.</p>
+</blockquote>
+<blockquote>
+<p><strong>🔧 In practice →</strong> This shows up the first time you build any pipeline. Say you read a request body into a <code>String</code> and want to both log it and parse it:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let body = read_body();          // String
+log_request(body);               // moves body away...
+let parsed = parse(body);        // ERROR: body was moved into log_request
+<span class="boring">}</span></code></pre>
+<p>The compiler stops you before this becomes a bug. The fix you’ll reach for 90% of the time is <em>don’t move at all</em> — make <code>log_request(&amp;body)</code> borrow, so <code>body</code> is still yours to <code>parse</code>. You only <code>clone()</code> when both callees genuinely need to <em>own</em> an independent copy (e.g. you hand one copy to a background thread and keep one locally). The error is Rust nudging you to decide: borrow, or pay for a copy on purpose.</p>
 </blockquote>
 <h3 id="assigning-over-a-live-binding-drops-the-old-value"><a class="header" href="#assigning-over-a-live-binding-drops-the-old-value">Assigning over a live binding drops the old value</a></h3>
 <p>The mirror image: assigning a fresh value to an existing <code>mut</code> binding drops the previous one <em>immediately</em>, not at end of scope.</p>
@@ -266,10 +276,10 @@ println!("{s1} {s2}");
 <p><strong>⚙️ Under the hood →</strong> <code>Copy</code> and <code>Clone</code> are a supertrait pair: <code>Copy: Clone</code>, so every <code>Copy</code> type is also <code>Clone</code>. <code>Copy</code> carries no method; it is a flag the compiler reads to decide whether a <code>let</code>/argument bind is a non-destructive copy or a destructive move. <code>Clone::clone(&amp;self) -&gt; Self</code> is an ordinary method call you can override. You typically write <code>#[derive(Clone, Copy)]</code>; the derive generates a field-wise clone and, for <code>Copy</code>, simply asserts every field is <code>Copy</code>.</p>
 </blockquote>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> Map this onto C++: <code>Copy</code> is roughly a trivially-copyable type with an implicit copy constructor that is a <code>memcpy</code>; <code>Clone</code> is an explicit, user-defined copy you must <em>call by name</em>. The break: C++ copy constructors fire implicitly on every pass-by-value, which is why accidental deep copies are a classic C++ performance trap. Rust makes the expensive case syntactically loud (<code>clone()</code>) and the cheap case the only implicit one.</p>
+<p><strong>🦀 From your toolbox →</strong> This maps cleanly onto a distinction you already feel in Java and Swift. <code>Copy</code> is like Java’s primitives (<code>int</code>, <code>double</code>) or Swift’s small value-types: assigning them just duplicates the bits and both sides are independent and valid. <code>Clone</code> is like calling <code>.clone()</code> on a Java object or writing an explicit deep copy in Swift — it’s a method you invoke <em>by name</em>, and it can do real work. The point Rust adds is that the expensive case is <em>never</em> implicit: there’s no silent deep copy hiding behind an assignment, so a <code>.clone()</code> in the source is the only place a heap copy can happen, and you can see (and grep for) every one of them.</p>
 </blockquote>
 <h2 id="copy-and-drop-are-mutually-exclusive--and-that-is-not-arbitrary"><a class="header" href="#copy-and-drop-are-mutually-exclusive--and-that-is-not-arbitrary"><code>Copy</code> and <code>Drop</code> are mutually exclusive — and that is not arbitrary</a></h2>
-<p>You cannot implement both <code>Copy</code> and <code>Drop</code> for the same type; the compiler rejects it. The reason follows directly from the affine model. <code>Copy</code> says “a bitwise duplicate is a complete, independent value.” <code>Drop</code> says “this value owns something that needs cleanup.” If a type were both, then copying it would produce two values, each of which would run its destructor — two cleanups for one logical resource, i.e. a double-free or double-close. So <code>Copy</code> is exactly the set of types for which “duplicate freely, never run special cleanup” is sound, and <code>Drop</code> is exactly the set for which it is not.</p>
+<p>You cannot implement both <code>Copy</code> and <code>Drop</code> for the same type; the compiler rejects it. The reason follows directly from the model. <code>Copy</code> says “a bitwise duplicate is a complete, independent value.” <code>Drop</code> says “this value owns something that needs cleanup.” If a type were both, then copying it would produce two values, each of which would run its destructor — two cleanups for one logical resource, i.e. a double-free or double-close. So <code>Copy</code> is exactly the set of types for which “duplicate freely, never run special cleanup” is sound, and <code>Drop</code> is exactly the set for which it is not.</p>
 <h2 id="ownership-flows-through-function-boundaries"><a class="header" href="#ownership-flows-through-function-boundaries">Ownership flows through function boundaries</a></h2>
 <p>Passing an argument and returning a value obey the same move/copy rule as <code>let</code>. Passing a non-<code>Copy</code> value to a function <em>moves</em> it; the callee becomes the owner and drops it (unless it moves it out again):</p>
 <pre class="playground"><code class="language-rust">fn consume(s: String) {       // s owned here
@@ -316,7 +326,17 @@ fn main() {
 }   // "removing /tmp/scratch" prints here, automatically</code></pre>
 <p><code>Drop::drop</code> takes <code>&amp;mut self</code>, not <code>self</code> — you are <em>finalising</em> the value in place, not consuming it (the value is already being destroyed; if <code>drop</code> took <code>self</code> by value it would need to drop <em>that</em>, recursing forever). <code>Drop</code> is in the prelude, so no import is needed.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is exactly the resource-cleanup obligation that <em>Concurrent and Distributed Systems</em> drills into you for locks: every <code>acquire</code> needs a matching <code>release</code> on every path, including exceptional ones. Rust encodes the release as the <code>Drop</code> impl of a guard type (<a href="15-smart-pointers.html">smart pointers</a> covers <code>MutexGuard</code>), so the lock is released the instant the guard leaves scope — no manual <code>unlock</code>, no path you forgot, no lock leak on early return.</p>
+<p><strong>🔧 In practice →</strong> <code>Drop</code> is how you make “this always gets cleaned up, on every exit path” a property of the <em>type</em> rather than something every caller has to remember. The canonical real-world case is a lock guard: you lock a <code>Mutex</code>, get back a guard, and the moment that guard leaves scope — whether you returned normally, hit an early <code>return</code>, or bailed out with <code>?</code> — the lock is released. You never write the unlock.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn transfer(accounts: &amp;Mutex&lt;Ledger&gt;, from: u32, to: u32, amt: u64) -&gt; Result&lt;(), Error&gt; {
+    let mut ledger = accounts.lock().unwrap();   // guard acquired
+    ledger.debit(from, amt)?;   // if this returns Err, `?` exits early...
+    ledger.credit(to, amt)?;    // ...and the guard's Drop still unlocks the Mutex
+    Ok(())
+}   // guard drops here on the happy path
+<span class="boring">}</span></code></pre>
+<p>This is the same trick behind temp-file cleanup, closing sockets, flushing buffered writers, and decrementing metrics counters. If you’ve ever leaked a lock in Java because an exception skipped your <code>finally</code>, this is the structural fix: cleanup is welded to scope exit and the compiler won’t let you forget it. (<a href="15-smart-pointers.html">Smart pointers</a> covers <code>MutexGuard</code> in detail.)</p>
 </blockquote>
 <h3 id="drop-order-is-defined-deterministic-and-worth-memorising"><a class="header" href="#drop-order-is-defined-deterministic-and-worth-memorising">Drop order is defined, deterministic, and worth memorising</a></h3>
 <p>Within a scope, <strong>variables drop in reverse order of declaration</strong> (LIFO — the last binding created is the first destroyed, matching stack discipline). Within a single value, after any explicit <code>Drop::drop</code> body runs, <strong>fields drop in forward declaration order</strong>. Both are guaranteed by the language, so you can rely on them for ordering-sensitive teardown (e.g. a child resource that must outlive nothing but is declared after its parent).</p>
@@ -356,13 +376,13 @@ drop(t);                       // runs cleanup now; t is moved, can't be used ag
 <li>A moved-from binding must be unusable ⇒ otherwise two bindings could both try to free.</li>
 <li><code>Copy</code> is precisely the types where “duplicate, both valid” is sound (no owned resource) ⇒ those don’t move.</li>
 <li><code>Drop</code> + <code>Copy</code> is unsound ⇒ they’re mutually exclusive.</li>
-<li>Drop runs exactly once at the owner’s scope exit ⇒ deterministic RAII, no GC, no manual <code>free</code>.</li>
+<li>Drop runs exactly once at the owner’s scope exit ⇒ deterministic cleanup, no GC, no manual <code>free</code>.</li>
 </ul>
-<p>The cost is that you cannot freely share an owned value the way you would pass a Java object reference around. The escape from “move everything” — using a value without consuming it — is <a href="03-references-and-borrowing.html">borrowing</a>: take a <code>&amp;T</code> or <code>&amp;mut T</code>, which lends access for a bounded region without transferring ownership. That is the next chapter, and it is what makes the ownership model ergonomic rather than merely safe.</p>
+<p>The cost is that you cannot freely share an owned value the way you would pass a Java object reference or a Python object around. The escape from “move everything” — using a value without consuming it — is <a href="03-references-and-borrowing.html">borrowing</a>: take a <code>&amp;T</code> or <code>&amp;mut T</code>, which lends access for a bounded region without transferring ownership. That is the next chapter, and it is what makes the ownership model ergonomic rather than merely safe.</p>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
-<li>Ownership is an <strong>affine</strong> discipline: each non-<code>Copy</code> value has one owner, may be moved (used) at most once, and is <strong>dropped</strong> deterministically when its owner leaves scope — RAII with compiler-synthesised, leak-free, zero-overhead destruction.</li>
-<li>A move is a <strong>destructive <code>memcpy</code> of the handle</strong> that statically invalidates the source. Unlike C++, there is no move constructor and no valid moved-from state; use-after-move is a <em>compile</em> error (<code>E0382</code>), never UB.</li>
+<li>Ownership means each non-<code>Copy</code> value has <strong>one owner</strong>, may be moved (used) <strong>at most once</strong>, and is <strong>dropped</strong> deterministically when its owner leaves scope — automatic, leak-free, zero-overhead cleanup at a compile-time-fixed point, unlike Java’s GC, Swift’s ARC, or Python’s refcounting that all decide at run time.</li>
+<li>A move is a <strong>destructive <code>memcpy</code> of the handle</strong> that statically invalidates the source. Unlike a Java/Python reference assignment, you are not left with two usable names for one resource; use-after-move is a <em>compile</em> error (<code>E0382</code>), never a silent shared alias or UB.</li>
 <li><code>Copy</code> (implicit, cheap, bitwise, source stays valid) is for stack-only resource-free types; <code>Clone</code> (explicit, named, possibly a heap allocation) is the only way to deep-copy. Implicit duplication is therefore always cheap.</li>
 <li><code>Copy</code> and <code>Drop</code> are mutually exclusive: a type with cleanup cannot be silently duplicated, or you’d double-free.</li>
 <li>Drop order is defined: <strong>variables reverse-of-declaration, struct fields forward-of-declaration</strong>. You can’t call <code>.drop()</code> (<code>E0040</code>); force early cleanup with <code>std::mem::drop(x)</code>, which works purely by <em>moving</em> <code>x</code> in.</li>
@@ -370,22 +390,24 @@ drop(t);                       // runs cleanup now; t is moved, can't be used ag
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write a function <code>fn first_word(s: String) -&gt; usize</code> that returns the index of the first space (or the length if none). Call it, then try to print the original <code>String</code> afterwards. Read the <code>E0382</code> error carefully, then fix it <em>two</em> ways: (a) by cloning at the call site, (b) by changing the signature to borrow. Which is idiomatic and why?</p>
+<p><strong>Predict the error, then choose the fix.</strong> You have <code>let cfg = load_config();</code> (a <code>String</code>), and you want to call <code>validate(cfg)</code> and then <code>apply(cfg)</code>, both of which currently take <code>String</code> by value. Before touching the code, state which call fails and the error code you’ll see. Now you have three options: clone for the first call, change one signature to borrow, or change both to borrow. Which do you pick, and what would have to be true about <code>validate</code>/<code>apply</code> for cloning to be the <em>right</em> choice rather than a workaround?</p>
 </li>
 <li>
-<p>Declare four <code>Loud</code> values (the noisy-<code>Drop</code> struct from this chapter) in a single scope, two of them inside a nested <code>{ }</code> block. Predict the exact print order <em>before</em> compiling, then verify. Explain the order using the reverse-declaration and nested-scope rules.</p>
+<p><strong>Which of these compiles?</strong> Without running them, decide for each whether it builds, and why:
+(a) <code>let a = 5; let b = a; println!("{a} {b}");</code>
+(b) <code>let a = String::from("hi"); let b = a; println!("{a} {b}");</code>
+(c) <code>let a = (1_i32, 2_i32); let b = a; println!("{a:?} {b:?}");</code>
+(d) <code>let a = (String::from("hi"), 2); let b = a; println!("{b:?}");</code> — and would adding <code>println!("{a:?}")</code> change the answer?
+State the single rule that decides each case.</p>
 </li>
 <li>
-<p>Define <code>struct Pair { a: Loud, b: Loud }</code> where <code>Loud</code> has a noisy <code>Drop</code>, and give <code>Pair</code> itself a noisy <code>Drop</code> too. Predict and then verify the order of all three messages when a <code>Pair</code> leaves scope. (★) Now swap the declaration order of <code>a</code> and <code>b</code> and explain what changed and what didn’t.</p>
+<p><strong>Predict the print order.</strong> Declare four <code>Loud</code> values in one scope, with two of them inside a nested <code>{ }</code> block, then declare one more after the block closes. Write down the exact output <em>before</em> compiling, then verify. Explain the order using the reverse-declaration rule and what the nested scope’s closing brace does.</p>
 </li>
 <li>
-<p>Try to put <code>#[derive(Copy, Clone)]</code> on a struct that contains a <code>String</code> field. Read the error, and explain in one sentence — in terms of ownership of the heap buffer — why the compiler is right to reject it.</p>
+<p><strong>Make a design decision.</strong> You’re writing a <code>Connection</code> type that holds an OS socket handle that must be closed exactly once. Should <code>Connection</code> be <code>Copy</code>, <code>Clone</code>, both, or neither — and should it implement <code>Drop</code>? Justify each choice in terms of “how many owners can be responsible for closing the socket,” and explain why the compiler would reject one of the combinations outright.</p>
 </li>
 <li>
-<p>(★) Write a <code>Guard</code> struct holding a <code>&amp;'static str</code> name with a noisy <code>Drop</code>. In <code>main</code>, create one, then use <code>std::mem::drop</code> to finalise it early, then attempt to use it again on the next line. Predict both the runtime output <em>and</em> the compile error you’ll get from the post-drop use, and explain how the move rule guarantees the destructor runs exactly once.</p>
-</li>
-<li>
-<p>Given <code>let v = vec![String::from("x"), String::from("y")];</code>, write a <code>for</code> loop that moves each <code>String</code> out and passes it to a consuming function. Then try to use <code>v</code> after the loop. Explain why <code>into_iter()</code> is what makes the per-element move legal and why the binding <code>v</code> is unusable afterwards.</p>
+<p>(★) <strong>Adapt the early-drop pattern.</strong> Using a <code>Guard</code> struct that holds a <code>&amp;'static str</code> name and prints in its <code>Drop</code>, you want the guard finalised <em>before</em> a long computation runs (imagine it holds a lock you want to release early). Write the few lines that achieve this with <code>std::mem::drop</code>, then predict: what is the runtime output order relative to a “computation done” print, and what error (and code) do you get if you reference the guard after the early drop? Explain how the move rule guarantees the destructor still runs exactly once and not twice.</p>
 </li>
 </ol>
 
@@ -424,22 +446,6 @@ drop(t);                       // runs cleanup now; t is moved, can't be used ag
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

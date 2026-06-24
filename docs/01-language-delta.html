@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -191,7 +191,7 @@ let y: f64 = 2.0; // optional annotation, ML-style: name : type
 </code></pre>
 <p>To opt into mutation you write <code>let mut x = 5;</code>. This is the inverse of C and Java, where everything is mutable unless you sprinkle <code>const</code>/<code>final</code>. The default is flipped on purpose: an immutable binding is a fact the compiler (and the reader) can rely on, and — looking ahead — immutability is the cheaper, contention-free half of the borrow rules in <a href="03-references-and-borrowing.html">references and borrowing</a>. <code>mut</code> is not just a lint; it is load-bearing type information.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> Think OCaml <code>let x = 5</code> (a binding, not a mutable cell), but with an explicit escape hatch. C’s <code>const int x</code> is the closest analogy for the <em>default</em>, except Rust’s <code>mut</code> annotates the <em>binding</em>, not the type — there is no <code>const</code>-poisoning of pointer types the way <code>const char *</code> differs from <code>char *</code>. The analogy to OCaml’s <code>ref</code> breaks down too: <code>mut</code> does not introduce a level of indirection the way <code>ref</code>/<code>:=</code> does; the variable <em>is</em> the storage and you assign through its name.</p>
+<p><strong>🦀 From your toolbox →</strong> Closest to Swift’s <code>let</code> vs <code>var</code>: Swift’s <code>let</code> is the immutable default and <code>var</code> is the opt-in to mutation — Rust just renames <code>var</code> to <code>let mut</code>. Java’s <code>final</code> and Kotlin’s <code>val</code> are the same idea, except Rust flips the default so that <em>not</em> writing <code>mut</code> is the common case (think “everything is <code>final</code> unless you say otherwise”). Python has no equivalent — every name is a rebindable reference — so the Rust discipline will feel stricter than <code>x = 5</code> in a script. Where the analogy breaks down: Rust’s <code>mut</code> annotates the <em>binding</em>, not the value’s type, and unlike Swift’s <code>var</code> on a class reference, there’s no hidden indirection — the variable <em>is</em> the storage, and you assign straight through its name.</p>
 </blockquote>
 <h2 id="shadowing--and-why-it-is-not-mut"><a class="header" href="#shadowing--and-why-it-is-not-mut">Shadowing — and why it is not <code>mut</code></a></h2>
 <p>You may bind the same name twice. The second <code>let</code> does not mutate the first binding; it creates a brand-new binding that <em>shadows</em> the old one for the rest of the scope:</p>
@@ -201,12 +201,23 @@ let y: f64 = 2.0; // optional annotation, ML-style: name : type
 let count = count.trim();        // &amp;str, whitespace stripped
 let count: u32 = count.parse().unwrap(); // now a u32 — different type!
 <span class="boring">}</span></code></pre>
-<p>This is exactly OCaml’s shadowing, and it is categorically different from <code>mut</code>:</p>
+<p>There is nothing like this in Java, Swift, or Python — re-using a name there always <em>reassigns</em> the same variable (and in Java/Swift the type is locked, so you couldn’t go from <code>String</code> to <code>int</code> anyway). Rust’s shadowing is a genuinely new binding, and it is categorically different from <code>mut</code>:</p>
 <ul>
 <li>Shadowing introduces a <em>new variable</em> (possibly a new type, as above: <code>&amp;str</code> then <code>u32</code>). <code>mut</code> keeps the same variable and forbids changing its type.</li>
 <li>Shadowing requires the <code>let</code> keyword every time, so an accidental re-assignment without <code>let</code> is still caught.</li>
 <li>After a chain of shadowing transformations, the final binding can be immutable. You get the ergonomics of “transform in place” without giving up the guarantee that the value won’t change <em>after</em> you’re done with it.</li>
 </ul>
+<blockquote>
+<p><strong>🔧 In practice →</strong> Shadowing shines when you parse-and-narrow an input. Picture a request handler that receives a port as text: you want a validated <code>u16</code> by the end, but the raw form is a <code>&amp;str</code>. Instead of inventing <code>port_str</code>, <code>port_trimmed</code>, <code>port_num</code>, you keep one name and let its type sharpen as you go:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+let port = port.trim();              // &amp;str
+let port: u16 = port.parse().unwrap_or(8080); // now a validated u16
+// from here on `port` is the immutable, final value — no leftover string lying around
+<span class="boring">}</span></code></pre>
+<p>The intermediate <code>&amp;str</code> is gone, so nobody downstream can accidentally use the un-parsed version. That “the old shape is unreachable now” guarantee is exactly what <code>mut</code> can’t give you.</p>
+</blockquote>
 <p>A scope-local shadow reverts when the scope ends:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -232,8 +243,8 @@ static GREETING: &amp;str = "hello";      // a single object with a 'static addr
 <li><code>static</code> is a single global with a fixed address that lives for the whole program (its lifetime is <code>'static</code>; see <a href="04-lifetimes.html">lifetimes</a>). A <code>static mut</code> exists but is <code>unsafe</code> to touch, because a mutable global is a data race waiting to happen — see <a href="16-unsafe-and-ffi.html">unsafe</a>. Reach for <code>const</code> by default.</li>
 </ul>
 <p>Convention: <code>SCREAMING_SNAKE_CASE</code> for both.</p>
-<h2 id="type-inference-local-hindleymilner-not-global"><a class="header" href="#type-inference-local-hindleymilner-not-global">Type inference: local Hindley–Milner, not global</a></h2>
-<p>Inside a function body Rust infers types the way you expect from OCaml — you rarely annotate locals:</p>
+<h2 id="type-inference-local-not-global"><a class="header" href="#type-inference-local-not-global">Type inference: local, not global</a></h2>
+<p>Inside a function body Rust infers types the way you expect from Swift (<code>let v = [1, 2, 3]</code>) or modern Java’s <code>var</code> — you rarely annotate locals:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let v = vec![1, 2, 3];   // Vec&lt;i32&gt;
@@ -244,9 +255,15 @@ let total: i64 = v.iter().sum(); // annotation steers `sum`'s output type
 </span><span class="boring">fn main() {
 </span>fn add(x: i32, y: i32) -&gt; i32 { x + y }
 <span class="boring">}</span></code></pre>
-<p>This is a hard rule, and it is a design choice, not a limitation of the algorithm. OCaml will happily infer the type of <code>let add x y = x + y</code> across the whole module. Rust refuses at the function boundary so that (a) type errors stay local and produce comprehensible messages instead of cascading across files, and (b) the public API of a function is documented and stable regardless of its body. The cost is a few annotations; the payoff is that inference within a body can be aggressive precisely because the boundaries are pinned.</p>
+<p>This is a hard rule, and it is a design choice, not a limitation of the algorithm. OCaml will happily infer the type of <code>let add x y = x + y</code> across the whole module. Rust deliberately stops at the function boundary so that (a) type errors stay local and produce comprehensible messages instead of cascading across files, and (b) the public API of a function is documented and stable regardless of its body — much like Swift and Java, where method signatures are always spelled out even though locals can be inferred. The cost is a few annotations; the payoff is that inference within a body can be aggressive precisely because the boundaries are pinned.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Foundations of Computer Science.</em> This is Hindley–Milner with the let-generalisation scoped to the function body and the principal type at each <code>fn</code> boundary fixed by annotation rather than inferred. Unlike the global unification you saw in OCaml, Rust solves a constraint set per function, seeded by the signature. The inference is also influenced <em>backwards</em> by later use (note how <code>let guess: u32 = "42".parse().unwrap();</code> lets <code>parse</code> pick its return type from the annotation) — that’s unification flowing both directions, not C-style forward-only declaration.</p>
+<p><strong>🔧 In practice →</strong> The fact that inference flows <em>backwards</em> from how you use a value — not just forwards from where it’s created — is what makes <code>.collect()</code> and <code>.parse()</code> pleasant. You write the target type once on the binding and the method figures out what to produce:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let port: u16 = "8080".parse().unwrap();          // parse() reads u16 off the annotation
+let names: Vec&lt;String&gt; = rows.iter().map(|r| r.name.clone()).collect();
+<span class="boring">}</span></code></pre>
+<p>Without the annotation on <code>port</code>, Rust can’t tell <em>which</em> <code>parse</code> you meant (parse to <code>u16</code>? <code>i64</code>? <code>f32</code>?) and asks you to say. So the rule of thumb: annotate the binding, and let the call site infer the rest. This is the same “the variable’s declared type steers the call” idea you’ve used with Swift’s <code>let x: Int = ...</code> and Java’s explicit target types.</p>
 </blockquote>
 <h2 id="scalar-types-sized-explicit-non-coercing"><a class="header" href="#scalar-types-sized-explicit-non-coercing">Scalar types: sized, explicit, non-coercing</a></h2>
 <div class="table-wrapper">
@@ -263,9 +280,9 @@ let total: i64 = v.iter().sum(); // annotation steers `sum`'s output type
 </tbody>
 </table>
 </div>
-<p>Three things that will bite C and OCaml muscle memory:</p>
-<p><strong>Sizes are in the name.</strong> There is no implementation-defined <code>int</code>. <code>i32</code> is 32 bits everywhere. <code>isize</code>/<code>usize</code> are pointer-width (the moral equivalent of <code>ptrdiff_t</code>/<code>size_t</code>), and indexing a collection yields a <code>usize</code> — using a different width as an index is a type error, not a silent conversion.</p>
-<p><strong>No implicit numeric coercion. None.</strong> This is the single biggest break from C’s arithmetic. <code>let x: i64 = some_i32;</code> does not compile; you must write <code>some_i32 as i64</code> or <code>i64::from(some_i32)</code>. C’s integer-promotion and the entire usual-arithmetic-conversions ritual simply do not exist. Mixing an <code>i32</code> and a <code>u8</code> in <code>+</code> is a compile error. The reason is the invariant again: silent widening/narrowing is a classic source of bugs (sign flips, truncation), so Rust forces the conversion to be written, where it is auditable.</p>
+<p>Three things that will bite muscle memory built on Java, Swift, or Python:</p>
+<p><strong>Sizes are in the name.</strong> There is no implementation-defined <code>int</code>. <code>i32</code> is 32 bits everywhere — closer to Java’s guaranteed-width <code>int</code>/<code>long</code> than to C’s wobbly <code>int</code>. <code>isize</code>/<code>usize</code> are pointer-width, and indexing a collection yields a <code>usize</code> — using a different width as an index is a type error, not a silent conversion. (Swift’s <code>Int</code> and <code>Array</code> index type <code>Int</code> is the nearest cousin: an explicit width tied to the platform.)</p>
+<p><strong>No implicit numeric coercion. None.</strong> This is the single biggest surprise if you’re used to Java, Swift, or Python. <code>let x: i64 = some_i32;</code> does not compile; you must write <code>some_i32 as i64</code> or <code>i64::from(some_i32)</code>. Java will silently widen an <code>int</code> to a <code>long</code> for you; Swift makes you write <code>Int64(x)</code> (so Swift will already feel familiar here); Python just promotes everything to arbitrary-precision integers. Rust takes the strict-Swift stance and applies it everywhere: mixing an <code>i32</code> and a <code>u8</code> in <code>+</code> is a compile error. The reason is the invariant again: silent widening/narrowing is a classic source of bugs (sign flips, truncation), so Rust forces the conversion to be written, where it is auditable.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let a: i32 = 1000;
@@ -307,27 +324,27 @@ let cat = '😻';     // a single char
 <span class="boring">}</span></code></pre>
 <p>A <code>char</code> is <strong>4 bytes</strong> and holds exactly one Unicode scalar value (any code point in <code>U+0000..=U+D7FF</code> or <code>U+E000..=U+10FFFF</code>, i.e. everything except surrogate halves). This is nothing like C’s <code>char</code> (a byte) or <code>wchar_t</code>. It is <em>not</em> a UTF-8 byte and <em>not</em> a UTF-8 grapheme either — string iteration and the byte-vs-char-vs-grapheme distinction is a genuine subtlety covered in <a href="10-collections.html">collections</a>. Single quotes are <code>char</code>; double quotes are <code>&amp;str</code>.</p>
 <h2 id="compound-types-tuples-and-fixed-arrays"><a class="header" href="#compound-types-tuples-and-fixed-arrays">Compound types: tuples and fixed arrays</a></h2>
-<p><strong>Tuples</strong> are anonymous, fixed-arity, heterogeneous products — straight out of OCaml:</p>
+<p><strong>Tuples</strong> are anonymous, fixed-size, mixed-type groupings — the same idea as Swift’s <code>(Int, Double, UInt8)</code> tuples or Python’s <code>(500, 6.4, 1)</code>, but with the element types fixed at compile time:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let t: (i32, f64, u8) = (500, 6.4, 1);
-let (x, y, z) = t;        // destructuring let
-let first = t.0;          // positional access via .N
+let (x, y, z) = t;        // destructuring let — like Swift/Python tuple unpacking
+let first = t.0;          // positional access via .N (Swift uses .0 too)
 <span class="boring">}</span></code></pre>
-<p>The empty tuple <code>()</code> is the <strong>unit type</strong>, and it matters enormously — it is Rust’s “no meaningful value,” the type of an expression evaluated for effect. (OCaml’s <code>unit</code>, exactly.) We’ll lean on it the moment we discuss expressions below.</p>
-<p><strong>Arrays</strong> <code>[T; N]</code> are fixed-length, stack-allocated, homogeneous — like C arrays but with the length as part of the type:</p>
+<p>The empty tuple <code>()</code> is the <strong>unit type</strong>, and it matters enormously — it is Rust’s “no meaningful value,” the type of an expression evaluated only for its effect. Think Swift’s <code>Void</code> (which is literally a typealias for the empty tuple <code>()</code>) or the implicit <code>None</code>-returning function in Python. We’ll lean on it the moment we discuss expressions below.</p>
+<p><strong>Arrays</strong> <code>[T; N]</code> are fixed-length, stack-allocated, same-type-throughout — closest to Java’s <code>int[]</code> or Swift’s <code>Array</code>, except the length <code>N</code> is baked into the <em>type</em> and they can’t grow:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let xs: [i32; 5] = [1, 2, 3, 4, 5];
 let zeros = [0u8; 16];    // [value; count]: sixteen zero bytes
 <span class="boring">}</span></code></pre>
-<p>The crucial delta from C: <strong>indexing is bounds-checked.</strong> <code>xs[10]</code> does not read adjacent memory; it <em>panics</em> with <code>index out of bounds: the len is 5 but the index is 10</code>. When the index is a compile-time constant the check is elided; when it comes from runtime data the check happens at runtime. This is the array-out-of-bounds half of “memory safety” made concrete — Rust traps instead of letting you stroll off the end the way C does. The compiler cannot know a user-supplied index in advance, so it inserts a guard; safety beats the saved comparison.</p>
+<p>The crucial point: <strong>indexing is bounds-checked.</strong> <code>xs[10]</code> does not read adjacent memory; it <em>panics</em> with <code>index out of bounds: the len is 5 but the index is 10</code>. This is the same safety net you get from Java’s <code>ArrayIndexOutOfBoundsException</code>, Swift’s array trap, or Python’s <code>IndexError</code> — Rust just calls it a <em>panic</em>. When the index is a compile-time constant the check is elided; when it comes from runtime data the check happens at runtime. The difference from a hand-written C array, where reading past the end silently scribbles over (or reads) whatever memory is next door, is exactly the “memory safety” guarantee made concrete. The compiler cannot know a user-supplied index in advance, so it inserts a guard; safety beats the saved comparison.</p>
 <p>For a growable, heap-backed sequence you want <code>Vec&lt;T&gt;</code>, and for a borrowed <em>view</em> into either an array or a <code>Vec</code> you want a <em>slice</em> <code>&amp;[T]</code> — these, and why <code>[T; N]</code> / <code>Vec&lt;T&gt;</code> / <code>&amp;[T]</code> form a family, are the subject of <a href="05-slices-and-duality.html">slices and the owned/borrowed duality</a>.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>[T; N]</code> is C’s <code>T arr[N]</code> with the length promoted into the type (so <code>[i32; 4]</code> and <code>[i32; 5]</code> are <em>distinct types</em> and a function taking one rejects the other — unlike C, where arrays decay to bare pointers and lose their length at the first opportunity). The decay-to-pointer move has no equivalent; Rust keeps the length, which is exactly what makes bounds checks and the <code>for x in arr</code> loop below possible.</p>
+<p><strong>🦀 From your toolbox →</strong> Unlike Java’s <code>int[]</code> or Swift’s <code>Array</code> — where the length is a runtime property of the object — Rust folds the length into the <em>type</em>. So <code>[i32; 4]</code> and <code>[i32; 5]</code> are genuinely <em>distinct types</em>, and a function taking <code>[i32; 4]</code> flatly rejects a <code>[i32; 5]</code>. (Java and Swift would accept any <code>int[]</code>/<code>[Int]</code> and discover a length mismatch only at runtime, if at all.) Where the analogy breaks down: in C, a bare array hands its length away the instant you pass it — it becomes just a pointer to the first element, and the size is lost. Rust never does that; it keeps the length attached, which is precisely what makes the bounds checks and the <code>for x in arr</code> loop below possible. If you’ve only met C’s “arrays are really pointers” rule as a footgun, Rust’s stance is “the length is part of who you are.”</p>
 </blockquote>
 <h2 id="the-big-one-rust-is-expression-oriented"><a class="header" href="#the-big-one-rust-is-expression-oriented">The big one: Rust is expression-oriented</a></h2>
-<p>If you internalise one thing from this chapter, make it this. Like OCaml and unlike C/Java, <strong>almost everything in Rust is an expression that evaluates to a value.</strong> Blocks, <code>if</code>, <code>match</code>, and <code>loop</code> all produce values. The distinction Rust draws is:</p>
+<p>If you internalise one thing from this chapter, make it this. Unlike Java or Python — where <code>if</code>, loops, and blocks are <em>statements</em> that produce nothing — <strong>almost everything in Rust is an expression that evaluates to a value.</strong> This will feel most familiar from Swift, where <code>switch</code> and <code>if</code> can be used as expressions, and from OCaml, where it’s the whole language. Blocks, <code>if</code>, <code>match</code>, and <code>loop</code> all produce values. The distinction Rust draws is:</p>
 <ul>
 <li><strong>Statements</strong> perform an action and evaluate to nothing (<code>let y = 6;</code> is a statement; a <code>fn</code> definition is a statement).</li>
 <li><strong>Expressions</strong> evaluate to a value (<code>5 + 6</code>, a function call, a macro call, a block <code>{ … }</code>).</li>
@@ -337,7 +354,7 @@ let zeros = [0u8; 16];    // [value; count]: sixteen zero bytes
 </span><span class="boring">fn main() {
 </span>// let x = (let y = 6);  // error: expected expression, found `let` statement
 <span class="boring">}</span></code></pre>
-<p>This is the opposite of C, where assignment is an expression returning the assigned value (the source of <code>if (x = 0)</code> bugs). Rust amputates that footgun by making <code>let</code> a statement.</p>
+<p>This is the opposite of Java and C, where assignment is itself an expression returning the assigned value — the source of the classic <code>if (x = 0)</code> typo (you meant <code>==</code>). Rust removes that footgun entirely by making <code>let</code> a statement, so <code>if x = 0</code> simply doesn’t parse.</p>
 <h3 id="blocks-evaluate-to-their-trailing-expression"><a class="header" href="#blocks-evaluate-to-their-trailing-expression">Blocks evaluate to their trailing expression</a></h3>
 <p>A <code>{ … }</code> block is an expression. Its value is the last expression inside it — <strong>written without a trailing semicolon</strong>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -349,7 +366,7 @@ let zeros = [0u8; 16];    // [value; count]: sixteen zero bytes
 <span class="boring">}</span></code></pre>
 <p>The semicolon is the pivotal piece of punctuation in Rust, and it does the opposite of what it does in C. A trailing semicolon <strong>discards</strong> the value and turns the expression into a statement whose value is <code>()</code>. Drop the semicolon and the expression’s value becomes the block’s value. This rule unifies <code>let x = { … }</code> with function return below.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> In big-step operational semantics, a Rust block is <code>⟨e₁; e₂; …; eₙ⟩</code> where the value of the whole is the value of <code>eₙ</code>. A trailing semicolon is the rule <code>e ; ⤳ ()</code> — it sequences <code>e</code> for its side effects and yields unit. This is precisely OCaml’s <code>e1; e2</code> sequencing, where <code>e1 : unit</code>, generalised: in Rust <em>every</em> non-final statement is implicitly forced to type-check as a statement, and the type of the block is the type of its tail expression (or <code>()</code> if there is none).</p>
+<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages</em> — the intuition, no formalism. Read a block top to bottom: each line that ends in a semicolon is run for its effect and then thrown away (its value becomes <code>()</code>); the final line, if you leave the semicolon off, <em>is</em> the block’s value. That’s the whole rule. If you’ve used OCaml, it’s the <code>e1; e2</code> sequencing you already know — run <code>e1</code> for effect, hand back <code>e2</code> — just generalised to a stack of statements followed by one tail expression. The mental model to carry: <strong>semicolon = “and then discard”; no semicolon on the last line = “this is the answer.”</strong></p>
 </blockquote>
 <h3 id="functions-return-their-tail-expression"><a class="header" href="#functions-return-their-tail-expression">Functions return their tail expression</a></h3>
 <p>There is no <code>return</code> keyword on the happy path. The body is a block; the function returns the block’s trailing (semicolon-less) expression. The return type follows <code>-&gt;</code>:</p>
@@ -373,7 +390,7 @@ fn add_one(x: i32) -&gt; i32 {
 <p><strong>⚠️ Pitfall →</strong> The number-one beginner error, and it hits OCaml veterans too: <code>fn add_one(x: i32) -&gt; i32 { x + 1; }</code>. The stray semicolon turns <code>x + 1</code> into a statement, so the block yields <code>()</code>, and you get <code>error[E0308]: mismatched types — expected i32, found ()</code>, with the helpful note <code>implicitly returns () as its body has no tail or return expression</code>. The fix the compiler suggests is literally “remove this semicolon.” When a function with a non-<code>()</code> return type “returns nothing,” look for a rogue semicolon first.</p>
 </blockquote>
 <p>A function with no <code>-&gt;</code> returns <code>()</code> implicitly — that is what <code>main</code> and <code>fn another()</code> do. This is why <code>()</code> is not a curiosity: it is the value of every “void” function and every semicolon-terminated block.</p>
-<p><strong>No function overloading.</strong> Unlike C++ and Java, you cannot define two functions with the same name and different parameter types. Names are unique within a scope; the polymorphism you’d reach for overloading to express is done with <em>generics</em> and <em>traits</em> instead (see <a href="08-generics-and-traits.html">generics and traits</a>). And there is no <code>void f(int) {}</code> vs <code>void f(float) {}</code> — one name, one function.</p>
+<p><strong>No function overloading.</strong> Unlike Java, Swift, or C++ — where you can write <code>f(int)</code> and <code>f(float)</code> as two functions sharing a name — Rust lets a name refer to exactly one function within a scope. The “same operation, many types” need that you’d solve with overloading (or with Java/Swift method overloads) is met instead by <em>generics</em> and <em>traits</em> (see <a href="08-generics-and-traits.html">generics and traits</a>). One name, one function; the polymorphism moves into the type parameters.</p>
 <h2 id="control-flow-as-expressions"><a class="header" href="#control-flow-as-expressions">Control flow as expressions</a></h2>
 <h3 id="if-is-an-expression"><a class="header" href="#if-is-an-expression"><code>if</code> is an expression</a></h3>
 <p>Because <code>if</code>/<code>else</code> produces a value, it replaces C’s ternary <code>?:</code> (which Rust deliberately omits):</p>
@@ -392,7 +409,24 @@ let result = loop {
     if counter == 10 { break counter * 2; }  // break WITH a value
 };                                            // result == 20
 <span class="boring">}</span></code></pre>
-<p>This is the idiomatic “retry until success, then hand the result back” construct — there is no equivalent in C, where <code>break</code> is value-less. (<code>while</code> and <code>for</code> do <em>not</em> yield values this way; their type is always <code>()</code>, because they may run zero times and there’d be no value to produce.)</p>
+<p>This is the idiomatic “retry until success, then hand the result back” construct — there’s no direct equivalent in Java, Swift, or Python, where <code>break</code> carries no value and you’d need a mutable variable declared <em>outside</em> the loop plus a flag. (<code>while</code> and <code>for</code> do <em>not</em> yield values this way; their type is always <code>()</code>, because they may run zero times and there’d be no value to produce.)</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> This is the clean way to write a retry-with-backoff. Say you’re polling a flaky service and want the response back once it succeeds, without a mutable <code>result</code> variable hanging around afterwards:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut attempt = 0;
+let response = loop {
+    attempt += 1;
+    match try_fetch() {
+        Ok(body) =&gt; break body,                 // hand the success out of the loop
+        Err(_) if attempt &lt; 5 =&gt; continue,      // try again
+        Err(e) =&gt; break_on_giving_up(e),        // (or break with a fallback)
+    }
+};
+// `response` is now a plain, immutable binding holding the value the loop produced
+<span class="boring">}</span></code></pre>
+<p>Compare the Java/Swift shape: declare <code>String response = null;</code> before the loop, mutate it inside, and hope every path sets it. Rust’s <code>break body</code> makes the loop itself the expression that produces <code>response</code>, so the binding can stay immutable and there’s no “did I forget to assign it?” gap.</p>
+</blockquote>
 <h3 id="while-is-the-conditional-loop"><a class="header" href="#while-is-the-conditional-loop"><code>while</code> is the conditional loop</a></h3>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -439,7 +473,7 @@ for i in (1..4).rev() { /* 3,2,1 */ }  // ranges compose with iterator adapters
 };
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Foundations of Computer Science.</em> This is OCaml’s <code>match … with</code> — including the exhaustiveness analysis. The C <code>switch</code> is the false friend: it has fall-through, no exhaustiveness guarantee, and operates only on integers/enums. Rust’s <code>match</code> is a total function from the matched value’s type to the result type, and the compiler discharges the proof of totality (Curry–Howard: the wildcard <code>_</code> is the case that makes the function total). Forget a variant of an <code>enum</code> and you get a compile error, not a silent default.</p>
+<p><strong>🎓 Tripos link →</strong> <em>Foundations of Computer Science.</em> This is OCaml’s <code>match … with</code>, exhaustiveness check and all — and it’s the close cousin of Swift’s <code>switch</code>, which also forces you to handle every case (or write <code>default</code>). The false friend is Java’s / C’s <code>switch</code>: it falls through unless you <code>break</code>, makes no promise that you covered every case, and works only on a handful of types. Rust’s <code>match</code> insists that <em>some</em> arm fires for every possible value — the wildcard <code>_</code> is how you say “everything else.” Forget a variant of an <code>enum</code> and you get a compile error, not a silent fall-through to nothing. The plain takeaway: the compiler turns “did I handle every case?” from a code-review worry into a guarantee.</p>
 </blockquote>
 <h2 id="comments-and-a-note-on-println"><a class="header" href="#comments-and-a-note-on-println">Comments and a note on <code>println!</code></a></h2>
 <p>Line comments are <code>//</code>; block comments <code>/* … */</code> nest. Doc comments <code>///</code> and <code>//!</code> feed <code>rustdoc</code> and are covered in <a href="20-testing-and-tooling.html">testing and tooling</a>.</p>
@@ -453,20 +487,35 @@ for i in (1..4).rev() { /* 3,2,1 */ }  // ranges compose with iterator adapters
 <li><strong><code>for</code> iterates over iterators (and ranges), never C-style indices</strong>, which is both safer (no fencepost panics) and faster (elided bounds checks). <code>loop</code> can carry a value out via <code>break value</code>; <code>while</code>/<code>for</code> cannot.</li>
 </ul>
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<p>These go a little beyond what the chapter spelled out — most ask you to <em>predict</em> what the compiler will say, <em>adapt</em> an idea to a new shape, or <em>choose</em> between two tools and justify it.</p>
 <ol>
-<li>Predict the compiler’s verdict, then check: <code>let mut s = "hi"; s = s.len();</code>. What error code, and why is <code>mut</code> the wrong tool? Rewrite it so it compiles.</li>
-<li>Write <code>fn abs_diff(a: i32, b: i32) -&gt; i32</code> <em>without</em> using <code>return</code> and without an explicit <code>if … return</code>. Now add a single semicolon somewhere in the body that makes it fail to compile, and state the exact error message you expect.</li>
-<li>(★) Without running it, give the value and type of each <code>let</code> below, or mark it a compile error and name the cause:
+<li>
+<p><strong>Which of these compile, and why?</strong> For each line decide whether it’s accepted or rejected, and name the rule in play. (Assume each is its own <code>main</code>.)</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let a = { let x = 2; x * x };
-let b = if a &gt; 3 { a } else { "small" };
-let c = loop { break a + 1; };
-let d = { 7; };
+</span>let a = if true { 1 } else { 2 };          // (i)
+let b = if true { 1 };                      // (ii)
+let c: i64 = 5_i32;                          // (iii)
+let d = 5_i32 + 5_i64;                       // (iv)
+let e = if 1 { "yes" } else { "no" };        // (v)
+<span class="boring">}</span></code></pre>
+<p>For the ones that fail, what’s the one-line fix that keeps the obvious intent?</p>
+</li>
+<li>
+<p><strong><code>mut</code> vs shadowing — a design call.</strong> You’re cleaning a user-supplied string: trim it, then later you also need its length as a number. Sketch the bindings two ways — once with <code>let mut</code>, once with shadowing — and say which you’d ship and why. (Hint: think about what type the final binding has, and whether anything downstream could still reach the raw, un-trimmed string.)</p>
+</li>
+<li>
+<p><strong>Predict the overflow behaviour.</strong> Given <code>let big: u8 = 200;</code>, state what happens for each of the following in a <em>debug</em> build and in a <code>--release</code> build, and pick which one you’d actually write if the value is a running byte counter that should stop counting once it maxes out (and say why):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let x = big + big;                 // (a)
+let y = big.wrapping_add(big);     // (b)
+let z = big.saturating_add(big);   // (c)
+let w = big.checked_add(big);      // (d)  — what's the type of `w`?
 <span class="boring">}</span></code></pre>
 </li>
-<li><code>let big: u8 = 200; let sum = big + big;</code> — describe what happens in a debug build vs a <code>--release</code> build, and rewrite the line three ways using the explicit overflow-method families so that (a) it clamps, (b) it signals failure, (c) it wraps deliberately.</li>
-<li>Rewrite this index loop as an idiomatic <code>for</code>, and explain in one sentence what runtime work the compiler is now free to omit:
+<li>
+<p><strong>Adapt the loop, then explain the speedup.</strong> Rewrite the index loop below as an idiomatic <code>for</code>, then explain in one sentence what runtime work the <code>for</code> version lets the compiler skip that the indexed version forces it to do on <em>every</em> iteration.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let v = [3, 1, 4, 1, 5];
@@ -474,7 +523,9 @@ let mut i = 0;
 while i &lt; v.len() { println!("{}", v[i]); i += 1; }
 <span class="boring">}</span></code></pre>
 </li>
-<li>(★) Using a labeled <code>loop</code>, write a search over a 2-D array <code>[[i32; 4]; 4]</code> that, on finding the first element greater than 10, breaks out of <em>both</em> loops and binds that element to a <code>let</code> outside the loops. (Hint: combine a loop label with <code>break</code>’s value-carrying form. Why can’t you do this with <code>for</code>?)</li>
+<li>
+<p>(★) <strong>When does <code>loop</code>-with-value beat <code>while</code>?</strong> You want to read lines until you hit one that parses as a positive integer, and bind <em>that integer</em> to an immutable variable for the rest of the function. Write it with a <code>loop</code> that uses <code>break value</code>. Then describe the shape you’d be stuck with if you tried the same thing with <code>while</code> (what extra variable would you need, and what guarantee would you lose?). Bonus: why can a <code>for</code> loop never stand in for this <code>break value</code> pattern?</p>
+</li>
 </ol>
 
                     </main>
@@ -512,22 +563,6 @@ while i &lt; v.len() { println!("{}", v[i]); i += 1; }
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

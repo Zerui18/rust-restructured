@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -177,15 +177,15 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="11-error-handling"><a class="header" href="#11-error-handling">11. Error Handling</a></h1>
-<p>Most languages you know have a single error-handling channel that is <em>invisible in the type signature</em>. In Java, <code>String readConfig()</code> can throw <code>IOException</code> and you only learn that from the <code>throws</code> clause (checked) or, worse, from the documentation or a stack trace at 3am (unchecked <code>RuntimeException</code>). In C++, <code>std::string read_config()</code> can throw anything, and the signature says nothing — <code>noexcept</code> is opt-in and rarely used. C has no channel at all: you smuggle failure through return codes, <code>errno</code>, sentinel values, and out-parameters, and the compiler never checks that you looked.</p>
+<p>Most languages you know have a single error-handling channel that is <em>invisible in the type signature</em>. In Java, <code>String readConfig()</code> can throw <code>IOException</code> and you only learn that from the <code>throws</code> clause (checked) or, worse, from the documentation or a stack trace at 3am (unchecked <code>RuntimeException</code>). In Swift, a function annotated <code>throws</code> tells you it <em>can</em> fail but not <em>how</em> — the error type is collapsed to a single <code>Error</code>, so you discover the concrete cases at the <code>catch</code>. In Python, <em>any</em> call can raise <em>any</em> exception and nothing in the signature warns you. C++ is similar: <code>std::string read_config()</code> can throw anything, and the signature says nothing — <code>noexcept</code> is opt-in and rarely used.</p>
 <p>Rust makes a hard, deliberate split that maps onto a distinction every other language blurs:</p>
 <ul>
 <li><strong>Bugs</strong> — violated invariants, “this can’t happen” situations, programmer errors. These use <code>panic!</code>, are <em>unrecoverable</em> by default, and are deliberately <strong>not</strong> in the type signature, because no caller should be writing recovery logic for your bug.</li>
 <li><strong>Expected failure</strong> — a file that might not exist, input that might be malformed, a network that might be down. These are values of type <code>Result&lt;T, E&gt;</code>, <strong>in the signature</strong>, and the compiler forces every caller to confront them.</li>
 </ul>
-<p>There are no exceptions in Rust. There is no <code>throw</code>, no stack-unwinding control flow you can <code>catch</code> (panic unwinding exists but is not a general control-flow tool — see below). The closest thing you already know is OCaml’s <code>result</code> type and the <code>Stdlib.result</code> combinators, or Haskell’s <code>Either e a</code> in the <code>Either</code>/<code>ExceptT</code> monad. Rust takes that model and bakes it into the standard library, the prelude, and a piece of syntax (<code>?</code>) that makes it ergonomic enough to use everywhere.</p>
+<p>There are no exceptions in Rust. There is no <code>throw</code>, no stack-unwinding control flow you can <code>catch</code> (panic unwinding exists but is not a general control-flow tool — see below). The closest thing you already know is Swift’s <code>Result&lt;Success, Failure&gt;</code> and Java’s <code>Optional</code> / <code>Either</code>-style result objects — but where Swift and Java still let you <code>throw</code> <em>and</em> return a result, Rust has only the one channel. A function that can fail says so in its return type, and the compiler enforces that you act on it. The <code>?</code> operator (below) makes that ergonomic enough to use everywhere.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>Result&lt;T, E&gt;</code> is OCaml’s <code>('a, 'b) result</code> = <code>Ok of 'a | Error of 'b</code>, and the <code>?</code> operator is the <code>let*</code> of a <code>result</code> monad. Where the analogy breaks: OCaml lets you freely mix <code>result</code> with <code>raise</code>/exceptions, and most of the stdlib raises (<code>List.hd</code>, <code>Hashtbl.find</code>). Rust has no second escape hatch you can catch routinely — <code>panic!</code> is for bugs, and unwinding is not idiomatic control flow. Compared to Java/C++ exceptions: a Rust function that can fail <em>must</em> say so in its return type. There is no hidden <code>throws</code>.</p>
+<p><strong>🦀 From your toolbox →</strong> <code>Result&lt;T, E&gt;</code> is Swift’s <code>Result&lt;Success, Failure&gt;</code> enum almost exactly — two cases, <code>Ok</code>/<code>Err</code> versus <code>.success</code>/<code>.failure</code>, generic in both payloads — and it pattern-matches the same way. The big difference from Swift: in Swift you usually <code>throws</code> and reach for <code>Result</code> only at API boundaries; in Rust <code>Result</code> <em>is</em> the boundary, every time, with no <code>throws</code> alternative. Compared to Java’s checked exceptions, a Rust function lists its failure in the <em>return</em> type rather than a separate <code>throws</code> clause, and the error is a first-class value you can store, map, and pass around — not a control-flow jump. Where the analogy breaks: Java/Swift can still throw past the type system (unchecked exceptions, <code>try!</code>), so the signature is advisory; Rust’s <code>Result</code> is the only road, so the signature is a guarantee.</p>
 </blockquote>
 <h2 id="track-one-panic-for-unrecoverable-bugs"><a class="header" href="#track-one-panic-for-unrecoverable-bugs">Track one: <code>panic!</code> for unrecoverable bugs</a></h2>
 <p><code>panic!</code> aborts the current thread’s normal execution. You trigger it explicitly or — far more commonly — the standard library triggers it on your behalf when you violate a contract:</p>
@@ -193,23 +193,23 @@
     let xs = vec![10, 20, 30];
     let _ = xs[99]; // panics: index out of bounds: the len is 3 but the index is 99
 }</code></pre>
-<p>In C, <code>xs[99]</code> on a heap array is undefined behaviour: a buffer overread that hands you whatever bytes live past the allocation, a textbook security hole. Rust’s <code>Index</code> impl for slices bounds-checks and panics instead. That is the whole philosophy in one line: <strong>a contract violation is a bug, and continuing with corrupt assumptions is worse than stopping.</strong></p>
+<p>In Java this throws <code>ArrayIndexOutOfBoundsException</code>; in Swift it traps; in Python <code>xs[99]</code> raises <code>IndexError</code>. In C, the same access on a heap array is undefined behaviour: a buffer overread that hands you whatever bytes live past the allocation, a textbook security hole. Rust’s <code>Index</code> impl for slices bounds-checks and panics instead — closer to the Java/Swift/Python behaviour than the C one. That is the whole philosophy in one line: <strong>a contract violation is a bug, and continuing with corrupt assumptions is worse than stopping.</strong></p>
 <p>A panic prints the message and source location, then by default <em>unwinds</em>:</p>
 <pre><code class="language-text">thread 'main' panicked at src/main.rs:3:13:
 index out of bounds: the len is 3 but the index is 99
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 </code></pre>
-<p>Set <code>RUST_BACKTRACE=1</code> to get the call stack. Read it top-down and stop at the first frame in a file you wrote — that is where your bug lives; frames above are stdlib machinery (<code>core::panicking::panic_bounds_check</code> and friends).</p>
+<p>Set <code>RUST_BACKTRACE=1</code> to get the call stack. Read it top-down and stop at the first frame in a file you wrote — that is where your bug lives; frames above are stdlib machinery (<code>core::panicking::panic_bounds_check</code> and friends). This is the same read-the-stack-trace skill you use with a Java exception or a Python traceback.</p>
 <h3 id="unwinding-vs-aborting"><a class="header" href="#unwinding-vs-aborting">Unwinding vs. aborting</a></h3>
 <blockquote>
-<p><strong>⚙️ Under the hood →</strong> A panic does one of two things, chosen at compile time. The default is <strong>unwind</strong>: rustc walks back up the stack frame by frame, running every <code>Drop</code> impl it passes — exactly like a C++ exception running destructors during stack unwinding (it uses the same platform mechanism, the Itanium/SEH unwinder, and a landing pad per frame). This frees resources but bloats the binary with unwind tables. The alternative is <strong>abort</strong>: call <code>std::process::abort()</code> immediately, run no destructors, let the OS reclaim memory. You opt in per profile:</p>
+<p><strong>⚙️ Under the hood →</strong> A panic does one of two things, chosen at compile time. The default is <strong>unwind</strong>: rustc walks back up the stack frame by frame, running every <code>Drop</code> impl it passes — exactly like the destructor cleanup that runs when a value goes out of scope (it uses the same platform mechanism, the Itanium/SEH unwinder, and a landing pad per frame). This frees resources but bloats the binary with unwind tables. The alternative is <strong>abort</strong>: call <code>std::process::abort()</code> immediately, run no destructors, let the OS reclaim memory. You opt in per profile:</p>
 <pre><code class="language-toml">[profile.release]
 panic = "abort"
 </code></pre>
 <p><code>abort</code> produces smaller binaries and is mandatory in some contexts (e.g. a panic crossing an <code>extern "C"</code> boundary is UB unless aborting — see <a href="16-unsafe-and-ffi.html">unsafe and FFI</a>). With unwinding, a panic in a spawned thread kills only that thread; the parent observes it via the <code>JoinHandle</code> (<a href="13-fearless-concurrency.html">fearless concurrency</a>).</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> Unwinding-and-running-destructors is exactly the RAII cleanup you saw in <em>Programming in C and C++</em>: the same landing-pad codegen a C++ compiler emits for exception safety. The difference is intent. C++ exceptions are a control-flow mechanism you <code>catch</code> and recover from; Rust unwinding is a best-effort cleanup on the way to thread death. <code>std::panic::catch_unwind</code> exists, but it is for FFI boundaries and thread-pool isolation, not for <code>try</code>/<code>catch</code>-style logic.</p>
+<p><strong>🎓 Tripos link →</strong> Unwinding-and-running-destructors is the same scope-exit cleanup story you meet in <em>Operating Systems</em> when you reason about who frees a resource and when. The intent here is narrow, though: Rust unwinding is a best-effort cleanup on the way to thread death, <em>not</em> a recover-and-continue mechanism. <code>std::panic::catch_unwind</code> exists, but it is for FFI boundaries and thread-pool isolation, not for <code>try</code>/<code>catch</code>-style logic — do not reach for it the way you would reach for a <code>catch</code> block in Java or Swift.</p>
 </blockquote>
 <p><code>unwrap</code> and <code>expect</code> (below) are the most common ways <code>panic!</code> shows up in real code. The rule for when a panic is <em>correct</em> is the subject of the final section.</p>
 <h2 id="track-two-resultt-e-for-recoverable-failure"><a class="header" href="#track-two-resultt-e-for-recoverable-failure">Track two: <code>Result&lt;T, E&gt;</code> for recoverable failure</a></h2>
@@ -220,7 +220,7 @@ panic = "abort"
     Err(E),
 }
 <span class="boring">}</span></code></pre>
-<p>This is just a sum type — an OCaml variant with two constructors, generic in both the success payload <code>T</code> and the error payload <code>E</code> (<a href="08-generics-and-traits.html">generics and traits</a>). It is in the prelude, so <code>Ok</code>/<code>Err</code> are in scope unqualified, exactly like <code>Some</code>/<code>None</code>. A fallible function returns it, and the <em>only</em> way to get at the <code>T</code> is to deal with the possibility of the <code>E</code>:</p>
+<p>This is an enum with two cases that each carry a payload — directly comparable to a Swift enum with associated values, generic in both the success payload <code>T</code> and the error payload <code>E</code> (<a href="08-generics-and-traits.html">generics and traits</a>). It is in the prelude, so <code>Ok</code>/<code>Err</code> are in scope unqualified, exactly like <code>Some</code>/<code>None</code>. A fallible function returns it, and the <em>only</em> way to get at the <code>T</code> is to deal with the possibility of the <code>E</code>:</p>
 <pre class="playground"><code class="language-rust">use std::fs::File;
 
 fn main() {
@@ -230,13 +230,13 @@ fn main() {
     };
     // use `handle`...
 }</code></pre>
-<p><code>File::open</code> returns <code>Result&lt;File, std::io::Error&gt;</code>. There is no way to forget the error: the value you have is a <code>Result</code>, not a <code>File</code>, and the type system will not let you call <code>File</code> methods on it. You must pattern-match (or use one of the combinators) to extract the <code>File</code>. This is the entire safety argument — <strong>failure is encoded in the type, so the compiler can prove you handled it.</strong></p>
+<p><code>File::open</code> returns <code>Result&lt;File, std::io::Error&gt;</code>. There is no way to forget the error: the value you have is a <code>Result</code>, not a <code>File</code>, and the type system will not let you call <code>File</code> methods on it. You must pattern-match (or use one of the combinators) to extract the <code>File</code> — just as a Swift <code>Result</code> forces you through a <code>switch</code> or a <code>try get()</code> before you touch the success value. This is the entire safety argument — <strong>failure is encoded in the type, so the compiler can prove you handled it.</strong></p>
 <p><code>Result</code> is annotated <code>#[must_use]</code>. Ignore one and you get a warning, not silence:</p>
 <pre class="playground"><code class="language-rust">fn main() {
     std::fs::remove_file("scratch.tmp"); // warning: unused `Result` that must be used
 }</code></pre>
 <blockquote>
-<p><strong>⚠️ Pitfall →</strong> That warning catches the C bug class directly: in C you write <code>fclose(f);</code> and never check the return, silently dropping write errors. Here, <code>let _ = std::fs::remove_file("scratch.tmp");</code> is the explicit “yes, I am deliberately discarding this” — but if you are discarding an I/O error you almost always have a bug. The idiomatic fix is to propagate it with <code>?</code>.</p>
+<p><strong>⚠️ Pitfall →</strong> That warning catches a whole bug class directly: silently dropping a failure you never inspected — the C habit of writing <code>fclose(f);</code> and never checking the return, or the Python habit of an exception you swallow in a bare <code>except: pass</code>. Here, <code>let _ = std::fs::remove_file("scratch.tmp");</code> is the explicit “yes, I am deliberately discarding this” — but if you are discarding an I/O error you almost always have a bug. The idiomatic fix is to propagate it with <code>?</code>.</p>
 </blockquote>
 <h3 id="matching-on-the-kind-of-error"><a class="header" href="#matching-on-the-kind-of-error">Matching on the <em>kind</em> of error</a></h3>
 <p><code>std::io::Error</code> carries a <code>kind()</code> you can branch on, so you can recover from “file not found” while still treating “permission denied” as fatal:</p>
@@ -282,9 +282,23 @@ fn read_to_string(path: &amp;str) -&gt; Result&lt;String, std::io::Error&gt; {
     Ok(s)
 }
 <span class="boring">}</span></code></pre>
-<p>The <code>?</code> after a <code>Result</code> means: if <code>Ok(v)</code>, evaluate to <code>v</code> and continue; if <code>Err(e)</code>, <strong>return early</strong> from the enclosing function with <code>Err(e)</code>. It is the <code>let*</code> bind of OCaml’s <code>result</code> monad — <code>e1?; e2</code> is <code>match e1 { Ok(x) =&gt; e2, Err(e) =&gt; return Err(e) }</code>. Method chaining works because <code>?</code> is an expression that produces the unwrapped value: <code>File::open(path)?.read_to_string(&amp;mut s)?</code>.</p>
+<p>The <code>?</code> after a <code>Result</code> means: if <code>Ok(v)</code>, evaluate to <code>v</code> and continue; if <code>Err(e)</code>, <strong>return early</strong> from the enclosing function with <code>Err(e)</code>. The whole expression <code>e1?</code> is shorthand for <code>match e1 { Ok(x) =&gt; x, Err(e) =&gt; return Err(e) }</code>. If you have used Swift’s <code>try</code> keyword, the feel is similar — “do this, and if it fails, bail out of the current function with the error” — except Rust’s <code>?</code> returns the error as a value rather than throwing it. Method chaining works because <code>?</code> is an expression that produces the unwrapped value: <code>File::open(path)?.read_to_string(&amp;mut s)?</code>.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the monadic error pattern from <em>Foundations of Computer Science</em> made syntactic. <code>?</code> is the bind (<code>&gt;&gt;=</code>) of the <code>Result</code> monad specialised to short-circuit on <code>Err</code>, and <code>Ok</code> is <code>return</code>/<code>pure</code>. Haskell wraps the same idea in <code>do</code>-notation over <code>Either</code>; OCaml 4.08+ has <code>let*</code> via a <code>Result</code>-monad <code>let</code> operator. Rust commits to one monad — <code>Result</code>/<code>Option</code> — and gives it dedicated syntax rather than a general <code>do</code>. The desugaring is the operational-semantics rewrite you’d write on paper: a small-step rule that reduces <code>v?</code> to either <code>v</code>’s payload or an early <code>return</code>.</p>
+<p><strong>🔧 In practice →</strong> You are writing a function in a web request handler that loads a user’s profile: read a file, parse it as JSON, look up a field. Each step can fail, and you want the handler to return an error response rather than crash. <code>?</code> lets you write the happy path straight down the page and let any failure short-circuit out to the caller:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn load_profile(path: &amp;str) -&gt; Result&lt;Profile, std::io::Error&gt; {
+    let raw = std::fs::read_to_string(path)?;   // bail on read failure
+    let mut profile = Profile::default();
+    profile.name = raw.lines().next()
+        .unwrap_or("anonymous").to_string();
+    Ok(profile)
+}
+<span class="boring">}</span></code></pre>
+<p>Without <code>?</code> this is a staircase of <code>match</code>es that buries the one line that actually does work. With it, the error path is invisible until it fires — which is exactly when you want to think about it.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Think of <code>?</code> as the early-return rewrite you would do by hand, made into syntax: the compiler expands <code>v?</code> into either “the value inside <code>v</code>” or “return the error now.” That is the same kind of mechanical source-to-source transformation a compiler performs in <em>Compiler Construction</em> when it lowers a high-level construct into simpler control flow. Rust gives this one pattern — short-circuit on failure — its own operator because it is so pervasive.</p>
 </blockquote>
 <h3 id="-is-not-just-early-return--it-calls-fromfrom"><a class="header" href="#-is-not-just-early-return--it-calls-fromfrom"><code>?</code> is not <em>just</em> early-return — it calls <code>From::from</code></a></h3>
 <p>The one detail that makes <code>?</code> compose across error types: on the <code>Err</code> path, the error is passed through <code>From::from</code> before being returned. So <code>e1?</code> actually desugars (roughly) to:</p>
@@ -315,14 +329,14 @@ returns `Result` or `Option` (or another type that implements `FromResidual`)
 <p><strong>⚠️ Pitfall →</strong> This is the most common <code>?</code> error. The fix the compiler suggests — change the return type — is usually right: make the function return <code>Result&lt;_, _&gt;</code>. If you genuinely cannot (e.g. a trait method with a fixed signature), handle the <code>Result</code> with <code>match</code>, <code>if let</code>, or a combinator instead. You <strong>cannot</strong> <code>?</code> a <code>Result</code> in an <code>Option</code>-returning function or vice versa: <code>?</code> will not silently convert between the two enums. Bridge them explicitly with <code>.ok()</code> (<code>Result</code> → <code>Option</code>, discarding the error) or <code>.ok_or(err)</code> / <code>.ok_or_else(|| err)</code> (<code>Option</code> → <code>Result</code>).</p>
 </blockquote>
 <h3 id="-in-main-and-in-option-returning-functions"><a class="header" href="#-in-main-and-in-option-returning-functions"><code>?</code> in <code>main</code> and in <code>Option</code>-returning functions</a></h3>
-<p><code>main</code> may return <code>Result&lt;(), E&gt;</code> for any <code>E: Debug</code>. The runtime prints the <code>Err</code> via <code>Debug</code> and exits with a non-zero code — mirroring the C convention where <code>main</code> returns <code>0</code> on success and non-zero on failure (Rust implements the <code>std::process::Termination</code> trait to do this):</p>
+<p><code>main</code> may return <code>Result&lt;(), E&gt;</code> for any <code>E: Debug</code>. The runtime prints the <code>Err</code> via <code>Debug</code> and exits with a non-zero code — mirroring the convention you know from Java’s <code>System.exit</code> codes and C’s <code>main</code> returning <code>0</code> on success, non-zero on failure (Rust implements the <code>std::process::Termination</code> trait to do this):</p>
 <pre class="playground"><code class="language-rust">use std::error::Error;
 
 fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
     let _config = std::fs::read_to_string("config.toml")?;
     Ok(())
 }</code></pre>
-<p><code>Box&lt;dyn Error&gt;</code> is a trait object (<a href="09-trait-objects-and-oop.html">trait objects and OOP</a>) meaning “any type implementing the <code>Error</code> trait, heap-allocated behind a pointer.” It is the universal sink for <code>?</code>: because <code>Box&lt;dyn Error&gt;: From&lt;E&gt;</code> for every <code>E: Error</code>, any error converts into it. That is why it is the idiomatic error type for <code>main</code> and for quick application code.</p>
+<p><code>Box&lt;dyn Error&gt;</code> is a trait object (<a href="09-trait-objects-and-oop.html">trait objects and OOP</a>) meaning “any type implementing the <code>Error</code> trait, heap-allocated behind a pointer.” It is close in spirit to Swift’s <code>any Error</code> or Java’s <code>catch (Exception e)</code> — a single type that any concrete error fits into. It is the universal sink for <code>?</code>: because <code>Box&lt;dyn Error&gt;: From&lt;E&gt;</code> for every <code>E: Error</code>, any error converts into it. That is why it is the idiomatic error type for <code>main</code> and for quick application code.</p>
 <p><code>?</code> works on <code>Option</code> too, with <code>None</code> as the short-circuit value:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -330,7 +344,7 @@ fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
     text.split_whitespace().next()?.chars().next()
 }
 <span class="boring">}</span></code></pre>
-<p>If <code>next()</code> yields <code>None</code>, the function returns <code>None</code> immediately; otherwise <code>?</code> unwraps the <code>&amp;str</code> and we keep going. Same mechanism, different monad.</p>
+<p>If <code>next()</code> yields <code>None</code>, the function returns <code>None</code> immediately; otherwise <code>?</code> unwraps the <code>&amp;str</code> and we keep going. Same mechanism, “fail = bail out now,” applied to absence instead of error — the way Swift’s optional chaining <code>a?.b?.c</code> quietly returns <code>nil</code> the moment any link is <code>nil</code>.</p>
 <h2 id="unwrap-and-expect-deliberate-panics"><a class="header" href="#unwrap-and-expect-deliberate-panics"><code>unwrap</code> and <code>expect</code>: deliberate panics</a></h2>
 <p><code>unwrap</code> and <code>expect</code> collapse a <code>Result</code>/<code>Option</code> to its inner value, panicking on the failure variant. They are the bridge from track two back to track one — “I assert this cannot fail; if I’m wrong, that’s a bug, so crash.”</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -341,11 +355,11 @@ let cfg = std::fs::read_to_string("config.toml")
 <span class="boring">}</span></code></pre>
 <p><code>expect</code> takes a message and panics <em>with</em> it; <code>unwrap</code> uses a generic one. <strong>Prefer <code>expect</code> always.</strong> The string is not a user-facing error message — it documents the <em>invariant you are asserting</em>, so that if the panic fires, the backtrace tells the next maintainer what assumption was wrong. “config.toml must exist” is a far better failure than “called <code>Result::unwrap()</code> on an <code>Err</code> value”.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>.unwrap()</code> on <code>Option</code> is OCaml’s <code>Option.get</code>, which raises <code>Invalid_argument</code> on <code>None</code>; <code>.expect(msg)</code> is C++’s <code>value.value()</code> on a disengaged <code>std::optional</code> (throws <code>bad_optional_access</code>) but with a custom message. The key cultural difference: in OCaml/C++ these are often used freely; in idiomatic Rust an <code>unwrap</code>/<code>expect</code> in library code is a claim that <em>demands justification in the message or a comment</em>, because it converts a recoverable error into a crash on behalf of every caller.</p>
+<p><strong>🦀 From your toolbox →</strong> <code>.unwrap()</code> on <code>Option</code> is Swift’s force-unwrap <code>!</code> on an optional (<code>maybe!</code>), which traps on <code>nil</code>, and Java’s <code>Optional.get()</code>, which throws <code>NoSuchElementException</code> on an empty optional. <code>.expect(msg)</code> is the same force-unwrap but with a custom message attached — Swift’s <code>precondition</code>/<code>fatalError(msg)</code> is the closest feel. The key cultural difference: Swift and Java code force-unwrap or call <code>.get()</code> fairly freely; in idiomatic Rust an <code>unwrap</code>/<code>expect</code> in library code is a claim that <em>demands justification in the message or a comment</em>, because it converts a recoverable error into a crash on behalf of every caller.</p>
 </blockquote>
 <p>When is <code>unwrap</code>/<code>expect</code> acceptable?</p>
 <ul>
-<li><strong>Examples, prototypes, tests.</strong> A failed <code>unwrap</code> in a <code>#[test]</code> panics, which is exactly how a test reports failure. Robust error handling would only obscure the example. (More in <a href="20-testing-and-tooling.html">testing and tooling</a>.)</li>
+<li><strong>Examples, prototypes, tests.</strong> A failed <code>unwrap</code> in a <code>#[test]</code> panics, which is exactly how a test reports failure (the same way an uncaught exception fails a JUnit test). Robust error handling would only obscure the example. (More in <a href="20-testing-and-tooling.html">testing and tooling</a>.)</li>
 <li><strong>When you can prove the <code>Err</code> is impossible</strong> but the compiler cannot:
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -356,7 +370,7 @@ let loopback: IpAddr = "127.0.0.1".parse()
 <code>parse</code> returns a <code>Result</code> because <em>in general</em> a string may be malformed; here the literal is fixed and valid, so asserting it is fine — and the message records <em>why</em> it is safe, prompting a future reader to revisit if the input ever becomes dynamic.</li>
 </ul>
 <h2 id="custom-error-types-and-the-error-trait"><a class="header" href="#custom-error-types-and-the-error-trait">Custom error types and the <code>Error</code> trait</a></h2>
-<p>Returning <code>io::Error</code> everywhere works only while every failure really is an I/O error. A realistic function fails in several distinct ways (parse error, validation error, I/O error), and you want one type that names them all. Enums are the natural fit — a sum type, one variant per failure mode:</p>
+<p>Returning <code>io::Error</code> everywhere works only while every failure really is an I/O error. A realistic function fails in several distinct ways (parse error, validation error, I/O error), and you want one type that names them all. Enums are the natural fit — one case per failure mode, just like a Swift <code>enum Error: Swift.Error</code> with associated values for each case:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::fmt;
@@ -388,7 +402,7 @@ impl std::error::Error for ConfigError {
     }
 }
 <span class="boring">}</span></code></pre>
-<p>The <code>std::error::Error</code> trait is the standard interface for “this is an error.” Its contract: you must also implement <code>Debug</code> (for programmers) and <code>Display</code> (for users), and you may override <code>source()</code> to return the underlying cause, which lets tools print a chain (“parse error … caused by … I/O error … caused by …”). Everything that takes <code>Box&lt;dyn Error&gt;</code> relies on this trait.</p>
+<p>The <code>std::error::Error</code> trait is the standard interface for “this is an error” — the role Java’s <code>Throwable</code>/<code>Exception</code> and Swift’s <code>Error</code> protocol play. Its contract: you must also implement <code>Debug</code> (for programmers) and <code>Display</code> (for users), and you may override <code>source()</code> to return the underlying cause, which lets tools print a chain (“parse error … caused by … I/O error … caused by …”) — the same idea as Java’s exception <code>getCause()</code> chain. Everything that takes <code>Box&lt;dyn Error&gt;</code> relies on this trait.</p>
 <p>To make <code>?</code> compose, implement <code>From</code> for each wrapped error type:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -410,7 +424,19 @@ impl std::error::Error for ConfigError {
 }
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is precisely the ADT-based error modelling from <em>Foundations of Computer Science</em>: an error is a value of a sum type, and handling it is exhaustive pattern matching. The compiler’s exhaustiveness check on <code>match self</code> in your <code>Display</code> impl is the same coverage guarantee that catches a forgotten variant. <code>From</code> conversions are the structure-preserving maps between your error algebras; <code>?</code>’s automatic <code>From::from</code> is functorial lifting of an inner failure into the outer error type.</p>
+<p><strong>🔧 In practice →</strong> This is the pattern you reach for the moment a function talks to more than one subsystem. Imagine a config loader that reads a file (<code>io::Error</code>) and parses an integer out of it (<code>ParseIntError</code>). You do not want callers juggling two unrelated error types, so you define one <code>ConfigError</code> enum with a variant for each, add a <code>From</code> impl per source, and then your function body stays clean:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn read_port(path: &amp;str) -&gt; Result&lt;u16, ConfigError&gt; {
+    let text = std::fs::read_to_string(path)?; // io::Error  -&gt; ConfigError::Io
+    let port = text.trim().parse()?;           // ParseIntError -&gt; ConfigError::Parse...
+    Ok(port)
+}
+<span class="boring">}</span></code></pre>
+<p>Each <code>?</code> quietly converts a different upstream error into your one declared type. Callers match on <code>ConfigError</code> and never see the plumbing. (For the <code>parse()?</code> line to compile you would add <code>impl From&lt;std::num::ParseIntError&gt; for ConfigError</code> mapping it into a suitable variant.)</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is the same algebraic-data-type-plus-pattern-matching style you met in <em>Foundations of Computer Science</em> with OCaml variants: an error is a value of a sum type, and handling it is an exhaustive <code>match</code>. The compiler’s exhaustiveness check on <code>match self</code> in your <code>Display</code> impl is the same coverage guarantee that flags a forgotten case — add a fourth variant and forget to handle it, and you get a compile error, not a silent fall-through.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>Box&lt;dyn Error&gt;</code> is a fat pointer — data pointer plus vtable pointer — exactly the trait-object layout from <a href="09-trait-objects-and-oop.html">trait objects and OOP</a>. It heap-allocates and dynamically dispatches <code>Display</code>/<code>Debug</code>/<code>source</code>. A concrete enum like <code>ConfigError</code> is stack-sized (the largest variant plus a tag), monomorphised, statically dispatched, and exhaustively matchable by callers. The trade-off: <code>Box&lt;dyn Error&gt;</code> is maximally flexible and ergonomic but erases the type, so callers cannot match on <em>which</em> error; a concrete enum is recoverable-by-variant but couples callers to your error taxonomy. Libraries lean concrete; applications lean boxed.</p>
@@ -472,6 +498,18 @@ fn run() -&gt; Result&lt;()&gt; {
 </table>
 </div>
 <p>Use <code>.ok_or_else</code> over <code>.ok_or</code> whenever constructing the error is non-trivial (allocates, formats) — <code>ok_or</code> evaluates its argument eagerly even on the <code>Some</code> path, the same eager-vs-lazy distinction as <code>unwrap_or</code> vs <code>unwrap_or_else</code>. These conversions are how you bridge an <code>Option</code>-producing call (a map lookup, <code>.first()</code>) into a <code>Result</code>-returning function so <code>?</code> applies.</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You are parsing a config map and a key is <em>optional in the data structure</em> but <em>required for this code path</em>. <code>HashMap::get</code> hands you an <code>Option</code>, but your function returns a <code>Result</code> so <code>?</code> can propagate. <code>.ok_or_else</code> is the join:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn host(cfg: &amp;std::collections::HashMap&lt;String, String&gt;) -&gt; Result&lt;String, ConfigError&gt; {
+    let raw = cfg.get("host")
+        .ok_or_else(|| ConfigError::MissingKey("host".into()))?; // None -&gt; a real error
+    Ok(raw.trim().to_string())
+}
+<span class="boring">}</span></code></pre>
+<p>The <code>.ok_or_else(...)</code> turns “absent” into a named failure your callers can react to, and the trailing <code>?</code> lets it flow out like any other error. Use the <code>_else</code> form here because building the <code>ConfigError</code> allocates a <code>String</code> you do not want to pay for on the common <code>Some</code> path.</p>
+</blockquote>
 <h2 id="to-panic-or-not-to-panic"><a class="header" href="#to-panic-or-not-to-panic">To panic or not to panic</a></h2>
 <p>The guiding principle: <strong>returning <code>Result</code> is the default for any function that can fail, because it hands the decision to the caller.</strong> Panicking decides <em>for</em> the caller that the situation is unrecoverable, which is presumptuous unless you are certain.</p>
 <p>Panic when the program reaches a <strong>bad state</strong> — a broken invariant, contract, or guarantee — <em>and</em>:</p>
@@ -483,7 +521,7 @@ fn run() -&gt; Result&lt;()&gt; {
 <p>Return <code>Result</code> when failure is an <strong>expected, routine possibility</strong>: a parser meeting malformed input, an HTTP call hitting a rate limit, a file that may be absent. These are not bugs; they are the normal operating envelope, and the caller must choose how to respond.</p>
 <p>A function’s <strong>contract</strong> is the special case that justifies panic in library code. If your function’s behaviour is only defined for certain inputs (a precondition), violating it is always a caller-side bug, and panicking is the right response — there is nothing for the caller to “handle,” they must fix their code. This is exactly why slice indexing panics on out-of-bounds: operating on memory outside the structure is a security hole, so the stdlib refuses. Document any such panic in the function’s API docs.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> The strongest move from <em>Semantics of Programming Languages</em> is to make the bad state <em>unrepresentable</em> rather than checking for it. Encode the invariant in a type and let the type system discharge the check statically — “make illegal states unrepresentable.” A newtype with a private field and a validating constructor turns a runtime contract into a compile-time guarantee:</p>
+<p><strong>💡 Make the bad state unrepresentable →</strong> Often the best move is not to choose between panic and <code>Result</code> at all, but to design the bad state out of existence. Encode the invariant in a type, and the compiler enforces it once, at construction, so no later code has to re-check. A newtype with a private field and a validating constructor turns a runtime contract into a compile-time guarantee:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct Percent(u8); // invariant: 0..=100, enforced at construction
@@ -495,35 +533,32 @@ impl Percent {
     pub fn get(self) -&gt; u8 { self.0 }
 }
 <span class="boring">}</span></code></pre>
-<p>Every function taking <code>Percent</code> (not <code>u8</code>) is now <em>proved</em> to receive a valid percentage — no defensive check, no panic, no <code>Result</code> at the use site. The private field means the only way to make a <code>Percent</code> is through <code>new</code>, so the invariant holds by construction. This is the type-system-as-proof-system idea from <em>Logic and Proof</em> applied to data: you have moved a proof obligation from runtime to the type checker. Choosing <code>u32</code> over <code>i32</code> to forbid negatives, or a concrete type over <code>Option</code> to forbid absence, are the same move at smaller scale.</p>
+<p>Every function taking <code>Percent</code> (not <code>u8</code>) is now <em>guaranteed</em> to receive a valid percentage — no defensive check, no panic, no <code>Result</code> at the use site. The private field means the only way to make a <code>Percent</code> is through <code>new</code>, so the invariant holds by construction. (This is the same instinct as making a class field private with an invariant-checking constructor in Java or Swift — except here the type system, not convention, makes it the only path in.) Choosing <code>u32</code> over <code>i32</code> to forbid negatives, or a concrete type over <code>Option</code> to forbid absence, are the same move at smaller scale.</p>
 </blockquote>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
 <li><strong>Two channels, by design:</strong> <code>panic!</code> for bugs/violated invariants (unrecoverable, <em>not</em> in the signature), <code>Result&lt;T, E&gt;</code> for expected failure (recoverable, <em>in</em> the signature). Rust has no catchable exceptions; failure that callers should handle is always a value in the type.</li>
-<li><strong><code>?</code> is monadic bind for <code>Result</code>/<code>Option</code>:</strong> it early-returns on <code>Err</code>/<code>None</code> and, crucially, runs <code>From::from</code> on the error — so implementing <code>From&lt;InnerError&gt; for YourError</code> is what lets <code>?</code> aggregate many failure sources behind one type.</li>
+<li><strong><code>?</code> is short-circuit-on-failure made into syntax:</strong> it early-returns on <code>Err</code>/<code>None</code> and, crucially, runs <code>From::from</code> on the error — so implementing <code>From&lt;InnerError&gt; for YourError</code> is what lets <code>?</code> aggregate many failure sources behind one type.</li>
 <li><strong><code>unwrap</code>/<code>expect</code> convert a <code>Result</code> back into a panic</strong> — only justified in tests/prototypes or where you can prove the <code>Err</code> is impossible. Always <code>expect</code> with a message stating the invariant, never bare <code>unwrap</code> in real code.</li>
 <li><strong>Concrete enum (or <code>thiserror</code>) for library errors</strong> so callers can match on variants; <strong><code>Box&lt;dyn Error&gt;</code> or <code>anyhow</code> for application errors</strong> where the consumer is a human reading a log. <code>thiserror</code> derives the boilerplate; <code>anyhow</code> erases the type for maximum <code>?</code> ergonomics.</li>
-<li><strong>Prefer making bad states unrepresentable</strong> (newtypes, validating constructors, non-<code>Option</code> types) over runtime checks. A constraint discharged by the type checker is one you never check, never panic on, and never return a <code>Result</code> for at the use site.</li>
+<li><strong>Prefer making bad states unrepresentable</strong> (newtypes, validating constructors, non-<code>Option</code> types) over runtime checks. A constraint enforced by the type at construction is one you never check, never panic on, and never return a <code>Result</code> for at the use site.</li>
 </ul>
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write <code>fn parse_pair(s: &amp;str) -&gt; Result&lt;(i32, i32), std::num::ParseIntError&gt;</code> that splits <code>s</code> on a comma and parses both halves with <code>?</code>. Then try to make it also handle the “no comma” case — observe that <code>s.split_once(',')</code> returns an <code>Option</code>, so <code>?</code> will not compile against a <code>ParseIntError</code> return type. Fix it two ways: (a) <code>.ok_or_else(...)</code> into a custom error, and (b) returning <code>Box&lt;dyn Error&gt;</code>. Compare the call sites.</p>
+<p><strong>Predict the error, then fix it two ways.</strong> Sketch <code>fn parse_pair(s: &amp;str) -&gt; Result&lt;(i32, i32), std::num::ParseIntError&gt;</code> that splits <code>s</code> on a comma and parses both halves with <code>?</code>. Now suppose you also want to fail cleanly when there is <em>no</em> comma. <code>s.split_once(',')</code> returns an <code>Option</code>, so adding <code>?</code> to it will not compile against a <code>ParseIntError</code> return type — predict the exact reason before you try it. Then make it work two ways: (a) bridge the <code>Option</code> with <code>.ok_or_else(...)</code> into a custom error enum, and (b) widen the return type to <code>Box&lt;dyn Error&gt;</code>. Which call site reads better for a <em>library</em> consumer, and which for a <em>binary</em>?</p>
 </li>
 <li>
-<p>Define a <code>ConfigError</code> enum by hand with three variants, then write <code>Display</code>, <code>Error</code> (with a correct <code>source()</code>), and the <code>From</code> impls. Now rewrite it with <code>thiserror</code>. Diff the generated behaviour: does your hand-written <code>source()</code> match what <code>#[from]</code> produces? Verify by printing an error and its <code>.source()</code> chain.</p>
+<p><strong>Which of these compiles, and why?</strong> Given <code>fn f() -&gt; Result&lt;i32, MyError&gt;</code> where <code>MyError</code> implements <code>From&lt;std::io::Error&gt;</code> but <em>not</em> <code>From&lt;std::num::ParseIntError&gt;</code>, decide for each line whether it compiles inside <code>f</code>’s body and explain in one sentence why: (a) <code>let n = std::fs::read_to_string("x")?;</code> (b) <code>let n: i32 = "42".parse()?;</code> (c) <code>let n: i32 = "42".parse().map_err(MyError::from)?;</code>. Then say in one sentence why <code>?</code> is specified in terms of <code>From</code> rather than <code>Into</code>.</p>
 </li>
 <li>
-<p>(★) The compiler error <code>the ? operator can only be used in a function that returns Result or Option</code> appears for a function returning <code>()</code>. Construct a case where the function <em>does</em> return <code>Result</code>, but <code>?</code> still fails to compile — because the inner error type does not implement <code>Into</code> the outer error type. Read the resulting <code>E0277</code> (<code>From&lt;...&gt; is not satisfied</code>) and fix it by adding the missing <code>From</code> impl. Explain in one sentence why <code>?</code> needs <code>From</code> and not just <code>Into</code>.</p>
+<p><strong>Design decision.</strong> You are writing a date-parsing library used by other crates, and separately a small CLI that loads one config file at startup. For each, decide whether you would reach for a hand-written enum, <code>thiserror</code>, <code>anyhow</code>, or <code>Box&lt;dyn Error&gt;</code>, and justify the choice in one sentence each. Then name one concrete thing a <em>caller</em> of the library could do that they could not do if you had returned <code>anyhow::Error</code> from the library.</p>
 </li>
 <li>
-<p>(★) Write a function that, given a <code>Vec&lt;&amp;str&gt;</code>, parses each element to <code>u32</code> and collects into <code>Result&lt;Vec&lt;u32&gt;, ParseIntError&gt;</code>. Use <code>.collect()</code> directly on an iterator of <code>Result</code>s and explain <em>why</em> <code>collect</code> can turn <code>Iterator&lt;Item = Result&lt;T, E&gt;&gt;</code> into <code>Result&lt;Vec&lt;T&gt;, E&gt;</code> (short-circuiting on the first <code>Err</code>). Then change it to collect into <code>Vec&lt;Result&lt;u32, ParseIntError&gt;&gt;</code> instead and explain when each shape is the one you want.</p>
+<p>(★) <strong>Adapt <code>collect</code>.</strong> Iterators of <code>Result</code> can be collected directly: write a function turning <code>Vec&lt;&amp;str&gt;</code> into <code>Result&lt;Vec&lt;u32&gt;, ParseIntError&gt;</code> by calling <code>.collect()</code> on an iterator of parsed results, and explain <em>why</em> <code>collect</code> is allowed to short-circuit on the first <code>Err</code>. Then adapt it to instead produce <code>Vec&lt;Result&lt;u32, ParseIntError&gt;&gt;</code> (one result per element, no short-circuit). Describe a real situation where you want the second shape — where stopping at the first bad element would be the wrong behaviour.</p>
 </li>
 <li>
-<p>Take the <code>Percent</code> newtype from the Tripos-link box. Make the field <code>pub</code> instead of private and write a downstream function that constructs an invalid <code>Percent(200)</code> directly, bypassing <code>new</code>. Then revert to a private field and observe the compile error at the construction site. Articulate precisely which guarantee privacy buys you that a runtime check in <code>new</code> alone does not.</p>
-</li>
-<li>
-<p>Set <code>RUST_BACKTRACE=1</code> and run a program that panics three call-frames deep inside your own code. Identify the frame where <em>your</em> bug originates versus the stdlib frames above it. Then flip <code>panic = "abort"</code> in a release profile and confirm a <code>Drop</code> impl that prints on drop does <strong>not</strong> run on panic — explaining why aborting skips unwinding.</p>
+<p><strong>What guarantee does privacy buy?</strong> Take the <code>Percent</code> newtype. Suppose a teammate argues “the <code>new</code> constructor already checks <code>v &lt;= 100</code>, so making the field <code>pub</code> is harmless.” Construct the one line of downstream code that proves them wrong, then state precisely which guarantee a <em>private</em> field gives you that the runtime check in <code>new</code> alone does not. (Hint: think about who can build a <code>Percent</code> and how.)</p>
 </li>
 </ol>
 
@@ -562,22 +597,6 @@ impl Percent {
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

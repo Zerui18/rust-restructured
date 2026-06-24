@@ -26,7 +26,7 @@ fcut/
     └── cli.rs       # integration tests over the public API
 ```
 
-> **🦀 From your toolbox →** In C the equivalent is keeping `main.c` to `getopt` + `exit`, and putting logic in a separately-compiled `.o` you can link into a test driver. In Java you'd extract a `static` method off `Main` so JUnit can call it. Rust *enforces* the discipline through crate visibility rather than leaving it to convention: a `tests/` file genuinely cannot see private items or `main`, so the split is load-bearing, not stylistic. Where the analogy breaks: there is no separate "compile the test driver" step — `cargo test` builds both the lib and each `tests/*.rs` as its own crate automatically.
+> **🦀 From your toolbox →** In Java this is the reflex of extracting a `static` method off `Main` so JUnit can call it — you never test through `public static void main`. In Swift you'd push the logic into the framework target and keep the executable target a thin `@main` shim, because XCTest links against the framework, not the executable. In Python you guard the entry point with `if __name__ == "__main__":` and `import` the real functions into your `pytest` module. Rust *enforces* the same discipline through crate visibility rather than leaving it to convention: a `tests/` file genuinely cannot see private items or `main`, so the split is load-bearing, not stylistic. Where the analogy breaks: there is no separate "compile the test driver" step — `cargo test` builds both the lib and each `tests/*.rs` as its own crate automatically.
 
 ### Step 1: reading the arguments
 
@@ -84,7 +84,7 @@ fn parse_fields(spec: &str) -> Result<Vec<usize>, String> {
 
 Two things worth dwelling on. First, `parse_fields` collects an iterator of `Result<usize, String>` directly into a `Result<Vec<usize>, String>`. This is the `collect`-into-`Result` trick from [chapter 12](12-closures-and-iterators.md): `FromIterator` is implemented so that the first `Err` short-circuits and becomes the whole result. It is the iterator-level analogue of `?`. Second, `ok_or` converts an `Option` into a `Result` so the `?` in `build`'s callers (and the `?` here) can propagate a uniform error type.
 
-> **🦀 From your toolbox →** `Option::ok_or` is the bridge between OCaml's `option` and `('a, 'b) result`. In OCaml you'd `match ... with None -> Error "..." | Some x -> Ok x`; `ok_or` is exactly that combinator, and `ok_or_else` takes a closure so you don't allocate the error string unless the `None` case fires. The break: Rust's `?` then drives the propagation, where OCaml leaves you threading the `result` by hand or with a `let*` monadic operator.
+> **🦀 From your toolbox →** `Option::ok_or` is the move you make in Swift when you turn an optional into a thrown error: `guard let x = opt else { throw MyError.missing }`. The optional says "maybe absent"; the conversion adds a *reason* for the absence so a caller can react. In Java the analogue is `Optional.orElseThrow(() -> new IllegalArgumentException("..."))`. `ok_or_else` is the lazy form — it takes a closure, so you don't build the error string unless the `None` case actually fires (just as `orElseThrow` only constructs the exception on the empty path). The break from Swift: there is no `throw` here, no stack unwinding — `ok_or` returns an ordinary `Result` value, and Rust's `?` then propagates it explicitly up the call chain.
 
 ### Step 1.5: in production, use `clap`
 
@@ -114,9 +114,21 @@ fn main() {
 }
 ```
 
-Add it with `cargo add clap --features derive`. `Cli::parse()` reads `env::args_os()`, validates, and on failure prints a usage message to stderr and exits with code 2 — the conventional "usage error" code. The `value_delimiter = ','` attribute even reproduces our `parse_fields` for free. The derive macro is monomorphised, ordinary Rust code emitted at compile time (see [chapter 18](18-macros.md)); there is no runtime reflection, unlike Java annotation processors that lean on reflection at startup.
+Add it with `cargo add clap --features derive`. `Cli::parse()` reads `env::args_os()`, validates, and on failure prints a usage message to stderr and exits with code 2 — the conventional "usage error" code. The `value_delimiter = ','` attribute even reproduces our `parse_fields` for free. The derive macro is ordinary Rust code generated at compile time (see [chapter 18](18-macros.md)) and compiled like anything else: there is no reflection at runtime. Contrast Java, where annotation-driven frameworks like Spring or Jackson read annotations via reflection while the program is running; `clap` has done all of that work before `main` ever starts.
 
-> **🎓 Tripos link →** `clap`'s derive is a textbook Compiler Construction exercise: the `#[derive(Parser)]` proc-macro consumes the struct's token stream as input and *emits* a parser as output — a source-to-source translation running inside `rustc`. The struct is effectively a grammar; the generated code is the recursive-descent recogniser. You wrote parsers by hand in that course; here the metaprogram writes them for you, type-checked against the very struct that declared the grammar.
+> **🎓 Tripos link →** `clap`'s derive is a hands-on Compiler Construction exercise. The `#[derive(Parser)]` macro reads the struct's tokens as input and *writes out* a parser as output — a source-to-source translation running inside `rustc`. The struct is effectively a tiny grammar; the generated code is the recogniser. You wrote argument and grammar parsers by hand in that course; here the macro writes one for you, and the compiler then type-checks it against the very struct that described the grammar.
+
+> **🔧 In practice →** You're shipping a backup CLI and a teammate asks for `backup --dest ./snap --exclude '*.tmp' --exclude node_modules --dry-run -vvv`. With a hand-rolled loop you now own `--help`, repeated `--exclude`, the count-the-`v`s verbosity flag, and "did they pass a value?" checks — a day of fiddly bugs. With `clap` it's a struct:
+> ```rust
+> #[derive(Parser)]
+> struct Backup {
+>     #[arg(long)] dest: PathBuf,
+>     #[arg(long)] exclude: Vec<String>,     // repeatable: collects every --exclude
+>     #[arg(long)] dry_run: bool,            // presence ⇒ true
+>     #[arg(short, long, action = clap::ArgAction::Count)] verbose: u8, // -vvv ⇒ 3
+> }
+> ```
+> You reach for `clap` the moment a tool grows past two flags or a user might type `--help` — which is to say, almost always. Hand-roll only when you're learning the seams (as here) or you genuinely cannot take a dependency.
 
 ### Step 2: the I/O source — file or stdin, uniformly
 
@@ -156,11 +168,23 @@ Note `run` takes `out: &mut impl Write` rather than printing directly. That sing
 
 > **⚙️ Under the hood →** `Box<dyn BufRead>` is a fat pointer: one word to the heap-allocated reader, one word to its vtable. Each `reader.lines()` call dispatches through that vtable — one indirect call per line. `out: &mut impl Write`, by contrast, is *static* dispatch: the compiler emits one monomorphised `run` per concrete `W`, and `writeln!` inlines straight into a direct call. I mixed the two deliberately: the input side genuinely needs runtime polymorphism (the source is decided at runtime), the output side does not.
 
-> **🦀 From your toolbox →** `io::stdin().lock()` returns a `StdinLock` that holds the global stdin mutex for as long as it lives — RAII exactly as in C++. Reading line-by-line without locking re-acquires the lock per call; locking once and reading through the guard is both faster and the borrow that lets `BufRead` work. The analogy to C's `flockfile`/`funlockfile` is exact, except Rust ties release to scope so you cannot forget `funlockfile`.
+> **🦀 From your toolbox →** `io::stdin().lock()` returns a `StdinLock` that holds the global stdin mutex for as long as it lives. The pattern is Swift's `defer { handle.close() }` or Java's try-with-resources `try (var lock = stdin.lock())` — a resource whose release is tied to a scope rather than to a call you must remember. Reading line-by-line without locking re-acquires the lock per call; locking once and reading through the guard is both faster and the borrow that lets `BufRead` work. The difference from Swift/Java: you don't write `defer` or a `try (...)` block at all — the lock releases automatically when the value goes out of scope, the same "a destructor runs at the end of the block" idea you'd see in C++.
 
 ### Step 3: error handling, exit codes, stdout vs stderr
 
 `run` returns `Result<(), Box<dyn Error>>`. The `Box<dyn Error>` (trait-object error, from [chapter 11](11-error-handling.md)) lets `?` absorb *any* error type that implements `std::error::Error` — `io::Error` from `File::open`, `ParseIntError`, our own `String`-via-`From` — without us declaring a bespoke enum. For a binary, where the only consumer is a human reading stderr, that erasure is the right trade; a library should expose a concrete error type so callers can match on it.
+
+> **🔧 In practice →** You're writing a one-shot data-munging script: open a file, parse some JSON, look up an environment variable, write a report. Each step fails with a *different* error type (`io::Error`, `serde_json::Error`, `VarError`). Declaring a hand-written enum that wraps all four — plus the `From` impls to convert each — is pure boilerplate for a tool nobody calls as a library. So you type `Box<dyn Error>` once and let `?` flatten everything:
+> ```rust
+> fn report() -> Result<(), Box<dyn std::error::Error>> {
+>     let raw = std::fs::read_to_string("metrics.json")?; // io::Error
+>     let data: Metrics = serde_json::from_str(&raw)?;     // serde_json::Error
+>     let bucket = std::env::var("BUCKET")?;               // VarError
+>     // ... all three error types coerced into Box<dyn Error> by ?
+>     Ok(())
+> }
+> ```
+> The rule of thumb: `Box<dyn Error>` in application/binary code where the only reader is a human, a concrete enum in a library where a caller needs to `match` on which thing went wrong and recover differently.
 
 `main` ties it together. It must do two things the library deliberately does *not*: choose the process exit code, and route messages to stderr.
 
@@ -258,7 +282,7 @@ fn main() {
 }
 ```
 
-> **🎓 Tripos link →** This is the Berkeley sockets model from Computer Networking, named in Rust types: `bind` is `bind(2)`, `incoming()` wraps `accept(2)`, and a `TcpStream` is a connected socket file descriptor. The difference from the C you wrote is that the descriptor is *owned*: when `stream` is dropped at the end of the loop body, Rust calls `close(2)` for you — no leaked descriptors, no double-close. The RAII discipline from Programming in C/C++ applied to kernel resources.
+> **🎓 Tripos link →** This is the Berkeley sockets model from Computer Networking, named in Rust types: `bind` is `bind(2)`, `incoming()` wraps `accept(2)`, and a `TcpStream` is a connected socket file descriptor. The difference from a C socket program is that the descriptor is *owned*: when `stream` is dropped at the end of the loop body, Rust calls `close(2)` for you — no leaked descriptors, no double-close. It is the same scope-tied cleanup as the file-handle locking above, now applied to a kernel resource: the destructor that runs at the end of the block closes the socket, the way Swift's `deinit` or a C++ destructor frees what it owns.
 
 ### Step 2: parse a request, route, respond
 
@@ -309,6 +333,16 @@ for stream in listener.incoming() {
 ```
 
 Now we design `ThreadPool` so that this compiles. We will let the compiler's error messages drive the design — "compiler-driven development," the dual of the test-driven approach in Project A.
+
+> **🔧 In practice →** You have 50,000 thumbnails to generate and resizing each one pegs a CPU core. Spawning 50,000 threads thrashes the scheduler and blows out memory; doing them one at a time wastes 15 of your 16 cores. A bounded pool sized to the core count is the sweet spot:
+> ```rust
+> let pool = ThreadPool::new(num_cpus::get()); // e.g. 16 workers
+> for path in image_paths {
+>     pool.execute(move || resize_and_save(path));
+> }
+> // pool drops at end of scope → all 50,000 jobs drained, workers joined
+> ```
+> The 50,000 jobs queue up; 16 workers chew through them with no thread ever idle and the OS never overwhelmed. You reach for a fixed-size pool whenever you have *many more units of work than cores* and each unit is CPU-bound — batch image/PDF processing, parallel checksums, a build system's compile steps. (For *I/O-bound* work waiting on the network, async tasks scale better — that's the `tokio` note at the end of the chapter. In real code you'd use `rayon` for the CPU case rather than hand-rolling this, but the shape is exactly what you're building here.)
 
 ### Step 4: what `execute` must accept
 
@@ -411,7 +445,7 @@ while let Ok(job) = receiver.lock().unwrap().recv() {
 
 the guard's lifetime extends across the entire `while let` body (a `while let` holds its scrutinee's temporaries for the loop body), so a worker holds the mutex *while executing the job*, and the pool degrades to one-at-a-time — the very serialisation we set out to kill. The borrow checker won't flag this; it is a correctness bug hiding in a lifetime rule. The `match`/`break` form drops the guard at the `;`, then runs the job unlocked.
 
-> **🎓 Tripos link →** This is precisely the CSP/message-passing model from Concurrent & Distributed Systems realised with ownership. The channel `send` *moves* the `Job` from main to worker — there is no shared mutable job, so no data race on it; ownership transfer is the synchronisation. The `Arc<Mutex<Receiver>>` is the one genuinely shared resource, and the `Mutex` serialises access to *dequeueing* (which must be atomic) while leaving job *execution* parallel. Holding the lock only across `recv` is the textbook "minimise the critical section" rule, here enforced by where you put a semicolon.
+> **🎓 Tripos link →** This is the message-passing model from Concurrent & Distributed Systems realised with ownership. The channel `send` *moves* the `Job` from main to worker — there is no shared mutable job, so no data race on it; transferring ownership *is* the synchronisation. The `Arc<Mutex<Receiver>>` is the one genuinely shared resource, and the `Mutex` serialises access to *dequeueing* (taking a job off the queue, which must happen one worker at a time) while leaving job *execution* fully parallel. Holding the lock only across `recv` is the course's "keep the critical section as small as possible" rule — here it comes down to exactly where you put a semicolon.
 
 > **⚙️ Under the hood →** `Arc<T>` is a pointer to a heap allocation carrying `T` plus two atomic counters (strong/weak). `Arc::clone` is an atomic increment, not a deep copy — all four workers point at the *same* `Mutex<Receiver>`. `Rc` would be faster (non-atomic refcount) but is `!Send`, so it cannot cross the `thread::spawn` boundary; the compiler rejects it. That `!Send`-ness is the type system encoding "this refcount is not safe to touch from two threads," the data-race-freedom proof from [chapter 13](13-fearless-concurrency.md) discharged structurally.
 
@@ -457,7 +491,7 @@ fn main() {
 
 When `pool` leaves scope, `Drop` runs: the channel closes, each worker's `recv` returns `Err`, the loops break, the threads finish their current job and exit, and `join` collects them — clean shutdown, every destructor honoured.
 
-> **🦀 From your toolbox →** This is C++ RAII with the missing half supplied: in C++ you *also* write a destructor that joins, but nothing stops you from forgetting it or moving the object and double-joining. Rust guarantees `drop` runs exactly once at scope exit (unless you `std::mem::forget` or `process::exit`), and the move checker prevents using a moved-from pool. The `Option`-`take` dance is the price for `Drop`'s `&mut self` not permitting field moves — a wrinkle C++ avoids because its destructor can freely move members, but at the cost of the use-after-move guarantees Rust keeps.
+> **🦀 From your toolbox →** Think of how cleanup works in the languages you know. In Java a `finally` block or `AutoCloseable.close()` joins/releases, but only if you remember to write the `try` and never let an early return skip it — and a garbage-collected object's finalizer runs *whenever* the GC feels like it, if at all. Swift's `deinit` is closer: it runs deterministically the moment the last reference drops, like a destructor at scope end. Rust gives you Swift-style determinism but stronger: `drop` runs exactly once at scope exit (unless you explicitly `std::mem::forget` or call `process::exit`), and after the pool moves elsewhere the compiler won't let you touch the moved-from value at all. The `Option`-`take` dance is the price of that strictness: `Drop::drop` only gets `&mut self`, and you can't move a field out of a borrow, so `take` swaps in `None` and hands you the owned `JoinHandle`. Java/Swift dodge this only because they let a finalizer reach into fields freely — and pay for it with the use-after-free and double-cleanup bugs Rust rules out.
 
 > **⚠️ Pitfall →** A subtle double-panic hazard: `thread.join().unwrap()` inside `drop` panics if a worker panicked. Since `drop` itself can run *during* unwinding from another panic, a panic here causes a double-panic, which aborts the process immediately and skips remaining cleanup. Fine for a demo; production code logs the join error instead of unwrapping. The general rule: destructors should not panic.
 
@@ -478,7 +512,7 @@ And the honest note the standard book makes too: **the async version is how you 
 
 ## A send-off
 
-Twenty-two chapters ago the thesis was that Rust buys memory safety and data-race freedom *at compile time, with no garbage collector and no runtime check on the hot path*, by making ownership a typing discipline. Everything since has been that thesis cashed out: borrowing is aliasing-XOR-mutability; lifetimes are regions; `Send`/`Sync` are the data-race proof; `Drop` is RAII the compiler runs for you; traits are bounded polymorphism that monomorphises; `?` and `Result` are error handling without exceptions. The two projects here did not introduce one genuinely new idea — they *composed* old ones, and that composition is where Rust either rewards you or fights you. When it fights you, the error message is almost always pointing at a real bug you would have shipped in C.
+Twenty-two chapters ago the thesis was that Rust buys memory safety and data-race freedom *at compile time, with no garbage collector and no runtime check on the hot path*, by making ownership a typing discipline. Everything since has been that thesis cashed out: borrowing is "share many readers OR hand out one writer, never both"; a lifetime is just the stretch of code during which a borrow is allowed to be alive; `Send`/`Sync` are how the compiler proves you can't get a data race; `Drop` is scope-tied cleanup the compiler runs for you; traits are reusable behaviour the compiler stamps out a specialised copy of per type; `?` and `Result` are error handling without exceptions. The two projects here did not introduce one genuinely new idea — they *composed* old ones, and that composition is where Rust either rewards you or fights you. When it fights you, the error message is almost always pointing at a real bug you would have shipped in C.
 
 You now know enough to read the standard library's source, contribute to a crate, and — most importantly — to argue with the borrow checker and usually concede it was right. Go build something that would have been a segfault in another language. That is the whole point.
 
@@ -492,14 +526,17 @@ You now know enough to read the standard library's source, contribute to a crate
 
 ## Exercises
 
-1. In `fcut`, change `cols.get(f - 1)` to `cols[f - 1]` and run the out-of-range test. Read the panic. Now reason about *why* no borrow-checker error appeared — what category of property is "index in bounds," and which of Rust's guarantees explicitly does *not* cover it? Restore the `get` version and add a test for `-f 0` (1-based field zero), which currently underflows `usize`; decide whether that should be a parse error in `Config::build` and implement it.
+1. **Predict the type, then a design call.** The chapter's `cut_line` returns a fresh `String`. Suppose you instead wanted it to return the selected columns *without copying* the text — borrowing slices straight out of the input line. Sketch the new signature. What lifetime relationship must hold between the input `&str` and the returned value, and write down (in words) what the compiler would refuse if you tried to return those slices from a function that *owned* its input line rather than borrowing it. Which version would you actually ship for `fcut`, and why does it barely matter here but matter a lot in a tight inner loop?
 
-2. Make `fcut`'s `run` print to stdout via `eprintln!` by mistake, then run `fcut -f 1 data.csv > out.txt`. Inspect `out.txt` and your terminal. Explain in one sentence what broke and why the stdout/stderr split is load-bearing for composability.
+2. **A new error path the text didn't handle.** As written, a line shorter than the requested field is silently skipped (the `filter_map` drops it). A teammate argues that for `fcut -f 3` on a 2-column line, the *right* behaviour is to emit an empty field so columns stay aligned, not to drop it. Decide which behaviour you'd defend for a `cut`-style tool, then describe the one-line change to `cut_line` that switches between "skip missing fields" and "emit empty for missing fields." (You don't need to run it — reason about what `cols.get(...)` returns and how `filter_map` vs `map` would treat it.)
 
-3. (★) Replace `fcut`'s hand-rolled parser with `clap`'s derive API (`cargo add clap --features derive`). Then deliberately break it: pass `-f abc`. Compare `clap`'s error/exit-code to your hand-rolled version's. Now make a field a validated `u16` port-style argument with a custom `value_parser` and trigger its error. What did you get for free, and what is the compile-time cost (hint: look at build time before/after)?
+3. **Which of these compiles, and why.** For each `execute` bound below, say whether the pool would accept the closure `move || handle(stream)` and explain in one line:
+   - `F: FnOnce() + Send + 'static` (the chapter's choice)
+   - `F: Fn() + Send + 'static`
+   - `F: FnOnce() + 'static` (dropped `Send`)
+   - `F: FnMut() + Send` (dropped `'static`)
+   Then answer: *why* did the chapter pick `FnOnce` over `Fn`, given that `Fn` is "more capable"? (Hint: what does requiring `Fn` *forbid* the closure from doing to its captures?)
 
-4. In Project B's `Worker::new`, replace the `match`/`break` body with `while let Ok(job) = receiver.lock().unwrap().recv() { job(); }`. Add a `thread::sleep(Duration::from_secs(3))` inside `handle` and fire four `/` requests at a 4-worker pool simultaneously. Time them. They serialise — explain precisely which temporary's lifetime causes it and why moving the `;` fixes it.
+4. **Adapt the pool to report results.** Right now `execute` is fire-and-forget — the worker runs the job and the caller learns nothing. Suppose each job computes a `u64` checksum and the main thread needs to collect all of them. Without writing the full implementation, design the change: what would the job's return type become, and what second channel (going which direction) would you add so workers can hand results *back*? Sketch the new `execute` signature and say where the receiving end lives.
 
-5. (★) Try to share the `mpsc::Receiver` across workers using `Rc<RefCell<Receiver>>` instead of `Arc<Mutex<Receiver>>`. Predict the exact trait that fails to be satisfied (`Send`? `Sync`?) before compiling, then verify against the error. Explain at the field level why `Arc` is `Send`/`Sync` (given a `Send + Sync` payload) but `Rc` is neither — tie it to the atomic vs non-atomic refcount.
-
-6. Remove the `Option` from `Worker::thread` and try to `join` in `Drop` directly: `worker.thread.join()`. Read error E0507 ("cannot move out of … behind a mutable reference"). Explain why `Drop::drop` takes `&mut self` rather than `self`, and why that forces either `Option::take` or `Vec::drain(..)` to extract owned values. Then break shutdown the other way: in `Drop`, `join` the workers *before* dropping the `Sender`. Observe the deadlock and explain it in terms of which `recv` never returns.
+5. (★) **Predict the failure before compiling.** You decide to swap `Arc<Mutex<Receiver>>` for `Rc<RefCell<Receiver>>` to skip the atomic-refcount cost, reasoning "the workers never touch the same receiver at the same instant anyway." Predict the *exact* trait bound that `thread::spawn` will report as unsatisfied, and on which type, **before** you compile. Then explain at the field level why no amount of "they don't actually race" reasoning persuades the compiler — what is it about `Rc`'s refcount that makes the rejection a sound call rather than an overcautious one? Finally: name one situation where `Rc<RefCell<_>>` *is* the right tool and `Arc<Mutex<_>>` would be wasteful overhead.

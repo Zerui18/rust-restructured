@@ -1,10 +1,10 @@
 # 7. Enums & Pattern Matching
 
-You already know this construct under another name. In OCaml you wrote `type shape = Circle of float | Rect of float * float`; in Foundations you destructured it with `match`. Rust's `enum` *is* the OCaml variant — a **sum type**, a tagged union — wearing C-family syntax. So the conceptual delta in this chapter is small but the engineering payoff is enormous: Rust takes the OCaml sum type, gives it a guaranteed memory layout, makes its constructors first-class functions, fuses it with the ownership system from [ownership](02-ownership-and-moves.md), and then uses *exhaustiveness checking* — a totality argument straight out of your Semantics course — to statically eliminate two of the most expensive bug classes in the C/Java world: the null dereference and the unhandled case.
+You already know this construct under several names. In Swift you wrote `enum Shape { case circle(Double); case rect(Double, Double) }` and switched over it with `switch`. In OCaml it was `type shape = Circle of float | Rect of float * float`. Rust's `enum` *is* that same idea — a value that is **one of several shapes**, each carrying its own payload, wearing C-family syntax. So the conceptual delta in this chapter is small but the engineering payoff is enormous: Rust takes the Swift/OCaml enum, gives it a guaranteed memory layout, makes its constructors first-class functions, fuses it with the ownership system from [ownership](02-ownership-and-moves.md), and then *checks at compile time that you handled every case* — statically eliminating two of the most expensive bug classes in the Java/C world: the null dereference and the unhandled case.
 
-If [structs](06-structs-and-methods.md) are Rust's product types (a value of `Point` is an `x` **and** a `y`), enums are its sum types (a value of `Shape` is a `Circle` **or** a `Rect`). Everything else in this chapter follows from taking that "or" seriously.
+If [structs](06-structs-and-methods.md) bundle several fields together (a value of `Point` is an `x` **and** a `y`), enums express a choice (a value of `Shape` is a `Circle` **or** a `Rect`). Everything else in this chapter follows from taking that "or" seriously.
 
-## Enums are sum types with a runtime tag
+## Enums are a choice between shapes, with a runtime tag
 
 Here is the definition that anchors the whole chapter:
 
@@ -26,14 +26,14 @@ let b = Shape::Circle(2.0);
 let c = Shape::Rect { w: 3.0, h: 4.0 };
 ```
 
-A subtle, useful fact: the tuple-like constructor `Shape::Circle` is *itself a function* of type `fn(f64) -> Shape`. You can pass it to a higher-order function exactly as you would in OCaml:
+A subtle, useful fact: the tuple-like constructor `Shape::Circle` is *itself a function* of type `fn(f64) -> Shape`. You can pass it to a higher-order function exactly as you would pass a method reference in Java or a function in Swift:
 
 ```rust
 let radii = [1.0, 2.0, 3.0];
 let circles: Vec<Shape> = radii.into_iter().map(Shape::Circle).collect();
 ```
 
-> **🦀 From your toolbox →** This is OCaml's `type` with `|` variants, almost beat for beat — and the `Shape::Circle`-as-function trick is exactly OCaml treating a constructor as a function in `List.map Circle xs`. The analogy breaks down against C and Java. A C `enum` is just a named integer; it carries no payload and offers no type safety. The faithful C analogue is a `struct { enum tag; union { ... }; }` discriminated union — but C will not stop you reading the wrong union arm, which is exactly the unsoundness Rust closes. Java has no sum types until sealed interfaces (Java 17+); before that you reached for the visitor pattern or a class hierarchy, both of which scatter one logical type across many files.
+> **🦀 From your toolbox →** This is Swift's `enum` with associated values, almost beat for beat: `Shape::Circle(2.0)` is Rust's `.circle(2.0)`, and switching over it is Swift's `switch shape { case .circle(let r): ... }`. The `Shape::Circle`-as-function trick mirrors how Swift lets you pass `.circle` where a function is expected. The analogy breaks down against Java and C. Java had no real sum types until sealed interfaces (Java 17+); before that you reached for an `abstract class` hierarchy or the visitor pattern, both of which scatter one logical type across many files and lose the compiler's "did you handle every case" check. A C `enum` is just a named integer — it carries no payload and offers no type safety; the faithful C analogue is a hand-written `struct` holding a tag plus a `union`, but C will not stop you from reading the wrong union arm, which is exactly the hole Rust closes.
 
 > **⚙️ Under the hood →** An enum is laid out as a *discriminant* (the tag, an integer wide enough to count the variants) followed by enough space for the largest variant's payload. `Shape` above is roughly `{ tag: u8, payload: [the bigger of f64 and (f64,f64)] }`, so `size_of::<Shape>()` is dominated by the `Rect` arm plus tag and alignment padding — every `Shape`, even a `Dot`, occupies that worst-case size. This is the same trade-off as a C tagged union, except rustc both computes the layout and inserts the tag checks the C programmer had to write by hand. The exact discriminant type and ordering are unspecified unless you pin them with `#[repr(...)]` (see [unsafe and FFI](16-unsafe-and-ffi.md)).
 
@@ -48,9 +48,9 @@ enum Option<T> {
 }
 ```
 
-A generic sum type (we cover generics properly in [generics and traits](08-generics-and-traits.md); read `<T>` here the way you read OCaml's `'a option`). `Option<T>` is so fundamental it is in the prelude — you write `Some`/`None` without qualification — and it is Rust's answer to what Tony Hoare called his "billion-dollar mistake": the null reference.
+A generic enum (we cover generics properly in [generics and traits](08-generics-and-traits.md); read `<T>` here the way you read Swift's `Optional<T>` or Java's `Optional<T>`). `Option<T>` is so fundamental it is in the prelude — you write `Some`/`None` without qualification — and it is Rust's answer to what Tony Hoare called his "billion-dollar mistake": the null reference.
 
-In C, every `T*` is implicitly nullable, and the compiler does nothing to make you check. In Java every reference is implicitly nullable, and the NPE is a *runtime* event. Rust's move is to make absence a *value of a distinct type*: a `String` is always a real string, and "maybe a string" is a different type, `Option<String>`, with a different shape. You cannot accidentally use an `Option<String>` where a `String` is wanted — the types don't unify — so the compiler forces you to handle the `None` case *before* you can touch the inner value. The billion-dollar mistake becomes a compile error.
+In Java every reference is implicitly nullable, and the NPE is a *runtime* event. In C, every `T*` is implicitly nullable too, and the compiler does nothing to make you check. Rust's move is the same one Swift made with `Optional`: make absence a *value of a distinct type*. A `String` is always a real string, and "maybe a string" is a different type, `Option<String>`, with a different shape. You cannot accidentally use an `Option<String>` where a `String` is wanted — the types don't unify — so the compiler forces you to handle the `None` case *before* you can touch the inner value. Where Swift gives you `if let`/`guard let` to unwrap an optional, Rust gives you `match`/`if let`/`let ... else` to do exactly the same job. The billion-dollar mistake becomes a compile error.
 
 ```rust
 fn first_word(s: &str) -> Option<&str> {
@@ -65,11 +65,11 @@ match first_word("  hello world") {
 }
 ```
 
+> **🔧 In practice →** You're parsing a config file where a `timeout` key is optional. You model the lookup as `config.get("timeout"): Option<&str>` and *cannot* forget that it might be missing, because the type won't let you call `.parse()` on it directly. The natural code reads almost like a sentence: `let timeout = config.get("timeout").and_then(|s| s.parse().ok()).unwrap_or(30);` — "look it up; if present, try to parse it; if any step failed, fall back to 30." This is the Swift `??` default-value habit, but the compiler *enforces* that you account for the missing case rather than trusting you to remember.
+
 `Result<T, E>` is the same idea applied to fallible operations: `enum Result<T, E> { Ok(T), Err(E) }`. We mention it here only so the shape is familiar; the full treatment, including the `?` operator, lives in [error handling](11-error-handling.md).
 
-> **🎓 Tripos link →** In Semantics, a type system is *sound* when "well-typed programs do not go wrong" — the progress-and-preservation argument. `Option<T>` is exactly how Rust extends that guarantee to cover absence. "Dereferencing null" is a way for a program to go wrong; by reifying absence into the type, Rust pushes that failure mode out of the set of well-typed programs entirely. Java's `null` is the classic counterexample where the type system *fails* to be sound in this respect: `String s` claims to be a string but may be `null`, and the unsoundness is only caught dynamically.
-
-## `match`: an expression, and a totality check
+## `match`: an expression that forces you to cover every case
 
 `match` compares a *scrutinee* against a sequence of *arms*, each arm being a pattern, an optional guard, and an expression. The first arm whose pattern matches wins, and its expression becomes the value of the whole `match`.
 
@@ -83,11 +83,11 @@ fn area(s: &Shape) -> f64 {
 }
 ```
 
-Three things to internalise immediately, because they distinguish `match` from C's `switch`:
+Three things to internalise immediately, because they distinguish `match` from Java's `switch` and C's `switch`:
 
-1. **It is an expression, not a statement.** `area` has no `return`; the `match` *is* the function body. This is the OCaml/expression-oriented model from Foundations, not the C statement model. Every arm must produce a value of the same type.
+1. **It is an expression, not a statement.** `area` has no `return`; the `match` *is* the function body. Think of it like Swift's expression-style code or a ternary that scales — every arm must produce a value of the same type, and that value flows out as the result.
 
-2. **No fall-through.** Unlike C's `switch`, arms do not fall through to the next; there is no `break`. Each arm is self-contained.
+2. **No fall-through.** Unlike a classic C/Java `switch`, arms do not fall through to the next; there is no `break`. Each arm is self-contained.
 
 3. **It is exhaustive — and that is checked at compile time.** You must handle every possible value of the scrutinee. Omit the `Dot` arm and the program does not compile:
 
@@ -95,9 +95,11 @@ Three things to internalise immediately, because they distinguish `match` from C
 error[E0004]: non-exhaustive patterns: `&Shape::Dot` not covered
 ```
 
-This exhaustiveness check is the single most valuable property of `match`. It is a **totality** argument: the compiler proves your function is defined on every inhabitant of the input type. When you later add a `Triangle` variant to `Shape`, every `match` that has not been updated becomes a compile error pointing you at exactly the code that needs attention. In a Java `switch` or a chain of `instanceof`, that same change fails silently and you discover the gap in production.
+This exhaustiveness check is the single most valuable property of `match`: the compiler refuses to accept the function until it handles every shape the input could take. When you later add a `Triangle` variant to `Shape`, every `match` that has not been updated becomes a compile error pointing you at exactly the code that needs attention. In a Java `switch` over an enum, or a chain of `instanceof`, that same change compiles fine and you discover the gap in production — exactly the failure Swift's exhaustive `switch` also exists to prevent.
 
-> **🎓 Tripos link →** This is precisely OCaml's "this pattern-matching is not exhaustive" warning from Foundations, promoted from a warning to a hard error. Formally it is a coverage/totality check over the inhabitants of an algebraic data type — the compiler verifies that the patterns partition the value space. Tie it to Semantics: making the function *total* (defined everywhere on its domain) is what lets `match` be sound as an expression — there is no "stuck" configuration where no arm applies.
+> **🔧 In practice →** You add a new payment method to an e-commerce backend — a `PaymentMethod::ApplePay` variant alongside `Card` and `BankTransfer`. Without exhaustive `match`, you'd grep for every place that handles payment methods and hope you found them all. With it, you just add the variant and recompile: every `match` that hasn't been taught about `ApplePay` lights up red — the refund calculator, the receipt formatter, the fraud check. The compiler hands you a to-do list of exactly the sites that need updating, and you can't ship until they're all handled.
+
+> **🎓 Foundations of CS link →** This is the same machinery as OCaml's "this pattern-matching is not exhaustive" warning you met in Foundations, promoted from a warning to a hard error. The intuition is simple: the compiler checks that your arms, taken together, cover every possible value of the type, with no value left unhandled. Because there is no value that falls through the bottom, a `match` always produces a result — which is what lets it safely be an expression.
 
 ### Binding, catch-alls, and `_`
 
@@ -116,7 +118,7 @@ fn classify(n: u8) -> &'static str {
 }
 ```
 
-A bare identifier like `other` is an *irrefutable* pattern (defined below) that matches anything and binds it. If you need a catch-all but do not need the value, use `_`, the wildcard, which matches anything and binds *nothing*:
+A bare identifier like `other` matches anything and binds it. If you need a catch-all but do not need the value, use `_`, the wildcard, which matches anything and binds *nothing*:
 
 ```rust
 match config_flag {
@@ -142,7 +144,7 @@ match byte {
 }
 ```
 
-Ranges in patterns are restricted to integers and `char`, because those are the only types for which rustc can decide at compile time whether a range is empty (and thus reason about exhaustiveness). Note the `..=` (inclusive); the half-open `..` is *not* a pattern range — it means something else, below.
+Ranges in patterns are restricted to integers and `char`, because those are the only types for which rustc can decide at compile time whether a range is empty (and thus check that you've covered the whole space). Note the `..=` (inclusive); the half-open `..` is *not* a pattern range — it means something else, below.
 
 **Alternation with `|`.** `1 | 2 | 3` matches any of the three. Combined with `@` and guards it composes (see below); note its precedence interacts with guards — `4 | 5 | 6 if cond` parses as `(4 | 5 | 6) if cond`, the guard applies to the whole alternation.
 
@@ -207,7 +209,7 @@ match opt {
 }
 ```
 
-Beware: a guard *defeats exhaustiveness analysis*. The compiler cannot reason about arbitrary boolean conditions, so `Some(x) if x % 2 == 0` is not treated as covering any `Some`; you still need a fallback arm. Use guards for refinement, not as your only handler of a variant.
+Beware: a guard *defeats the exhaustiveness check*. The compiler cannot reason about arbitrary boolean conditions, so `Some(x) if x % 2 == 0` is not treated as covering any `Some`; you still need a fallback arm. Use guards for refinement, not as your only handler of a variant.
 
 ### Shadowing inside patterns — the classic gotcha
 
@@ -226,7 +228,7 @@ match x {
 
 If your intent was "match when the inner value *equals the outer* `y`", the pattern `Some(y)` does the opposite — it captures the inner value into a new `y`. The fix is a guard against a differently-named binding: `Some(n) if n == y`.
 
-> **⚠️ Pitfall →** Forgetting that patterns bind rather than compare is the most common `match` bug for newcomers from C, where `case y:` would compare. There is no compiler *error* here — the code compiles and runs, it just always takes the `Some(_)` arm. The idiomatic fix is to bind to a fresh name and compare in a guard (`Some(n) if n == y`), or to inline the constant if it is one (`Some(10) => ...`).
+> **⚠️ Pitfall →** Forgetting that patterns bind rather than compare is the most common `match` bug for newcomers coming from Java/C, where `case y:` would compare. There is no compiler *error* here — the code compiles and runs, it just always takes the `Some(_)` arm. The idiomatic fix is to bind to a fresh name and compare in a guard (`Some(n) if n == y`), or to inline the constant if it is one (`Some(10) => ...`).
 
 ## Refutability: which patterns go where
 
@@ -246,13 +248,13 @@ help: you might want to use `let else` to handle the variant that isn't matched
 
 The `let` form must always succeed because there is nowhere to put the failure. The compiler even points you at the fix: `let ... else`.
 
-> **🎓 Tripos link →** Refutability is the static decision procedure behind exhaustiveness from your Semantics/Foundations work, viewed from the other side. An irrefutable pattern is one whose coverage is the entire type — a single arm that is *total* on its own. `let PATTERN = EXPR;` is sound only when `PATTERN` is total, because there is no second arm to handle the gap; the compiler discharges exactly that proof obligation before accepting the binding.
+> **🎓 Plain-language insight →** Refutability is just exhaustiveness seen from the other side. An irrefutable pattern is one that covers the *whole* type on its own — it can never fail to match, so it needs no second arm. `let PATTERN = EXPR;` is allowed only when `PATTERN` is irrefutable, because a plain `let` has nowhere to send a value that didn't match. The moment a pattern *could* fail, the compiler insists you use a form that has a "didn't match" branch (`if let`, `while let`, `let ... else`).
 
 ## The conditional family: `if let`, `let ... else`, `while let`, `matches!`
 
 When you care about *one* pattern and want to ignore the rest, a full `match` with a `_ => {}` arm is noise. The conditional forms are sugar over that pattern.
 
-**`if let`** runs a block only when one refutable pattern matches, optionally with `else`:
+**`if let`** runs a block only when one refutable pattern matches, optionally with `else`. This is the direct counterpart of Swift's `if let`:
 
 ```rust
 if let Some(w) = first_word(line) {
@@ -264,7 +266,7 @@ if let Some(w) = first_word(line) {
 
 You can chain `else if let` for unrelated conditions — more flexible than `match` (which tests one scrutinee) but, critically, *not* exhaustiveness-checked. Drop a case and the compiler stays silent. That is the price of the conciseness; pay it knowingly.
 
-**`let ... else`** is the early-return idiom and, in my view, the most underused construct for newcomers. It binds in the *enclosing* scope on success and *diverges* (returns, breaks, panics) on failure — flattening the dreaded rightward-drift staircase:
+**`let ... else`** is the early-return idiom — Rust's version of Swift's `guard let ... else { return }` — and, in my view, the most underused construct for newcomers. It binds in the *enclosing* scope on success and *diverges* (returns, breaks, panics) on failure — flattening the dreaded rightward-drift staircase:
 
 ```rust
 fn config_port(raw: Option<&str>) -> u16 {
@@ -279,7 +281,9 @@ fn config_port(raw: Option<&str>) -> u16 {
 }
 ```
 
-The `else` block is mandatory and must not fall through to the code after it — it has to `return`, `break`, `continue`, or `panic!`. The bindings introduced by the pattern escape into the surrounding scope, which is exactly what makes it a "guard clause" in the classic sense. Compare this to the OCaml/C habit of nesting the success case ever deeper inside `match`/`if`; `let ... else` lets you assert preconditions linearly and keep the main logic at the left margin.
+The `else` block is mandatory and must not fall through to the code after it — it has to `return`, `break`, `continue`, or `panic!`. The bindings introduced by the pattern escape into the surrounding scope, which is exactly what makes it a "guard clause" in the classic sense — identical in spirit to Swift's `guard`. Compare this to the habit of nesting the success case ever deeper inside `if let`/`switch`; `let ... else` lets you assert preconditions linearly and keep the main logic at the left margin.
+
+> **🔧 In practice →** You're in a web request handler that needs a logged-in user and a valid order id from the request. Instead of nesting two `if let`s and drifting rightward, you write the preconditions as flat guard clauses: `let Some(user) = session.user() else { return Response::unauthorized(); };` then `let Ok(order_id) = params.get("id").parse::<u64>() else { return Response::bad_request(); };`. Both `user` and `order_id` are now in scope for the rest of the handler, which stays at the left margin and reads top-to-bottom as "here are the things that must be true; now do the work."
 
 **`while let`** loops as long as the pattern keeps matching — the idiomatic way to drain something that yields `Some`/`Ok` until it stops:
 
@@ -332,35 +336,38 @@ assert_eq!(size_of::<NonZeroU32>(),   size_of::<Option<NonZeroU32>>()); // both 
 
 So `Option<&T>` is genuinely a nullable pointer at the machine level — you get C's compact representation and Rust's safety, simultaneously, with the null check *enforced by the type*. Types without a spare niche still need a discriminant: `Option<i32>` is 8 bytes (4 for the `i32`, plus a tag word with alignment), because every 32-bit pattern is a valid `i32` and there is nothing to steal for `None`. (`bool` has a niche — only `0` and `1` are valid — so `Option<bool>` fits in one byte.)
 
-> **🦀 From your toolbox →** This recovers, *safely*, the C idiom where you overload a sentinel value to mean "absent" — a `char *` of `NULL`, an index of `-1`, a `find` returning `npos`. In C you and every caller must remember the sentinel and check it by hand; nothing in the type records the convention. Niche-optimised `Option<&T>` gives you byte-for-byte the same representation, but the compiler *forces* the check and there is no way to forget which value is the sentinel. The analogy breaks down on safety, not on layout: the bits are identical, the guarantees are not.
+> **🦀 From your toolbox →** This recovers, *safely*, the old habit of overloading a sentinel value to mean "absent": a pointer of `null`, an index of `-1`, a search returning some magic "not found" constant. In Java or C you and every caller must remember the sentinel and check it by hand; nothing in the type records the convention, which is how the NPE happens. Niche-optimised `Option<&T>` gives you byte-for-byte the same compact representation, but the compiler *forces* the check and there is no way to forget which value is the sentinel. The contrast with Swift is the useful one: Swift's `Optional` also makes absence type-safe, and Rust matches that safety while *also* guaranteeing the cheap pointer-sized layout. The analogy to old C/Java sentinels breaks down on safety, not on layout: the bits are identical, the guarantees are not.
 
 ## Mental-model recap
 
-- An `enum` is a **sum type** (OCaml variant / tagged union), laid out as a discriminant plus space for the largest variant. The tag and payload are inseparable, so reading the wrong arm is impossible.
+- An `enum` is a value that is **one of several shapes** (Swift enum with associated values / OCaml variant / tagged union), laid out as a discriminant plus space for the largest variant. The tag and payload are inseparable, so reading the wrong arm is impossible.
 - `Option<T>` reifies absence as a *value of a distinct type*, turning the null dereference from a runtime crash into a compile error. `Result<T, E>` does the same for failure ([error handling](11-error-handling.md)).
-- `match` is an **expression** and is **exhaustive** — a compile-time totality check that forces every case to be handled and flags every site when you add a variant.
+- `match` is an **expression** and is **exhaustive** — a compile-time check that forces every case to be handled and flags every site when you add a variant.
 - **Refutability** decides placement: irrefutable patterns only in `let`/params/`for`; refutable patterns drive `if let`/`while let`/`let ... else`. Use `let ... else` to keep the happy path unindented.
 - Match the **reference** (`&val`), not the owned value, when you still need the original — match ergonomics then borrows the inner data instead of moving it.
 
 ## Exercises
 
-1. Define `enum Json { Null, Bool(bool), Num(f64), Str(String), Arr(Vec<Json>), Obj(Vec<(String, Json)>) }` and write `fn depth(j: &Json) -> usize` returning the maximum nesting depth. Then add a `Json::Date(...)` variant and observe which `match` sites stop compiling — that is the totality check doing your refactoring for you.
+1. **Adapt and observe.** Define `enum Json { Null, Bool(bool), Num(f64), Str(String), Arr(Vec<Json>), Obj(Vec<(String, Json)>) }` and write `fn depth(j: &Json) -> usize` returning the maximum nesting depth. Now add a `Json::Date(...)` variant *without* touching `depth`, and predict before compiling: which lines does rustc flag, and what error code? Was a `_ => ...` catch-all in your `depth` a good idea or a liability for this kind of refactor? Justify your choice.
 
-2. Explain why `let Shape::Circle(r) = shape;` fails to compile, quote the error code, and give two distinct fixes (one using `match`, one using `let ... else`). Which one is appropriate when `shape` might legitimately be any variant at runtime?
+2. **Which compiles, and why.** For each of the following, decide whether it compiles, and if not, name the failing rule (refutability or move-out):
+   - `let Some(x) = compute();` where `compute() -> Option<i32>`
+   - `let (a, b) = pair;` where `pair: (i32, String)` and you use `pair` afterwards
+   - `for Shape::Circle(r) in shapes { ... }` where `shapes: Vec<Shape>`
+   - `if let Point { x, y } = p { ... }` where `Point` has exactly those two fields
+   Then state the one-line fix for each that does *not* compile.
 
-3. The following compiles and runs but always prints `"other"`. Find the bug without running it, and fix it so it prints `"target"` when `code == limit`:
+3. **Predict the silent bug.** This compiles, runs, and always prints `"other"`. Without running it, explain why, then fix it so it prints `"target"` when `code == limit`:
    ```rust
    let code = 7;
    let limit = 7;
    match code {
-       limit => println!("target"),   // why does this not do what it looks like?
+       limit => println!("target"),
        _     => println!("other"),
    }
    ```
-   (Bonus: the compiler emits a *warning* here too — what is it, and why?)
+   The compiler also emits a *warning* here — predict what it is and why it appears.
 
-4. (★) Write `fn sum_tree(t: &Tree) -> i32` for `enum Tree { Leaf(i32), Node(Box<Tree>, Box<Tree>) }`. Do it by matching on `&t`. Then try writing it by matching on `t` by value and explain the exact borrow-checker error you get, in terms of moving out of a shared reference.
+4. **Design decision.** You're handling an `Option<Config>` in three different functions: (a) one that should fall back to a default if it's `None`, (b) one that should bail out early and return an error if it's `None`, and (c) one that needs to read a field whether or not it's present but must not consume the `Option`. For each, choose between `match`, `if let ... else`, `let ... else`, and matching on `&opt` — and say in one sentence why that form fits best.
 
-5. (★) Predict `size_of` for each, then verify with a program: `Option<i32>`, `Option<&i32>`, `Option<Box<i32>>`, `Option<Option<&i32>>`, and `Option<bool>`. Explain *each* result in terms of niche optimisation — in particular, why `Option<Option<&i32>>` does **not** stay pointer-sized but `Option<&i32>` does.
-
-6. Refactor a function written as a deeply nested `if let { if let { ... } }` staircase (invent one that parses two `Option<&str>` fields and validates them) into a flat sequence of `let ... else` guard clauses. State precisely what each `else` block must do for the code to compile.
+5. (★) **Predict the sizes.** Predict `size_of` for each, then verify with a program: `Option<i32>`, `Option<&i32>`, `Option<Box<i32>>`, `Option<Option<&i32>>`, and `Option<bool>`. Explain *each* result in terms of niche optimisation — in particular, why `Option<Option<&i32>>` does **not** stay pointer-sized even though `Option<&i32>` does. (Hint: once the inner `Option` has claimed the null niche, what is left for the outer one to use?)

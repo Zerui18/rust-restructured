@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -179,9 +179,9 @@
                         <h1 id="4-lifetimes-as-regions"><a class="header" href="#4-lifetimes-as-regions">4. Lifetimes as Regions</a></h1>
 <p>In <a href="03-references-and-borrowing.html">References &amp; Borrowing</a> you saw the borrow checker reject a reference that outlived its referent. That chapter waved its hands at <em>how</em> the checker knows. The machinery is <strong>lifetimes</strong>, and the single most important sentence in this chapter is this:</p>
 <p><strong>A lifetime is a region — a set of program points over which a reference is valid — and a lifetime annotation <code>'a</code> is a generic parameter ranging over such regions. Annotations <em>describe</em> constraints between regions; they never <em>change</em> them.</strong></p>
-<p>If you internalise that, the rest is bookkeeping. The thing that trips up newcomers is treating <code>'a</code> as a runtime quantity (“how long does this thing live?”) rather than what it is: a <em>type-level</em> variable that the compiler solves for, exactly like a type parameter <code>T</code>. You have met this idea before — it just had a different name in a different course.</p>
+<p>If you internalise that, the rest is bookkeeping. The thing that trips up newcomers is treating <code>'a</code> as a runtime quantity (“how long does this thing live?”) rather than what it is: a <em>type-level</em> variable that the compiler solves for, exactly like a type parameter <code>T</code> (think of a Java or Swift generic <code>&lt;T&gt;</code>, but standing for a <em>span of code</em> instead of a type). You have met the underlying idea before — it just had a different name in a different course.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is <strong>region-based memory management</strong> from <em>Semantics of Programming Languages</em>. A lifetime <code>'a</code> is a region; <code>&amp;'a T</code> is the type of a reference into region <code>'a</code>. The borrow checker is a <strong>constraint solver</strong>: it collects outlives-constraints (<code>'a: 'b</code>, read “<code>'a</code> outlives <code>'b</code>”) from the program text, then checks satisfiability. Tofte–Talpin region inference let you <em>allocate</em> into regions; Rust uses the same algebra purely to <em>prove safety</em>, with no runtime region at all. The “lifetime” in the type is the static region; nothing is stamped into the binary.</p>
+<p><strong>🎓 Tripos link →</strong> From <em>Semantics of Programming Languages</em>, the intuition is: a lifetime <code>'a</code> names a <em>region</em> of the program, and <code>&amp;'a T</code> is “a reference that’s only valid inside region <code>'a</code>”. The borrow checker works like a little constraint solver: it reads relationships off the program text — “this region must contain that one” — and checks they can all hold at once. There’s no runtime machinery for any of this; the region lives entirely in the type and disappears before the binary is produced.</p>
 </blockquote>
 <h2 id="lifetimes-do-not-control-dropping"><a class="header" href="#lifetimes-do-not-control-dropping">Lifetimes do not control dropping</a></h2>
 <p>Kill this myth now, because it is the commonest wrong mental model. A value is dropped when its <strong>owner</strong> goes out of scope — that is determined by ownership and lexical scope (<a href="02-ownership-and-moves.html">Ownership &amp; Moves</a>), full stop. Lifetimes are about how long a <em>reference</em> may be <em>used</em>, and the checker’s only job is to prove that every use of a reference happens within the region where its referent is alive. The annotation <code>'a</code> does not extend, shorten, or otherwise touch when anything is freed.</p>
@@ -195,7 +195,7 @@ v.push(4);             // mutable borrow is fine: the shared borrow's region is 
 <span class="boring">}</span></code></pre>
 <p>The <code>&amp;v[0]</code> still <em>exists</em> lexically until the block ends, but its lifetime — the region the checker reasons about — is the slice <code>[let first ..= println!]</code>. Drop happens later and is unaffected.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> In C++, a reference or raw pointer has no statically tracked validity region; you reason about lifetimes in your head and <code>-fsanitize=address</code> tells you at runtime when you got it wrong. RAII governs <em>destruction</em> (like Rust’s drop), but the validity of a <code>T&amp;</code> is not part of its type. Rust splits these: ownership ≈ RAII destruction order; lifetimes ≈ a separate, purely static proof that no reference is read after its referent dies. The analogy breaks down precisely where C++ is silent: <code>&amp;'a T</code> carries <code>'a</code> in the type, so the <em>signature</em> of a function is part of the contract a caller must satisfy.</p>
+<p><strong>🦀 From your toolbox →</strong> Think about how the languages you know decide <em>when memory is reclaimed</em> and <em>whether a reference is still valid</em>. Java’s GC and Python’s reference counting both reclaim objects at some indeterminate later point, and a reference is “valid” as long as something still points at the object — you never reason about validity statically. Swift’s ARC is the same shape: the object lives while a strong reference exists. None of these track <em>where in the code</em> a reference may legally be used. Rust splits the two concerns cleanly: <em>ownership and scope</em> decide deterministically when a value is dropped (at a known point, no GC pause, no refcount), and <em>lifetimes</em> are a separate, purely compile-time proof that no reference is read after its referent dies. The analogy breaks down where the managed languages are silent: in Rust, <code>&amp;'a T</code> carries <code>'a</code> <em>in the type</em>, so a function’s <em>signature</em> is part of the contract every caller must satisfy — there is no runtime safety net catching you later.</p>
 </blockquote>
 <h2 id="why-function-boundaries-need-annotations"><a class="header" href="#why-function-boundaries-need-annotations">Why function boundaries need annotations</a></h2>
 <p>Inside a single function body the compiler sees every borrow and every drop, so it infers all regions itself — you essentially never write a lifetime inside a body. The trouble starts at <strong>function boundaries</strong>, where the body is opaque to callers and callers are opaque to the body.</p>
@@ -223,9 +223,16 @@ v.push(4);             // mutable borrow is fine: the shared borrow's region is 
     if a.len() &gt;= b.len() { a } else { b }
 }
 <span class="boring">}</span></code></pre>
-<p>Read this as a quantified statement: <em>for all regions <code>'a</code>, given two <code>&amp;str</code> both valid for <code>'a</code>, I return a <code>&amp;str</code> valid for <code>'a</code>.</em> The caller, at each call site, instantiates <code>'a</code> with a concrete region — and the compiler picks the <strong>largest</strong> region that satisfies all the input constraints, which is the <em>intersection</em> of the two inputs’ regions, i.e. the shorter one. The result therefore borrows for “as long as both inputs are alive”, which is the tightest sound guarantee.</p>
+<p>Read this as a promise that holds <em>for any</em> region <code>'a</code>: <em>given two <code>&amp;str</code> both valid for <code>'a</code>, I return a <code>&amp;str</code> valid for <code>'a</code>.</em> The caller, at each call site, fills in <code>'a</code> with a concrete region — and the compiler picks the <strong>largest</strong> region that satisfies all the input constraints, which is the <em>overlap</em> of the two inputs’ regions, i.e. the shorter one. The result therefore borrows for “as long as both inputs are alive”, which is the tightest sound guarantee.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Logic and Proof</em> / Curry–Howard: the signature <code>fn pick&lt;'a&gt;(...) -&gt; &amp;'a str</code> is a ∀-quantified proposition, <code>∀'a. (&amp;'a str) → (&amp;'a str) → &amp;'a str</code>. The function body is its proof term. A call site is ∀-elimination: substitute a concrete region for <code>'a</code>. The borrow checker is the proof checker. “Missing lifetime specifier” means the proposition you wrote is too weak to be proven — you must strengthen the type until the body type-checks against it.</p>
+<p><strong>🔧 In practice →</strong> This signature is exactly what you write when a function hands back a <em>view into</em> its inputs instead of allocating. Say you’re tokenising and want the longest of two candidate matches without copying any bytes:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn longer_match&lt;'a&gt;(by_keyword: &amp;'a str, by_symbol: &amp;'a str) -&gt; &amp;'a str {
+    if by_keyword.len() &gt;= by_symbol.len() { by_keyword } else { by_symbol }
+}
+<span class="boring">}</span></code></pre>
+<p>The caller gets back a slice that still points into one of the original buffers — zero allocation, zero copy — and the <code>'a</code> is what lets the compiler guarantee the buffers outlive the slice. You reach for borrowed-output signatures like this all over parsers, config readers, and anything that slices a <code>&amp;str</code>/<code>&amp;[u8]</code> and returns part of it.</p>
 </blockquote>
 <p>Crucially, the annotation does <strong>not</strong> force the caller’s two slices to have equal lifetime. Subtyping (below) lets a longer-lived slice be <em>coerced</em> to a shorter region so both can unify at <code>'a</code>. The signature is a constraint, not an equation.</p>
 <blockquote>
@@ -251,7 +258,7 @@ v.push(4);             // mutable borrow is fine: the shared borrow's region is 
   |     println!("{result}");
   |               ------ borrow later used here
 </code></pre>
-<p><em>You</em> can see <code>long</code> is the longer string, so <code>result</code> “really” borrows <code>long</code>. The compiler cannot — it reasons from the <em>signature</em>, which says the output borrows for the intersection of both inputs’ regions. <code>short</code>’s region ends at the inner brace, so <code>result</code>’s region ends there too, and using it afterwards is rejected. This is the price and the point: the analysis is <strong>local</strong> to the signature, so a bug in <code>pick</code> can never silently corrupt a caller, and a change to <code>pick</code>’s body that keeps the same signature can never break callers.</p>
+<p><em>You</em> can see <code>long</code> is the longer string, so <code>result</code> “really” borrows <code>long</code>. The compiler cannot — it reasons from the <em>signature</em>, which says the output borrows for the overlap of both inputs’ regions. <code>short</code>’s region ends at the inner brace, so <code>result</code>’s region ends there too, and using it afterwards is rejected. This is the price and the point: the analysis is <strong>local</strong> to the signature, so a bug in <code>pick</code> can never silently corrupt a caller, and a change to <code>pick</code>’s body that keeps the same signature can never break callers.</p>
 <h2 id="when-the-relationship-is-asymmetric"><a class="header" href="#when-the-relationship-is-asymmetric">When the relationship is asymmetric</a></h2>
 <p>You only relate the lifetimes that are actually related. If <code>pick</code> always returned the first argument, the second’s region is irrelevant to the output:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -301,7 +308,7 @@ v.push(4);             // mutable borrow is fine: the shared borrow's region is 
 <p><strong>⚠️ Pitfall →</strong> Rule 2’s “exactly one input lifetime” counts lifetime <em>variables</em>, not <code>&amp;</code> characters. <code>fn f(x: &amp;(i32, &amp;str)) -&gt; &amp;str</code> has two input lifetimes (the outer <code>&amp;</code> and the inner <code>&amp;str</code>), so Rule 2 does <em>not</em> fire and you get <code>E0106</code>. Conversely <code>fn g(x: &amp;str, n: usize) -&gt; &amp;str</code> has exactly one input <em>lifetime</em> (<code>usize</code> carries none), so Rule 2 <em>does</em> fire and <code>g</code> needs no annotation. Count regions, not ampersands.</p>
 </blockquote>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> Elision is the closest Rust analogue to OCaml’s Hindley–Milner type inference you saw in <em>Foundations</em> — both let you omit annotations the compiler can recover. The difference is sharp: HM is <em>principal</em> and <em>complete</em> (it finds the most general type whenever one exists). Elision is deliberately <em>incomplete</em> — three syntactic patterns, no backtracking, no unification across the body. Rust chose a dumb-but-predictable procedure so that the <em>signature</em> alone is the contract and error messages point at the signature, not at some distant body expression.</p>
+<p><strong>🦀 From your toolbox →</strong> Elision is the closest Rust analogue to the type inference you saw in <em>Foundations of Computer Science</em>, where OCaml lets you write <code>let f x = x + 1</code> and figures out the types for you — you omit annotations the compiler can recover. But the resemblance is shallow and worth pinning down. OCaml’s inference is <em>thorough</em>: it explores the whole function body and finds the most general type whenever one exists. Elision is deliberately <em>not</em> thorough — it’s just three syntactic patterns checked in order, with no looking inside the body and no backtracking. Rust chose a dumb-but-predictable procedure on purpose, so that the <em>signature</em> alone is the contract and error messages point at the signature rather than at some distant expression buried in the body.</p>
 </blockquote>
 <h2 id="structs-that-hold-references"><a class="header" href="#structs-that-hold-references">Structs that hold references</a></h2>
 <p>Every struct field that is a reference forces a lifetime parameter on the struct, for the same reason functions need one: the type must record how long the borrowed data must outlive the struct.</p>
@@ -324,6 +331,16 @@ v.push(4);             // mutable borrow is fine: the shared borrow's region is 
 <pre><code class="language-text">error[E0597]: `text` does not live long enough
 </code></pre>
 <p>The struct can’t outlive what it borrows. This is the structural rule that makes self-referential and dangling-pointer-holding structs <em>unrepresentable</em> by construction. (If you genuinely need a struct that owns data and references it, that requires <code>Pin</code>/raw pointers or owning the data and storing indices — covered under <a href="15-smart-pointers.html">Smart Pointers &amp; Interior Mutability</a>. The everyday answer is: store an owned <code>String</code>, or store an index, not a borrow.)</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> A borrowing struct is the right call whenever you build a short-lived “view” object over data someone else owns and you don’t want to copy it. The classic case is a parser or scanner that walks over an input buffer:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let source = std::fs::read_to_string("config.toml")?;
+let mut parser = Parser { input: &amp;source, pos: 0 };
+// parser borrows `source`; as long as `parser` is alive, `source` must be too.
+<span class="boring">}</span></code></pre>
+<p>Because <code>Parser&lt;'src&gt;</code> ties itself to <code>source</code>, the compiler will <em>stop you at compile time</em> from, say, returning the parser out of a function while letting <code>source</code> drop — exactly the use-after-free you’d otherwise debug at runtime in C. If that borrow obligation ever becomes inconvenient (you want the parser to outlive the input), that’s the compiler telling you to store an owned <code>String</code> field instead.</p>
+</blockquote>
 <p>Methods on such a struct declare the lifetime after <code>impl</code>, because it’s part of the type:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -367,11 +384,22 @@ let _ = keep(r);              // ERROR: r borrows s for less than 'static
 </code></pre>
 <p><code>String: 'static</code> (owns everything); <code>&amp;'a str: 'static</code> only if <code>'a</code> <em>is</em> <code>'static</code>. The bound restricts <em>borrowing</em>, not <em>duration of existence</em>.</p>
 <blockquote>
+<p><strong>🔧 In practice →</strong> You’ll meet <code>T: 'static</code> the first time you spawn a thread. <code>thread::spawn</code> requires its closure to be <code>'static</code> because the new thread might outlive the function that launched it — so the closure must not capture any reference that could go dangling:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let data = vec![1, 2, 3];
+std::thread::spawn(move || {        // `move` makes the closure OWN `data`
+    println!("{:?}", data);         // now the closure is `'static`: it borrows nothing
+});
+<span class="boring">}</span></code></pre>
+<p>Without <code>move</code> the closure would borrow <code>data</code>, the borrow would be shorter than <code>'static</code>, and you’d get the same “does not live long enough” error. The fix is almost never to add <code>'static</code> to a borrow — it’s to <em>own</em> the data (here, <code>move</code> transfers <code>data</code> into the closure). That mirrors the pitfall below: <code>'static</code> is satisfied by owning, not by wishing.</p>
+</blockquote>
+<blockquote>
 <p><strong>⚠️ Pitfall →</strong> When a borrow-related error suggests “consider adding <code>'static</code>”, do <strong>not</strong> reflexively add it. It is almost always the wrong fix — it usually means you tried to return or store a reference to something that dies too soon. Slapping <code>'static</code> on the signature just moves the rejection to the call site (or fails outright, as above). The real fix is to return owned data, restructure ownership, or shorten the borrow. <code>'static</code> is a strong claim; make it only when the data genuinely lives that long.</p>
 </blockquote>
 <h2 id="subtyping-and-variance-the-precise-version"><a class="header" href="#subtyping-and-variance-the-precise-version">Subtyping and variance (the precise version)</a></h2>
-<p>You know subtyping from <em>Further Java</em> and <em>Semantics</em>. Lifetimes induce a subtyping relation, and getting its <strong>variance</strong> right is what separates a working mental model from one that mysteriously rejects code.</p>
-<p>The base relation: if region <code>'long</code> ⊇ region <code>'short</code> (the longer region contains the shorter), then <code>&amp;'long T</code> is a <strong>subtype</strong> of <code>&amp;'short T</code>. Written <code>'long: 'short</code> (“<code>'long</code> outlives <code>'short</code>”). A reference valid for a <em>bigger</em> region can be used wherever one valid for a <em>smaller</em> region is expected — you can always forget that you had it for longer. This is why a <code>&amp;'static str</code> slots into a parameter of any lifetime: <code>'static</code> outlives everything.</p>
+<p>You know subtyping from Java and Swift: a <code>String</code> can be used where an <code>Object</code> (Java) or a less-specific type is expected, because it’s “at least as good”. Lifetimes induce a similar subtyping relation of their own, and getting its <strong>variance</strong> right — <em>which direction</em> the substitution is allowed to go — is what separates a working mental model from one that mysteriously rejects code.</p>
+<p>The base relation: if region <code>'long</code> ⊇ region <code>'short</code> (the longer region contains the shorter), then <code>&amp;'long T</code> can be used where <code>&amp;'short T</code> is expected. Written <code>'long: 'short</code> (“<code>'long</code> outlives <code>'short</code>”). A reference valid for a <em>bigger</em> region can be used wherever one valid for a <em>smaller</em> region is expected — you can always forget that you had it for longer. This is why a <code>&amp;'static str</code> slots into a parameter of any lifetime: <code>'static</code> outlives everything.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn use_for&lt;'a&gt;(_: &amp;'a str) {}
@@ -380,10 +408,10 @@ use_for(forever);   // 'static coerces down to 'a — perfectly fine
 <span class="boring">}</span></code></pre>
 <p>Now the part people get wrong:</p>
 <ul>
-<li><code>&amp;'a T</code> is <strong>covariant</strong> in <code>'a</code> <em>and</em> covariant in <code>T</code>. Longer-lived is usable as shorter-lived, and <code>&amp;&amp;'long U</code> is usable as <code>&amp;&amp;'short U</code>. Reading deeper doesn’t let you violate anything.</li>
-<li><code>&amp;'a mut T</code> is <strong>covariant in <code>'a</code></strong> but <strong>invariant in <code>T</code></strong>. You can shorten the <em>outer</em> borrow’s region, but you may <strong>not</strong> vary the referent type’s lifetime at all — neither up nor down.</li>
+<li><code>&amp;'a T</code> (a <em>shared, read-only</em> reference): a longer-lived one is freely usable where a shorter-lived one is wanted, and likewise <code>&amp;&amp;'long U</code> is usable as <code>&amp;&amp;'short U</code>. Reading deeper through layers of <code>&amp;</code> never lets you violate anything.</li>
+<li><code>&amp;'a mut T</code> (a <em>mutable</em> reference): you can still shorten the <em>outer</em> borrow’s region, but you may <strong>not</strong> vary the referent type’s lifetime at all — neither lengthen nor shorten it.</li>
 </ul>
-<p>Why the asymmetry? Through a <code>&amp;mut T</code> you can both <em>read</em> and <em>write</em>. If <code>&amp;'a mut T</code> were covariant in <code>T</code>, you could take a <code>&amp;mut &amp;'long str</code>, treat it as <code>&amp;mut &amp;'short str</code>, and <em>write</em> a <code>'short</code> reference into a slot the original owner believes holds a <code>'long</code> one — then read it back after <code>'short</code> has expired. Dangling reference, statically. So mutability forces invariance. The compiler tells you this verbatim:</p>
+<p>Why the asymmetry? Through a <code>&amp;mut T</code> you can both <em>read</em> and <em>write</em>. If a <code>&amp;'a mut T</code> allowed you to swap a longer lifetime in <code>T</code> for a shorter one, you could take a <code>&amp;mut &amp;'long str</code>, treat it as <code>&amp;mut &amp;'short str</code>, and <em>write</em> a <code>'short</code> reference into a slot the original owner believes holds a <code>'long</code> one — then read it back after <code>'short</code> has expired. Dangling reference, statically. So mutability forbids that substitution. The compiler tells you this verbatim:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn shorten&lt;'a, 'b: 'a&gt;(r: &amp;'a mut &amp;'b str) -&gt; &amp;'a mut &amp;'a str { r }
@@ -393,7 +421,7 @@ use_for(forever);   // 'static coerces down to 'a — perfectly fine
   = note: mutable references are invariant over their type parameter
 </code></pre>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is exactly the <em>Further Java</em> array-covariance hole, but caught statically instead of at runtime. Java made <code>String[] &lt;: Object[]</code> (covariant arrays), so writing an <code>Integer</code> into a <code>String[]</code>-aliased-as-<code>Object[]</code> throws <code>ArrayStoreException</code> <em>at runtime</em>. Same disease — covariance plus mutation is unsound — same cure shape, different time: Rust makes the mutable referent <strong>invariant</strong> so the violating coercion is a <em>type error</em>. From <em>Semantics</em>: read-only positions may be covariant, write positions must be invariant; read-write must be invariant. Rust applies this rule to lifetimes mechanically.</p>
+<p><strong>🎓 Tripos link →</strong> This is the same hole that <em>Further Java</em> warns about with <strong>array covariance</strong>, but caught at compile time instead of at runtime. Java lets you treat a <code>String[]</code> as an <code>Object[]</code> (covariant arrays), so if you then write an <code>Integer</code> into it through the <code>Object[]</code> alias, you get an <code>ArrayStoreException</code> <em>while the program runs</em>. Same disease — letting you substitute freely <em>and</em> write through the result is unsound — and essentially the same cure, just applied earlier: Rust refuses the lifetime substitution on the <em>mutable</em> reference, so the violating coercion is a <em>compile error</em>, not a runtime crash. The rule of thumb is general: a position you only ever read from can be substituted freely; a position you can also write to cannot.</p>
 </blockquote>
 <h2 id="combining-lifetimes-with-generics-and-bounds"><a class="header" href="#combining-lifetimes-with-generics-and-bounds">Combining lifetimes with generics and bounds</a></h2>
 <p>Lifetimes, type parameters, and trait bounds all coexist in one <code>&lt;...&gt;</code> list because lifetimes <em>are</em> a kind of generic parameter (by convention they come first):</p>
@@ -420,27 +448,27 @@ fn pick_and_log&lt;'a, T: Display&gt;(a: &amp;'a str, b: &amp;'a str, tag: T) -&
 <li>Annotations <strong>describe</strong> outlives-relationships between regions; they never change when anything is dropped. Drop is governed by <em>ownership and scope</em>; lifetimes only constrain how long a <em>reference</em> may be <em>used</em>.</li>
 <li>Function/struct boundaries need annotations because the analysis is <strong>local to the signature</strong>: the signature is the entire contract between body and caller. Elision (3 deterministic rules) fills the common cases and <em>errors rather than guesses</em> when it can’t.</li>
 <li><code>'static</code> has two meanings: <code>&amp;'static T</code> (referent lives the whole run) vs <code>T: 'static</code> (the type holds no shorter-than-<code>'static</code> borrows, so an <em>owned</em> value qualifies). “Add <code>'static</code>” is usually the wrong fix for a borrow error.</li>
-<li><code>&amp;'a T</code> is covariant; <code>&amp;'a mut T</code> is <strong>invariant in the referent type</strong> — the same covariance-plus-mutation unsoundness Java arrays hit at runtime, caught here statically.</li>
+<li><code>&amp;'a T</code> (shared) substitutes freely from longer to shorter; <code>&amp;'a mut T</code> (mutable) may <strong>not</strong> vary the referent type’s lifetime at all — the same covariance-plus-mutation unsoundness Java arrays hit at runtime, caught here statically.</li>
 </ul>
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write <code>fn longest_prefix&lt;'a&gt;(a: &amp;'a str, b: &amp;str) -&gt; &amp;'a str</code> that returns the first <code>a.len().min(b.len())</code> bytes of <code>a</code>. Then <em>try</em> to also relate <code>b</code>’s lifetime to the output and observe how over-constraining the signature rejects callers that drop <code>b</code> early. Explain which signature is “weakest-but-sound”.</p>
+<p>You have <code>fn pick&lt;'a&gt;(a: &amp;'a str, b: &amp;'a str) -&gt; &amp;'a str</code> from the chapter. A colleague proposes a “simpler” variant <code>fn pick2&lt;'a, 'b&gt;(a: &amp;'a str, b: &amp;'b str) -&gt; &amp;'a str</code> that always returns <code>a</code>. Which calls compile under <code>pick</code> but are <em>rejected</em> under a version that also tried to return <code>b</code> through <code>'a</code>? Sketch one call site where giving <code>b</code> its own independent <code>'b</code> matters, and state in one sentence the principle (“annotate the weakest true relationship”).</p>
 </li>
 <li>
-<p>Run elision by hand on each, predict whether it compiles, then check: (a) <code>fn f(x: &amp;str) -&gt; &amp;str</code>; (b) <code>fn f(x: &amp;str, y: &amp;str) -&gt; &amp;str</code>; (c) <code>fn f(x: &amp;(u8, &amp;str)) -&gt; &amp;str</code>; (d) <code>fn f(&amp;self, y: &amp;str) -&gt; &amp;str</code> inside an <code>impl Foo&lt;'a&gt;</code>. State which rule fires (or fails) for each.</p>
+<p>Run elision by hand on each, predict whether it compiles <em>before</em> checking, and name which rule fires or fails: (a) <code>fn f(x: &amp;str) -&gt; &amp;str</code>; (b) <code>fn f(x: &amp;str, y: &amp;str) -&gt; &amp;str</code>; (c) <code>fn f(x: &amp;(u8, &amp;str)) -&gt; &amp;str</code>; (d) <code>fn f(&amp;self, y: &amp;str) -&gt; &amp;str</code> inside an <code>impl Foo&lt;'a&gt;</code>. For the one that fails, write the annotation that would make it compile <em>and</em> express the weakest sound guarantee.</p>
 </li>
 <li>
-<p>Define <code>struct Cursor&lt;'a&gt; { data: &amp;'a [i32], at: usize }</code> with a method <code>fn next(&amp;mut self) -&gt; Option&lt;&amp;'a i32&gt;</code>. Make <code>next</code> return a reference tied to the underlying <code>data</code> (lifetime <code>'a</code>), <em>not</em> to <code>&amp;mut self</code>. Why does eliding the lifetime here produce the <em>wrong</em> (too-short) one, and what breaks at the call site if you let elision win?</p>
+<p>Adapt the <code>Parser&lt;'src&gt;</code> from the chapter: add a method <code>fn rest_after(&amp;self, n: usize) -&gt; &amp;'src str</code> returning the source from byte <code>n</code> onward. Now <em>predict</em>: if you instead wrote the return type as plain <code>-&gt; &amp;str</code> and let elision choose, what lifetime would the output get, and give a concrete two-line caller that compiles with the <code>'src</code> version but is rejected by the elided one. (You don’t have to run it — reason it out, then verify.)</p>
 </li>
 <li>
-<p>(★) The compiler says <code>&amp;'a mut T</code> is invariant in <code>T</code>. Construct the smallest function signature you can that the compiler rejects <em>only</em> because of this invariance, and write a one-sentence argument for the concrete dangling-pointer bug that would result if the coercion were allowed. (Hint: a <code>&amp;mut &amp;str</code> and two distinct lifetimes.)</p>
+<p>Design decision: you’re writing a function that returns “the first word of the input”. You could return <code>&amp;str</code> (borrowing the input) or <code>String</code> (owned). Give one calling scenario where the borrowing version is clearly better and one where it forces an awkward <code>'static</code> or a clone at the call site. Which would you make the default, and why?</p>
 </li>
 <li>
-<p>(★) Take the dangling <code>fn dangling&lt;'a&gt;() -&gt; &amp;'a str</code> from the chapter. Explain, in terms of <em>who chooses</em> <code>'a</code>, why <strong>no</strong> body returning a borrow of a local can ever satisfy <em>any</em> caller-chosen <code>'a</code>. Then write a version that compiles by changing the return type, and say which course concept (ownership transfer) makes the fix sound.</p>
+<p>(★) The chapter shows <code>&amp;'a mut T</code> won’t let you vary the referent’s lifetime. Construct the <em>smallest</em> function signature you can that the compiler rejects <strong>only</strong> for this reason (hint: a <code>&amp;mut &amp;str</code> and two lifetimes where one outlives the other), then write one sentence describing the concrete dangling-pointer bug that would occur if Rust accepted it. Bonus: change one <code>&amp;mut</code> to <code>&amp;</code> and explain why it now compiles.</p>
 </li>
 <li>
-<p>Explain why <code>let v = vec![1,2,3]; let r = &amp;v[0]; drop(v); println!("{r}");</code> fails but <code>let r = &amp;v[0]; println!("{r}"); drop(v);</code> succeeds, in terms of NLL regions rather than lexical scope. What is the <em>region</em> of the borrow <code>r</code> in each case?</p>
+<p>Explain, purely in terms of NLL <em>regions</em> (not lexical braces), why <code>let v = vec![1,2,3]; let r = &amp;v[0]; drop(v); println!("{r}");</code> fails but reordering to <code>let r = &amp;v[0]; println!("{r}"); drop(v);</code> succeeds. State the exact region of the borrow <code>r</code> in each case, then predict what happens if you add a <em>second</em> <code>println!("{r}")</code> after the <code>drop(v)</code> in the second version.</p>
 </li>
 </ol>
 
@@ -479,22 +507,6 @@ fn pick_and_log&lt;'a, T: Display&gt;(a: &amp;'a str, b: &amp;'a str, tag: T) -&
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

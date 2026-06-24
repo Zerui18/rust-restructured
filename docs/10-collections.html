@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -179,7 +179,7 @@
                         <h1 id="10-common-collections"><a class="header" href="#10-common-collections">10. Common Collections</a></h1>
 <p>Arrays and tuples (from <a href="01-language-delta.html">the language delta</a>) are fixed-size and live on the stack: their layout is known at compile time. The collections in <code>std::collections</code> are the opposite — heap-backed, growable, and generic over their element types. You already know what a dynamic array, a hash table, and a balanced tree <em>are</em> (Algorithms). What is new in Rust is not the data structures; it is that every one of them is threaded through the <a href="02-ownership-and-moves.html">ownership</a> and <a href="03-references-and-borrowing.html">borrowing</a> rules. A <code>Vec&lt;T&gt;</code> owns its elements. Indexing returns a <em>borrow</em>, not a copy. Reallocation can invalidate outstanding references — and the borrow checker statically forbids the use-after-free that would result. This chapter is the std collections at working speed, with the ownership consequences foregrounded.</p>
 <h2 id="vect-the-growable-array"><a class="header" href="#vect-the-growable-array"><code>Vec&lt;T&gt;</code>: the growable array</a></h2>
-<p>A <code>Vec&lt;T&gt;</code> is exactly the data structure you would build in C++ as <code>std::vector&lt;T&gt;</code>: a heap allocation plus bookkeeping. Concretely, a <code>Vec&lt;T&gt;</code> value is three words on the stack — a pointer to the heap buffer, a <code>len</code>, and a <code>cap</code> (capacity):</p>
+<p>A <code>Vec&lt;T&gt;</code> is exactly the data structure behind Java’s <code>ArrayList&lt;T&gt;</code>, Swift’s <code>Array</code>, or Python’s <code>list</code>: a heap allocation plus bookkeeping. Concretely, a <code>Vec&lt;T&gt;</code> value is three words on the stack — a pointer to the heap buffer, a <code>len</code>, and a <code>cap</code> (capacity):</p>
 <pre><code class="language-text">stack:  Vec { ptr ──┐  len: 3  cap: 4 }
                      ↓
 heap:            [ e0 | e1 | e2 | ___ ]
@@ -195,7 +195,7 @@ let w = vec![1, 2, 3];              // vec! macro: type inferred as Vec&lt;i32&g
 <span class="boring">}</span></code></pre>
 <p><code>Vec::new()</code> does not allocate; a fresh empty vector has capacity 0 and a dangling (non-null, well-aligned) pointer. The first <code>push</code> triggers the first allocation.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is <code>std::vector&lt;T&gt;</code>, down to the geometric growth and the move-on-realloc. The differences: (1) there is no copy constructor invoked on growth — Rust elements are <em>moved</em> by a bitwise <code>memcpy</code>, because Rust types have no self-referential move constructors (a moved-from value is simply abandoned, see <a href="02-ownership-and-moves.html">moves</a>); (2) <code>Vec</code> has no implicit copy — <code>let w = v;</code> <em>moves</em> the three-word header and leaves <code>v</code> unusable, where C++ would copy unless you wrote <code>std::move</code>.</p>
+<p><strong>🦀 From your toolbox →</strong> This is Java’s <code>ArrayList</code>, Swift’s <code>Array</code>, Python’s <code>list</code> — same heap buffer, same geometric growth, same amortised push. Two differences worth holding onto. (1) In Java and Python a variable is a <em>reference</em> to the list; assigning <code>w = v</code> makes a second handle to the <em>same</em> list. In Rust <code>let w = v;</code> <em>moves</em> the three-word header and leaves <code>v</code> unusable — there is exactly one owner (see <a href="02-ownership-and-moves.html">moves</a>). Swift sits in between: its <code>Array</code> is a value type with copy-on-write, so <code>let w = v</code> looks like a copy but shares the buffer until one side mutates; Rust makes the single-owner story explicit instead of hiding it behind reference counting. (2) On growth the elements are <em>moved</em> by a plain <code>memcpy</code> — Rust has no copy/move hooks that run user code on a relocation, so a moved-from slot is simply abandoned. <em>Where it breaks down:</em> don’t picture Java’s resizing as identical — Java copies object <em>references</em> on growth, while Rust copies the elements themselves (for <code>Vec&lt;String&gt;</code>, the three-word <code>String</code> headers), since the elements live inline in the buffer.</p>
 </blockquote>
 <h3 id="indexing-vs-get-panic-vs-option"><a class="header" href="#indexing-vs-get-panic-vs-option">Indexing vs <code>get</code>: panic vs <code>Option</code></a></h3>
 <p>There are two ways to read an element, and the choice is about <em>how out-of-bounds is handled</em>, not ergonomics:</p>
@@ -215,7 +215,15 @@ if let Some(x) = v.get_mut(1) {
 }
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> Bounds-checked indexing is the operational cost Rust pays for soundness: array access cannot be proven in-bounds in general, so the safe operation either checks at runtime (<code>[]</code>, panic) or reflects the partiality in the type (<code>get</code>, <code>Option</code>). This is the same move as wrapping a partial function in an option type in OCaml — <code>List.nth_opt</code> rather than <code>List.nth</code>.</p>
+<p><strong>🔧 In practice →</strong> you’re paginating: a request comes in for “page 7” of a result set, and you compute <code>let start = page * page_size;</code> then want <code>results.get(start)</code>. If you wrote <code>&amp;results[start]</code> and the user asked for a page past the end, your service panics and the request 500s. With <code>results.get(start)</code> you get <code>None</code>, which you map to an empty page or a 404 — the out-of-bounds case becomes ordinary control flow:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match results.get(start) {
+    Some(_) =&gt; render_page(&amp;results[start..end]),
+    None    =&gt; render_empty_page(),   // no data this far in
+}
+<span class="boring">}</span></code></pre>
+<p>Rule of thumb: index with <code>[]</code> when an out-of-range value means <em>your own code has a bug</em>; reach for <code>get</code> the moment the index is derived from anything outside your control.</p>
 </blockquote>
 <h3 id="reading-while-mutating-the-borrow-rule-that-surprises-everyone"><a class="header" href="#reading-while-mutating-the-borrow-rule-that-surprises-everyone">Reading while mutating: the borrow rule that surprises everyone</a></h3>
 <p>This is the canonical <code>Vec</code> borrow-check failure, and it is worth dwelling on because it is <em>correct</em>, not pedantic:</p>
@@ -228,7 +236,7 @@ println!("{first}");
 <span class="boring">}</span></code></pre>
 <pre><code class="language-text">error[E0502]: cannot borrow `v` as mutable because it is also borrowed as immutable
 </code></pre>
-<p>The reason is the layout above. <code>first</code> points <em>into the heap buffer</em>. <code>push(6)</code> might reallocate, moving the buffer and leaving <code>first</code> dangling. C++ has exactly this hazard — pushing onto a <code>std::vector</code> invalidates iterators and references — but C++ does not check it, so it is a famous source of use-after-free. Rust’s rule (“one <code>&amp;mut</code> xor any number of <code>&amp;</code>”) makes the hazard a compile error: holding <code>&amp;v[0]</code> is an outstanding <code>&amp;</code> borrow of <code>v</code>, so the <code>&amp;mut v</code> that <code>push</code> needs is rejected. The fix is to dereference/copy before mutating, or to scope the borrow so it ends before the <code>push</code>.</p>
+<p>The reason is the layout above. <code>first</code> points <em>into the heap buffer</em>. <code>push(6)</code> might reallocate, moving the buffer and leaving <code>first</code> dangling. If you have ever held a reference to an element of a Python <code>list</code> (or a Java collection) and then mutated the collection through another path, you have met this hazard’s cousins — <code>ConcurrentModificationException</code> in Java is the runtime version of the same problem. Rust’s rule (“one <code>&amp;mut</code> xor any number of <code>&amp;</code>”) makes the hazard a <em>compile</em> error instead of a runtime crash: holding <code>&amp;v[0]</code> is an outstanding <code>&amp;</code> borrow of <code>v</code>, so the <code>&amp;mut v</code> that <code>push</code> needs is rejected. The fix is to dereference/copy before mutating, or to scope the borrow so it ends before the <code>push</code>.</p>
 <p>The same protection covers iteration. A <code>for</code> loop over <code>&amp;v</code> holds a borrow of the whole vector for the loop’s duration, so you cannot <code>push</code> or <code>remove</code> mid-iteration:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -259,7 +267,7 @@ for s in owned.into_iter() { /* s: String — owned, moved out of the vec */ }
 <span class="boring">}</span></code></pre>
 <p><code>&amp;v</code> in a <code>for</code> loop is sugar for <code>v.iter()</code>; <code>&amp;mut v</code> for <code>v.iter_mut()</code>; a bare <code>v</code> for <code>v.into_iter()</code>. The third <em>consumes</em> the vector and hands you each element <em>by value</em> — this is how you move owned elements out without cloning. For <code>Copy</code> element types (<code>i32</code>) the distinction is mostly academic; for owning types (<code>String</code>, <code>Vec&lt;_&gt;</code>) it is the difference between borrowing the contents and dismantling the container.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>iter()</code>/<code>iter_mut()</code> are <code>begin()</code>/<code>begin()</code> on a <code>const</code> vs non-<code>const</code> C++ container; <code>into_iter()</code> is closest to a <em>move iterator</em> (<code>std::make_move_iterator</code>) — except in Rust it also destroys the container, so there is no risk of touching moved-from elements afterward. In OCaml every <code>List.map</code> is <code>iter</code>-flavoured (immutable); Rust’s <code>iter_mut</code> and <code>into_iter</code> have no OCaml analogue because OCaml has neither mutable-by-default bindings nor affine ownership.</p>
+<p><strong>🦀 From your toolbox →</strong> <code>iter()</code>/<code>iter_mut()</code> are the read-only vs in-place-mutating loops you already write in Swift (<code>for x in arr</code> vs mutating through indices) or Java (<code>for (T x : list)</code> with the <code>Iterator.remove</code>/<code>set</code> story). <code>into_iter()</code> is the one with no everyday equivalent in those languages: it hands you each element <em>by value and empties the container as it goes</em>, so afterward the vector is gone and there is no risk of touching a half-moved collection. In Python you might fake “drain everything out” with a <code>while lst: x = lst.pop()</code>, but Python keeps the list object alive and never gives you a moved-out value. <em>Where it breaks down:</em> in Java/Python the loop variable is always a reference into a still-living collection; only <code>into_iter</code> actually transfers ownership and leaves nothing behind.</p>
 </blockquote>
 <h3 id="heterogeneity-via-enums"><a class="header" href="#heterogeneity-via-enums">Heterogeneity via enums</a></h3>
 <p><code>Vec&lt;T&gt;</code> is homogeneous — every element is the same type, because the layout demands a fixed stride. To store a “row of mixed cells”, wrap the alternatives in an enum so the <em>static</em> type is uniform:</p>
@@ -272,7 +280,7 @@ for s in owned.into_iter() { /* s: String — owned, moved out of the vec */ }
 }
 let row = vec![Cell::Int(7), Cell::Label("hi".into()), Cell::Real(2.5)];
 <span class="boring">}</span></code></pre>
-<p>Each slot is <code>size_of::&lt;Cell&gt;()</code> wide (the tag plus the largest variant). When the variant set is open-ended and unknown at compile time, you instead reach for trait objects, <code>Vec&lt;Box&lt;dyn Trait&gt;&gt;</code> — see <a href="09-trait-objects-and-oop.html">trait objects</a>.</p>
+<p>This is the same trick as a Swift <code>enum</code> with associated values (<code>enum Cell { case int(Int64); case real(Double); case label(String) }</code>) collected into an <code>[Cell]</code>: the array stays homogeneous because every element is a <code>Cell</code>, and the variant carries the real payload. Each slot is <code>size_of::&lt;Cell&gt;()</code> wide (the tag plus the largest variant). When the variant set is open-ended and unknown at compile time, you instead reach for trait objects, <code>Vec&lt;Box&lt;dyn Trait&gt;&gt;</code> — see <a href="09-trait-objects-and-oop.html">trait objects</a>.</p>
 <h3 id="capacity-tuning"><a class="header" href="#capacity-tuning">Capacity tuning</a></h3>
 <p>If you know the size ahead of time, <code>Vec::with_capacity(n)</code> allocates once and eliminates the intermediate reallocations of repeated <code>push</code>. This is a pure performance optimisation — it changes nothing about semantics:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -308,7 +316,7 @@ let s = format!("{x}-{y}-{z}");   // borrows everything, allocates once
 <p><strong>⚠️ Pitfall →</strong> Writing <code>let c = a + &amp;b;</code> and then using <code>a</code> gives <code>error[E0382]: borrow of moved value: a</code>. The <code>+</code> operator consumed <code>a</code>. If you need <code>a</code> afterward, either clone it (<code>a.clone() + &amp;b</code>) or use <code>format!("{a}{b}")</code>, which moves nothing. New Rustaceans expect <code>+</code> to behave like <code>String</code> concatenation in Java/Python (which produce a fresh string and leave both operands intact); Rust trades that for a guaranteed buffer reuse on the left.</p>
 </blockquote>
 <h2 id="hashmapk-v-keys-to-values"><a class="header" href="#hashmapk-v-keys-to-values"><code>HashMap&lt;K, V&gt;</code>: keys to values</a></h2>
-<p><code>HashMap&lt;K, V&gt;</code> is a hash table, heap-allocated like <code>Vec</code>. It is not in the prelude, so you must bring it in:</p>
+<p><code>HashMap&lt;K, V&gt;</code> is a hash table, heap-allocated like <code>Vec</code> — Java’s <code>HashMap</code>, Swift’s <code>Dictionary</code>, Python’s <code>dict</code>. It is not in the prelude, so you must bring it in:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::collections::HashMap;
@@ -327,7 +335,7 @@ let mut m = HashMap::new();
 m.insert(name, val);
 // name and val are MOVED — using either is a compile error now
 <span class="boring">}</span></code></pre>
-<p>Reading is by reference. <code>get</code> returns <code>Option&lt;&amp;V&gt;</code> (the key might be absent), and you commonly <code>.copied()</code> to turn <code>Option&lt;&amp;i32&gt;</code> into <code>Option&lt;i32&gt;</code> for a <code>Copy</code> value, then <code>.unwrap_or(default)</code>:</p>
+<p>This is where the Java/Python intuition needs adjusting. In Java <code>map.put(name, val)</code> stores <em>references</em>; <code>name</code> still points at the same <code>String</code> object afterward, and so does the map. In Rust there is one owner, and <code>insert</code> transferred it to the map — the local bindings are now used up. Reading is by reference. <code>get</code> returns <code>Option&lt;&amp;V&gt;</code> (the key might be absent), and you commonly <code>.copied()</code> to turn <code>Option&lt;&amp;i32&gt;</code> into <code>Option&lt;i32&gt;</code> for a <code>Copy</code> value, then <code>.unwrap_or(default)</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let blue = scores.get("Blue").copied().unwrap_or(0);
@@ -365,7 +373,18 @@ for n in 0..6 {
 }
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems / lock granularity.</em> The reason <code>entry</code> “plays nicely with the borrow checker” is the same reason a compare-and-swap beats a lock-read-then-lock-write: it collapses two separately-borrowed operations into one atomic borrow. <code>get</code>-then-<code>insert</code> requires two distinct <code>&amp;</code>/<code>&amp;mut</code> borrows of the same map that the borrow checker must reconcile across a gap; <code>entry</code> holds a single <code>&amp;mut</code> for the whole read-modify-write, which is both sound and a single hash probe.</p>
+<p><strong>🔧 In practice →</strong> you’re aggregating server logs and want, for each user ID, the list of endpoints they hit. In Python you would reach for <code>collections.defaultdict(list)</code> and write <code>groups[user].append(endpoint)</code>; <code>entry(...).or_default()</code> is exactly that, with the borrow checker keeping the lookup-and-mutate to a single map probe:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut by_user: HashMap&lt;UserId, Vec&lt;&amp;str&gt;&gt; = HashMap::new();
+for entry in log_lines {
+    by_user.entry(entry.user).or_default().push(entry.endpoint);
+}
+<span class="boring">}</span></code></pre>
+<p>Reach for <code>entry</code> whenever the shape is “look it up; if it’s there update it, if not seed a default” — counters, multimaps, memoisation caches, dedup-with-tally. The naive <code>if map.contains_key(k) { ... } else { ... }</code> does two lookups and fights the borrow checker; <code>entry</code> does one of each.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems.</em> The reason <code>entry</code> “plays nicely with the borrow checker” is the same reason you prefer a single atomic update over a separate read-then-write: it collapses two steps into one. <code>get</code>-then-<code>insert</code> reads the map, then comes back later to write it — two separate touches the borrow checker has to reconcile across a gap, just as a lock-read-then-lock-write leaves a window where another thread could interleave. <code>entry</code> holds one mutable handle for the whole read-modify-write, which is both easier to prove sound and a single hash probe instead of two.</p>
 </blockquote>
 <h3 id="eq-hash-and-the-hashing-function"><a class="header" href="#eq-hash-and-the-hashing-function"><code>Eq</code>, <code>Hash</code>, and the hashing function</a></h3>
 <p>A type may be a <code>HashMap</code> key only if it implements both <code>Hash</code> and <code>Eq</code> (<a href="08-generics-and-traits.html">traits</a>), and the two must agree: <code>a == b</code> must imply <code>hash(a) == hash(b)</code>. For your own structs, <code>#[derive(Hash, Eq, PartialEq)]</code> gives the field-wise implementations, which is almost always what you want. Floating-point types are <em>not</em> <code>Eq</code> (because of <code>NaN</code>), so <code>f64</code> cannot be a key without a wrapper.</p>
@@ -400,7 +419,7 @@ let squares: HashMap&lt;i32, i32&gt; = (1..=5).map(|n| (n, n * n)).collect();
 </tbody>
 </table>
 </div>
-<p>Two points worth pinning down. First, the <code>Hash</code>-vs-<code>Btree</code> axis is the classic hash-table-vs-balanced-tree tradeoff from Algorithms: <code>HashMap</code> gives O(1) average lookup but no order and worst-case O(n); <code>BTreeMap</code> gives O(log n) lookup <em>and</em> sorted traversal plus range queries, which the hash map fundamentally cannot offer. Choose <code>BTreeMap</code>/<code>BTreeSet</code> whenever ordering or ranges matter, <code>HashMap</code>/<code>HashSet</code> otherwise. Second, <code>BinaryHeap</code> is a <strong>max-heap</strong> — <code>pop</code> returns the <em>largest</em> element. For a min-heap, store <code>std::cmp::Reverse&lt;T&gt;</code>:</p>
+<p>Two points worth pinning down. First, the <code>Hash</code>-vs-<code>Btree</code> axis is the classic hash-table-vs-balanced-tree tradeoff from Algorithms: <code>HashMap</code> gives O(1) average lookup but no order and worst-case O(n); <code>BTreeMap</code> gives O(log n) lookup <em>and</em> sorted traversal plus range queries, which the hash map fundamentally cannot offer. (If you have used Java’s <code>HashMap</code> vs <code>TreeMap</code>, this is precisely that pair.) Choose <code>BTreeMap</code>/<code>BTreeSet</code> whenever ordering or ranges matter, <code>HashMap</code>/<code>HashSet</code> otherwise. Second, <code>BinaryHeap</code> is a <strong>max-heap</strong> — <code>pop</code> returns the <em>largest</em> element. For a min-heap, store <code>std::cmp::Reverse&lt;T&gt;</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::collections::BinaryHeap;
@@ -414,7 +433,7 @@ min.push(Reverse(3));
 min.push(Reverse(1));
 assert_eq!(min.pop(), Some(Reverse(1))); // Reverse flips the ordering
 <span class="boring">}</span></code></pre>
-<p>Every owning collection here frees its buffer <em>and</em> recursively drops every element when it goes out of scope — dropping a <code>Vec&lt;String&gt;</code> drops each <code>String</code>, which frees each string’s heap buffer. This is RAII applied transitively, with the borrow checker guaranteeing no reference outlives the collection that owns the data.</p>
+<p>Every owning collection here frees its buffer <em>and</em> recursively drops every element when it goes out of scope — dropping a <code>Vec&lt;String&gt;</code> drops each <code>String</code>, which frees each string’s heap buffer. This is the cleanup story you may know from Swift’s ARC or C++’s destructors-at-scope-end, but applied <em>transitively</em> and decided at compile time: unlike Java’s or Python’s garbage collector, there is no background reclaimer and no nondeterministic timing — the frees happen exactly when the owner’s scope ends, with the borrow checker guaranteeing no reference outlives the collection that owns the data.</p>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
 <li>A <code>Vec&lt;T&gt;</code>/<code>String</code> is <code>(ptr, len, cap)</code> on the stack over a heap buffer; growth is amortised-O(1) but <em>reallocates</em>, which is why holding <code>&amp;v[i]</code> blocks <code>v.push(...)</code> — that rule prevents a use-after-free, statically.</li>
@@ -426,29 +445,34 @@ assert_eq!(min.pop(), Some(Reverse(1))); // Reverse flips the ordering
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write <code>fn second(v: &amp;Vec&lt;i32&gt;) -&gt; Option&lt;&amp;i32&gt;</code> two ways: once with <code>v.get(1)</code>, once with indexing. Then call your indexing version with a one-element vector and explain the panic in terms of the <code>Index</code> trait. Which signature is honest about partiality?</p>
+<p>You’re writing a function that returns the <em>last</em> element of a slice. Sketch the signature <code>fn last&lt;T&gt;(xs: &amp;[T]) -&gt; Option&lt;&amp;T&gt;</code> and decide: should the body use <code>xs[xs.len() - 1]</code> or <code>xs.last()</code>? Call your reasoning out explicitly — what happens for each choice when <code>xs</code> is empty, and which one makes the empty case impossible to forget at the call site?</p>
 </li>
 <li>
-<p>The following fails to compile. Give the exact error code, explain it via the <code>(ptr, len, cap)</code> layout, and fix it <em>without</em> cloning:</p>
+<p>Predict whether each of these compiles, and for the failures name the rule being enforced:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let mut v = vec![1, 2, 3];
-let top = &amp;v[2];
+</span>// (a)
+let mut v = vec![1, 2, 3];
+let x = v[0];          // note: no &amp;
 v.push(4);
-println!("{top}");
+println!("{x}");
+
+// (b)
+let mut v = vec![String::from("a"), String::from("b")];
+let r = &amp;v[0];
+v.push(String::from("c"));
+println!("{r}");
 <span class="boring">}</span></code></pre>
+<p>Why does swapping <code>&amp;v[0]</code> for <code>v[0]</code> change the answer? Tie it back to the <code>(ptr, len, cap)</code> layout.</p>
 </li>
 <li>
-<p>Build <code>fn frequencies(words: &amp;[&amp;str]) -&gt; HashMap&lt;&amp;str, usize&gt;</code> using the <code>entry</code> API in a single statement inside the loop. Then rewrite it with <code>get</code>-then-<code>insert</code> and articulate precisely which two borrows the borrow checker has to reconcile in the second version.</p>
+<p>You have <code>let words: Vec&lt;String&gt; = ...;</code> and want a single <code>String</code> joining them with <code>", "</code> between. Decide between <code>words.iter()</code> and <code>words.into_iter()</code> for the job, and say what each choice costs: which one forces a clone of every element, which one leaves <code>words</code> usable afterward, and which property actually matters for <em>this</em> task.</p>
 </li>
 <li>
-<p>You have <code>let owned: Vec&lt;String&gt; = ...;</code> and want one <code>String</code> that concatenates them all. Do it with <code>into_iter</code> and explain why <code>iter</code> would force a <code>.clone()</code> on every element while <code>into_iter</code> does not. (★)</p>
+<p>A teammate stores request timestamps as <code>HashMap&lt;u64, LogLine&gt;</code> and now needs “all log lines from the last 5 minutes” as a sorted range. Without writing the query, decide what single change to the <em>type</em> unlocks this, explain why the <code>HashMap</code> fundamentally cannot answer the range question, and state the rough cost of the range scan in terms of the tree’s height and the number of results returned.</p>
 </li>
 <li>
-<p>(★) <code>let mut h: HashMap&lt;f64, i32&gt; = HashMap::new();</code> does not compile. Name the missing trait bound, explain <em>why</em> <code>f64</code> lacks it (one word: a particular IEEE value), and propose a key type that works while preserving the numeric value.</p>
-</li>
-<li>
-<p>(★) Take a <code>BTreeMap&lt;u32, String&gt;</code> of timestamps to log lines. Using one method call, extract just the entries whose key lies in <code>1000..2000</code>, and explain why the identical request is impossible to express on a <code>HashMap</code>. What is the asymptotic cost of your range query in terms of tree height and result size?</p>
+<p>(★) You’re tallying votes where each ballot is an <code>f64</code> score, and you reach for <code>HashMap&lt;f64, u32&gt;</code> — it won’t compile. Name the missing trait bound and the one IEEE value that is to blame. Then design a key type that lets you bucket by score <em>while preserving the numeric value</em> (hint: scores arrive rounded to two decimals — what integer could stand in for the key?), and say one thing your wrapper gives up compared to keying on the raw <code>f64</code>.</p>
 </li>
 </ol>
 
@@ -487,22 +511,6 @@ println!("{top}");
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

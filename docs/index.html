@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -177,25 +177,25 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="preface--how-to-read-this-book"><a class="header" href="#preface--how-to-read-this-book">Preface — How to read this book</a></h1>
-<p>This is the official <em>Rust Programming Language</em> book, taken apart and put back together for <strong>one specific reader</strong>: a third-year Cambridge Computer Science student who already writes C, C++, Swift, Python, JavaScript/TypeScript, and Java, and who has sat Foundations of Computer Science (OCaml), Programming in C and C++, Semantics of Programming Languages, Concurrent and Distributed Systems, and Compiler Construction.</p>
+<p>This is the official <em>Rust Programming Language</em> book, taken apart and put back together for <strong>one specific reader</strong>: a third-year Cambridge Computer Science student who is most fluent in Java, Swift, and Python (with working OCaml, TypeScript, and C), and who has sat Foundations of Computer Science (OCaml), Programming in C and C++, Concurrent and Distributed Systems, and Compiler Construction.</p>
 <p>That reader does not need to be told what a <code>for</code> loop is. They need the <em>delta</em> — the handful of genuinely new ideas in Rust — delivered at full altitude, in the order those ideas actually depend on one another, with every concept anchored to something they already understand.</p>
 <h2 id="what-changed-and-why"><a class="header" href="#what-changed-and-why">What changed, and why</a></h2>
 <p>The official book is excellent but it is written for <em>everyone</em>, including people for whom this is a first systems language. Three structural consequences follow that are wrong <strong>for you</strong>:</p>
 <ol>
-<li><strong>The ownership system is scattered.</strong> Ownership (ch. 4), lifetimes (ch. 10.3), and smart pointers (ch. 15) are three faces of one idea — the affine, region-checked memory model — yet the official book separates them by hundreds of pages. Here they form a single contiguous <strong>Part II</strong>, taught as one coherent theory.</li>
+<li><strong>The ownership system is scattered.</strong> Ownership (ch. 4), lifetimes (ch. 10.3), and smart pointers (ch. 15) are three faces of one idea — Rust’s single model of who owns each value and for how long — yet the official book separates them by hundreds of pages. Here they form a single contiguous <strong>Part II</strong>, taught as one coherent topic.</li>
 <li><strong>One topic, two locations.</strong> Pattern matching is introduced in ch. 6 and completed in ch. 19; traits in ch. 10 and extended in ch. 20. We merge each into one place.</li>
-<li><strong>The on-ramp is too long.</strong> Variables, integer types, and control flow consume the first three chapters. We compress all of it into a single chapter — <em>The Language Delta</em> — written as a diff against C and OCaml.</li>
+<li><strong>The on-ramp is too long.</strong> Variables, integer types, and control flow consume the first three chapters. We compress all of it into a single chapter — <em>The Language Delta</em> — written as a diff against the languages you already know.</li>
 </ol>
 <p>The reordering principle is <strong>conceptual dependency and difficulty-for-an-expert</strong>, not gentle beginner ramp. We front-load the one thing that is actually hard and new (ownership/borrowing/lifetimes), then build the type system on top of it, then idioms, then concurrency, then the systems-level and metaprogramming machinery, then engineering and capstones.</p>
 <h2 id="the-mental-model-to-hold-throughout"><a class="header" href="#the-mental-model-to-hold-throughout">The mental model to hold throughout</a></h2>
 <blockquote>
-<p><strong>Rust = an ML-family type system (sum types, exhaustive matching, traits-as-type-classes, no null) bolted onto a C++ memory model (RAII, moves, no GC) — with the borrow checker statically proving the thing C++ leaves to your discipline: that you never alias mutable state or use memory after it dies.</strong></p>
+<p><strong>Rust pairs a type system in the spirit of Swift and OCaml — enums that carry data, exhaustive <code>match</code>, no null, traits/protocols for shared behaviour — with hands-on control over memory and no garbage collector. The compiler’s borrow checker then automatically proves the thing other languages leave to your discipline: that you never mutate data through one name while another name is still looking at it, and never touch memory after it has been freed.</strong></p>
 </blockquote>
 <p>Everything in this book is a corollary of that sentence. When a rule seems arbitrary, trace it back to “the compiler is proving memory- and data-race-safety at compile time, and it will only accept programs it can prove correct.”</p>
 <h2 id="house-style--the-recurring-callouts"><a class="header" href="#house-style--the-recurring-callouts">House style — the recurring callouts</a></h2>
-<p>Throughout, you will see four kinds of margin-notes. Learn to read them:</p>
+<p>Throughout, you will see five kinds of margin-notes. Learn to read them:</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> maps a Rust feature to its closest analogue in a language you already know (C++ <code>unique_ptr</code>, OCaml <code>match</code>, Java <code>interface</code>, …) — <em>and names where the analogy breaks</em>.</p>
+<p><strong>🦀 From your toolbox →</strong> maps a Rust feature to its closest analogue in a language you already know (a Swift <code>enum</code> or <code>protocol</code>, a Java <code>interface</code>, Python’s reference counting, …) — <em>and names where the analogy breaks down</em>.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> what the compiler/runtime actually does: memory layout, monomorphisation, vtables, state machines. For when “it just works” isn’t enough for you.</p>
@@ -204,9 +204,12 @@
 <p><strong>⚠️ Pitfall →</strong> the specific error the borrow checker (or type checker) will throw, why, and the idiomatic fix. Learning Rust <em>is</em> learning to predict these.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> where a concept connects to a course you have already sat, with the formal framing made explicit.</p>
+<p><strong>🔧 In practice →</strong> a concrete, real-world situation where the feature earns its keep — when and why you’d actually reach for it in real code, with a small realistic sketch.</p>
 </blockquote>
-<p>Each module ends with a <strong>Mental-model recap</strong> (the three or four sentences worth memorising) and a few <strong>Exercises</strong> that target the failure modes, not the happy path.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> where a concept connects, in plain terms, to a course you’ve already done (Compiler Construction, Concurrent &amp; Distributed Systems, Operating Systems, …) — the intuition, not the theorems.</p>
+</blockquote>
+<p>Each module ends with a <strong>Mental-model recap</strong> (the three or four sentences worth memorising) and a few <strong>Exercises</strong> that push past the chapter — applying the idea to new situations rather than rehearsing it.</p>
 <h2 id="how-to-actually-use-it"><a class="header" href="#how-to-actually-use-it">How to actually use it</a></h2>
 <ul>
 <li>Read Parts I–II in order. They are load-bearing; nothing later makes sense without ownership.</li>
@@ -214,7 +217,7 @@
 <li>Keep a scratch crate open (<code>cargo new scratch</code>). Every time a callout claims the compiler will reject something, <em>make it reject it</em>, then fix it. The borrow checker is the best teacher in the book.</li>
 <li>The capstones in Part VII (<code>21</code>) integrate everything; treat them as the exam.</li>
 </ul>
-<p>The appendix maps every module back to the official book’s chapter numbers and to your specific Tripos courses, so you can cross-reference the canonical source whenever you want the “everyone” version of an explanation.</p>
+<p>The appendix maps every module back to the official book’s chapter numbers and to the Tripos courses it draws on, so you can cross-reference the canonical source whenever you want the “everyone” version of an explanation.</p>
 
                     </main>
 
@@ -245,22 +248,6 @@
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

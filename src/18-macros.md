@@ -1,6 +1,6 @@
 # 18. Macros & Metaprogramming
 
-You have already written code that writes code. In Compiler Construction you built a code generator that walked a typed AST and emitted target instructions; in Further Java you relied on `javac` synthesising bridge methods. Rust's macros expose that same machinery — *programs that transform programs* — but they run as a phase of `rustc`, before type checking, over a Rust-specific representation of source. This chapter covers what that representation is, how the two macro families consume it, and the one property (hygiene) that makes Rust macros categorically safer than anything `#define` ever gave you.
+You have already written code that writes code, even if you didn't call it that. In Compiler Construction you built a code generator that walked a typed AST and emitted target instructions. In Java, the compiler quietly synthesises bridge methods and `equals`/`hashCode` skeletons for you, and tools like Lombok's annotation processor stamp out getters and setters at build time. In Swift, the compiler *synthesises* `Codable` conformances and `==` for you from the shape of a struct. Rust's macros expose that same machinery — *programs that transform programs* — but they run as a phase of `rustc`, before type checking, over a Rust-specific representation of source. This chapter covers what that representation is, how the two macro families consume it, and the one property (hygiene) that makes Rust macros categorically safer than anything `#define` ever gave you.
 
 The single most important mental shift: a macro is not a function. A function is a value-level abstraction invoked at runtime over fully-typed arguments. A macro is a *syntactic* abstraction invoked at compile time over **token trees**, expanded into source before the compiler knows the types of anything. That difference is exactly why macros can do three things functions cannot: take a variadic, heterogeneously-typed argument list (`println!("{} {}", a, b)`), construct items like `impl` blocks (which must exist at compile time), and build domain-specific syntax the type system cannot otherwise express.
 
@@ -10,7 +10,7 @@ Before parsing into an AST, `rustc` lexes source into a flat token stream, then 
 
 Macros run on this layer. A declarative macro pattern-matches over token trees; a procedural macro receives a `proc_macro::TokenStream` (a sequence of token trees) and returns one. Crucially, **the input need not be valid Rust** — `sql!(SELECT * FROM posts)` lexes into legal token trees even though `SELECT * FROM posts` is not a Rust expression. The only hard constraint is that delimiters balance. This is the source of macros' expressive power and their cost: the tokens carry no types yet.
 
-> **🎓 Tripos link →** This is precisely the lexer/parser boundary from Compiler Construction. Lexing produces tokens; macro expansion is a *tree-rewriting pass* inserted between tokenisation and full parsing/name-resolution. Declarative macros are a small term-rewriting system over the token-tree grammar; procedural macros are arbitrary `TokenStream -> TokenStream` functions — i.e. a hook for you to write an extra compiler pass in safe Rust and have `rustc` dynamically load and run it.
+> **🎓 Tripos link →** This is precisely the lexer/parser boundary from Compiler Construction. Lexing produces tokens; macro expansion is an extra *tree-rewriting pass* slipped in between tokenisation and full parsing/name-resolution. A declarative macro is a small set of pattern → replacement rules over the token-tree grammar; a procedural macro is just a plain function from tokens to tokens — i.e. a hook for you to write an extra compiler pass in safe Rust and have `rustc` dynamically load and run it.
 
 ## Family one: `macro_rules!` (declarative)
 
@@ -42,7 +42,9 @@ Dissect the matcher `($($k:expr => $v:expr),* $(,)?)`:
 
 The transcriber `$( m.insert($k, $v); )*` re-uses the *same* repetition shape: for each `(k, v)` pair the matcher captured, it emits one `insert` call, substituting the captured fragments. The number of repetitions in the transcriber is inferred from the metavariables mentioned inside it — `$k` and `$v` were each matched the same number of times, so one `insert` is generated per pair.
 
-> **🦀 From your toolbox →** The matcher/transcriber pair is OCaml `match` over an algebraic structure, and `$(...)* ` is a fold over the matched list. But the analogy breaks in two ways. First, you are matching *syntax*, not a value: `$x:expr` binds an unevaluated expression tree, not a result. Second, there is no exhaustiveness check and no types — an arm either parses or it doesn't, and a malformed call is a parse error, not a non-exhaustive-match warning.
+> **🔧 In practice →** This is the bread-and-butter use of `macro_rules!`: terse literal builders for collections you construct constantly in tests and setup code. Instead of five lines of `let mut m = HashMap::new(); m.insert(...); ...`, a test fixture reads `let config = hmap!{ "host" => "localhost", "port" => "8080" };`. The same shape underlies the standard `vec![1, 2, 3]`. You reach for it the moment the boilerplate-to-payload ratio of `.insert()` calls starts hurting readability — typically in test data and config defaults.
+
+> **🦀 From your toolbox →** The closest thing in your toolbox is a Swift or Java `switch`/`match` with several cases, where the matcher picks an arm and the transcriber is the body — and `$(...)* ` works like running a loop over the captured items to build up output. But the analogy breaks in two ways. First, you are matching *syntax*, not a value: `$x:expr` binds an unevaluated expression tree (think "the source text `a + b`", not the number it computes to). Second, there is no exhaustiveness check and no types — an arm either parses or it doesn't, and a malformed call is a parse error, not the kind of "you forgot a case" warning Swift gives you on an enum `switch`.
 
 ### Fragment specifiers are a contract, and `expr` fragments are opaque
 
@@ -78,11 +80,11 @@ macro_rules! count {
 count!(a b "x" 9) // == 4
 ```
 
-> **⚠️ Pitfall →** Specifier ordering matters because the macro matcher commits as it parses. After certain fragments, only a restricted set of "follow" tokens is permitted; e.g. an `:expr` or `:stmt` fragment may only be followed by `=>`, `,`, or `;`. Writing `($e:expr $rest:tt)` fails with *"`$e:expr` is followed by `$rest`, which is not allowed for `expr` fragments"*. The fix is to insert one of the permitted separators (`($e:expr ; $rest:tt)`) or downgrade `$e` to `:tt` and parse it yourself. This restriction exists so the matcher stays unambiguous without unbounded lookahead — the same LL-parsing concern you met in Compiler Construction.
+> **⚠️ Pitfall →** Specifier ordering matters because the macro matcher commits as it parses. After certain fragments, only a restricted set of "follow" tokens is permitted; e.g. an `:expr` or `:stmt` fragment may only be followed by `=>`, `,`, or `;`. Writing `($e:expr $rest:tt)` fails with *"`$e:expr` is followed by `$rest`, which is not allowed for `expr` fragments"*. The fix is to insert one of the permitted separators (`($e:expr ; $rest:tt)`) or downgrade `$e` to `:tt` and parse it yourself. This restriction exists so the matcher stays unambiguous without unbounded lookahead — the same one-token-at-a-time parsing concern you met in Compiler Construction.
 
 ### Hygiene — the entire reason this is not the C preprocessor
 
-This is the headline feature, and it is the one place where your `cpp` instincts will actively mislead you. Consider the canonical C disaster:
+This is the headline feature, and it is the one place where any C preprocessor instincts will actively mislead you. Consider the canonical C disaster:
 
 ```c
 #define SWAP(a, b) { int tmp = a; a = b; b = tmp; }
@@ -109,7 +111,7 @@ The macro-introduced `tmp` and the caller's `tmp` *do not collide*: `$e` resolve
 
 > **⚙️ Under the hood →** Hygiene is implemented by attaching a `SyntaxContext` to every identifier's span. Name resolution compares the (symbol, context) pair, not just the symbol. Tokens written literally in the macro definition carry the *definition site* context; tokens substituted from a metavariable retain their *call site* context. Two `tmp`s with different contexts are different names, full stop. Note the boundaries of hygiene: it is *mixed-site* for `macro_rules!` — local variables and labels are hygienic (definition-site), but for things like type and `fn` name lookup the resolution can reach call-site scope. When a macro needs to name a standard-library item reliably regardless of what the caller has shadowed, use the special `$crate` metavariable (e.g. `$crate::collections::HashMap`) so the path resolves relative to the *defining* crate.
 
-> **🦀 From your toolbox →** Closest analogue is hygienic `let` in a lambda you pass to a higher-order function — the closure's locals can't be clobbered by the caller's bindings, and lexical scoping handles capture. The analogy breaks because a macro isn't a value and creates *new bindings in the caller's code*; hygiene is what re-imposes lexical-scoping discipline on something that would otherwise be raw text splicing.
+> **🦀 From your toolbox →** The closest thing you've used is the local variable inside a Swift or Java closure (or a Python function body) that you pass to some library: the closure's own locals can't be clobbered by whatever names the caller happens to have, because lexical scoping keeps them separate. Hygiene gives a macro the same guarantee. The analogy breaks because a macro isn't a value and it *creates new bindings directly in the caller's code* — exactly the situation where text-splicing would normally cause name clashes — and hygiene is what re-imposes that closure-like scoping discipline anyway.
 
 ### Scope and export
 
@@ -125,14 +127,14 @@ When pattern-matching over token trees is not enough — you need to actually *p
 
 A structural constraint: proc-macros **must live in their own crate** with `proc-macro = true` set in `Cargo.toml`, because the crate is compiled for the *host* (the compiler) rather than the target, and loaded as a dynamic library by `rustc`. The convention is that a library crate `foo` ships its derive macros in a sibling crate `foo_derive`.
 
-> **🎓 Tripos link →** A proc-macro is a user-supplied compiler pass, dynamically linked into `rustc`. The `TokenStream -> TokenStream` signature is exactly the interface of a syntax-directed translation stage between lexing and elaboration. Because it runs *inside* the compiler with full Turing-completeness, it can do arbitrary computation (read files, hit the network — and it will run on every build), which is why the community treats proc-macros as a sharp tool and audits them.
+> **🎓 Tripos link →** A proc-macro is a user-supplied compiler pass, dynamically linked into `rustc` — exactly the kind of "extra stage between lexing and the rest of the front end" you'd add in Compiler Construction, except you write it in safe Rust and the compiler loads it for you. Because it runs *inside* the compiler as ordinary code, it can do absolutely anything a program can — read files, hit the network, loop forever — and it will re-run on every build, which is why the community treats proc-macros as a sharp tool and audits them.
 
 ### The `syn` / `quote` toolchain
 
 The `proc_macro` crate gives you `TokenStream`, but parsing raw tokens into a usable Rust AST by hand is the full parser problem you'd rather not redo. Two ecosystem crates make proc-macros tractable:
 
 - **`syn`** parses a `TokenStream` into typed AST structs (e.g. `DeriveInput`, `ItemFn`, `Expr`).
-- **`quote`** does the inverse: the `quote! { ... }` macro is a *quasi-quoter* that lets you write output Rust with `#var` interpolation holes, producing a `TokenStream`.
+- **`quote`** does the inverse: the `quote! { ... }` macro is a *template for Rust source* that lets you write the output code with `#var` interpolation holes, producing a `TokenStream`.
 
 Here is the complete shape of the most common case — a derive macro. The user wants `#[derive(Describe)]` to synthesise an `impl` of a `Describe` trait whose method returns the type's name:
 
@@ -149,7 +151,7 @@ pub fn derive_describe(input: TokenStream) -> TokenStream {
     let name = &ast.ident;                       // the type's identifier
     let (ig, tg, wc) = ast.generics.split_for_impl(); // generic plumbing
 
-    // 2. Build the output as a quasi-quote, splicing `name` in with `#`.
+    // 2. Build the output from a template, splicing `name` in with `#`.
     let expanded = quote! {
         impl #ig Describe for #name #tg #wc {
             fn describe() -> &'static str {
@@ -164,6 +166,8 @@ pub fn derive_describe(input: TokenStream) -> TokenStream {
 ```
 
 Three things to internalise. First, `parse_macro_input!` is the idiomatic front door — on a parse error it emits a proper compiler diagnostic and returns early instead of panicking opaquely. Second, `split_for_impl` threads the input type's generics and `where`-clause through to the impl, so the derive works for `struct Pair<T>` as well as `struct Unit`; forgetting it is the classic "my derive doesn't handle generics" bug. Third, `stringify!(#name)` turns the spliced identifier into a `&'static str` *at compile time* with zero allocation — Rust has no runtime reflection, so the name must be baked in during expansion; that is the whole reason this is a derive macro rather than a blanket trait impl.
+
+> **🔧 In practice →** This is the pattern behind nearly every derive you'll actually use — `#[derive(Serialize, Deserialize)]` from `serde`, `#[derive(Debug)]`, `#[derive(Clone)]`. The concrete payoff: you have a 20-field config struct that must round-trip to and from JSON, and writing the field-by-field serialisation by hand is both tedious and a bug magnet (forget a field and it silently drops). With `serde`, `#[derive(Serialize, Deserialize)]` walks the struct's fields at compile time and stamps out exactly that boilerplate, type-checked, with zero runtime reflection. You write your own derive (like `Describe` above) for the same reason in your own codebase: when every type in some family needs an identical impl that depends only on the type's *shape*, and you'd otherwise hand-copy it onto each new type and inevitably let them drift.
 
 A derive macro returns *additional* items appended to the source. An attribute macro's signature is `fn(attr: TokenStream, item: TokenStream) -> TokenStream`: `attr` is the tokens inside `#[name(...)]`, `item` is the entire annotated item, and the returned stream *replaces* it (so `#[route(GET, "/")] fn index() {}` lets the macro rewrite `index` wholesale). A function-like proc-macro is `fn(TokenStream) -> TokenStream` invoked as `name!(...)` and is what powers things like a compile-time-checked `sql!(...)`.
 
@@ -189,7 +193,7 @@ Macros are the highest-leverage and highest-cost abstraction in the language. Th
 
 The cost is real and not just stylistic. A macro's contract is its grammar, which IDEs and `rust-analyzer` understand only partially; "go to definition" through a macro is lossy, error messages can point into expanded code, and a proc-macro runs arbitrary code on every build and slows compilation. The community idiom is unambiguous: **prefer functions, then generics, and treat macros as a last resort justified by one of the bullet points above.**
 
-> **🦀 From your toolbox →** Closest cousins: C++ templates and Java annotation processors. `#[derive]` is conceptually a Java annotation processor (`javax.annotation.processing`) — both generate code from annotations at compile time. The difference is that Rust derives produce real, type-checked Rust integrated into the same compilation, with no reflection and no runtime cost; Java processors generate `.java`/bytecode and frequently lean on reflection at runtime. C++ variadic templates overlap with variadic macros but are type-driven and far more constrained than `TokenStream` rewriting.
+> **🦀 From your toolbox →** The closest cousin you've actually met is the Java annotation processor (`javax.annotation.processing`), as used by Lombok or Dagger — and Swift's `Codable` synthesis is the same idea built into the compiler. `#[derive]` is exactly this: generate code from an annotation at compile time. The difference is that a Rust derive produces real, type-checked Rust folded into the *same* compilation, with no reflection and no runtime cost, whereas a Java processor emits separate `.java`/bytecode and the resulting library often still leans on reflection at runtime. (If C++ templates come to mind for the variadic case, that's a fair surface comparison, but Rust macros rewrite raw tokens rather than being driven by types, so it's only a loose one — don't push it.)
 
 ## Aside: build scripts (`build.rs`)
 
@@ -198,21 +202,19 @@ There is a third compile-time code-generation mechanism that is *not* a macro bu
 ## Mental-model recap
 
 - A macro transforms **token trees** at compile time, *before* type checking; a function transforms typed **values** at run time. That timing difference is why macros alone can be variadic, build `impl`s, and host DSLs.
-- `macro_rules!` is a term-rewriting system: matchers pattern-match token trees via **fragment specifiers** (`expr`/`ty`/`ident`/`tt`/…) and **repetitions** (`$(...)sep*`); a captured `expr`/`ty` fragment is an **opaque** node, not re-tokenisable text.
+- `macro_rules!` is a set of pattern → replacement rules: matchers pattern-match token trees via **fragment specifiers** (`expr`/`ty`/`ident`/`tt`/…) and **repetitions** (`$(...)sep*`); a captured `expr`/`ty` fragment is an **opaque** node, not re-tokenisable text.
 - **Hygiene** is the decisive advantage over `cpp`: macro-introduced identifiers carry a distinct syntax context and cannot capture or be captured by call-site names. `#define` has none of this; Rust's collision is impossible by construction.
 - Procedural macros are user-written compiler passes (`TokenStream -> TokenStream`) in a dedicated `proc-macro = true` crate, built on **`syn`** (parse) and **`quote`** (emit); three flavours — `derive`, `attribute`, function-like. They are *not* auto-hygienic, so manage **spans** for both hygiene and error reporting.
 - Decision order: **function → generics/traits → macro**, last only. Macros tax readability, tooling, and build time; spend that cost only for what the type system cannot express.
 
 ## Exercises
 
-1. Write a `vec_of_strings!` macro that accepts a comma-separated list of string-literal-or-expression arguments and produces a `Vec<String>`, calling `.to_string()` on each. Support a trailing comma. Then call it with **zero** arguments — what type is `Vec::new()` inferred to be, and why does it still compile here but would fail if you used the result ambiguously?
+1. **Predict the follow-token error.** Without compiling, say what happens when you write a matcher `($name:ident $val:expr)` versus `($val:expr $name:ident)`, and call each with `(x 5)` and `(5 x)` respectively. One of these is rejected at *definition* time with a "not allowed after `expr`" message. Which, and why does the restriction land on `expr` but not on `ident`?
 
-2. Take the hygiene example's `make_temp!` and *deliberately* try to break it: write a macro `leak!` that introduces `let leaked = ...;` and a caller that reads `leaked` afterwards. Confirm it fails to compile, read the `cannot find value leaked in this scope` error, and explain in one sentence why this is hygiene working as designed rather than a bug.
+2. **Adapt `hmap!` to a new requirement.** The current `hmap!` calls `m.insert($k, $v)` directly, so the caller must pass owned values. Adapt the transcriber so every key and value is `.into()`-converted before insertion, letting callers write `hmap!{ "a" => 1 }` and get a `HashMap<String, i64>` when the surrounding type is annotated. What single change does this need, and what new constraint does it silently impose on the key/value types?
 
-3. (★) Implement a `tt`-munching macro `min!` that takes one or more comma-separated expressions and expands to nested `std::cmp::min` calls (`min!(a, b, c)` → `min(a, min(b, c))`). You will need a base case (single expression) and a recursive case. Why must the elements be `:expr` and the recursion be driven by re-invoking `min!`, and where would a naive `$($x:expr),+` single-arm definition get stuck?
+3. **Which compiles?** Given `macro_rules! twice { ($e:expr) => { $e + $e }; }`, decide for each call whether it compiles and what it evaluates to, *before* running it: (a) `twice!(2 * 3)`; (b) `twice!(if true { 1 } else { 2 })`; (c) `let mut c = 0; twice!({ c += 1; c })`. Pay special attention to (a) — explain why the result is **not** `2 * 3 + 2 * 3 == 12`-by-text-paste-confusion, and what (c) reveals about a captured `expr` being substituted rather than evaluated once.
 
-4. (★) Sketch a derive macro `#[derive(FieldNames)]` that, for a named-field struct, generates `fn field_names() -> &'static [&'static str]`. Outline the `syn` types you'd match on to get at the fields (start from `DeriveInput.data`), how you'd iterate them in `quote!`, and how you'd emit a proper `compile_error!` with a correct **span** if the macro is applied to an enum or a tuple struct instead.
+4. **A design decision: derive vs attribute.** You want to attach a numeric `id()` to every type in a plugin system. Compare two designs: (i) a derive `#[derive(Id)]` that reads an existing `const ID: u32` field/const on the type, versus (ii) an attribute `#[id(7)]` that takes the number as an argument and generates the impl. For each, state what the proc-macro function receives as input and whether it can *change* the annotated item. When would the attribute be the only option?
 
-5. Explain why `#[proc_macro_derive]` functions return `TokenStream` rather than `Result<TokenStream, _>`, and rewrite a panicking `syn::parse(input).unwrap()` into the idiomatic non-panicking pattern. What does the *user* of your derive see in each case when their annotated code is malformed?
-
-6. For each of these, decide function / generic / declarative macro / proc-macro and justify in one line: (a) a routine that swaps two `&mut T`; (b) `assert_all_eq!(a, b, c, d)` that checks every argument is equal and prints the first mismatch; (c) deriving JSON (de)serialisation for arbitrary structs; (d) a `#[timed]` attribute that wraps a function body in start/stop timing.
+5. (★) **Span hunting.** You write a `#[derive(FieldNames)]` for named-field structs that should reject enums with a clear error. A colleague's first attempt does `panic!("FieldNames only works on structs")` when `ast.data` is an enum. Describe exactly what the *user* of the derive sees when they apply it to an enum, then rewrite the rejection using `syn::Error::new_spanned(...).to_compile_error()` and describe what the user sees instead — specifically, *where* the red squiggle appears and why the choice of node passed to `new_spanned` controls that location.

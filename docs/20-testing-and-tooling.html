@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -205,7 +205,7 @@ mod tests {
 <p>A test <em>passes</em> if the function returns normally and <em>fails</em> if it panics. That is the whole protocol. Every assertion macro is just a conditional <code>panic!</code>. <code>cargo test</code> compiles a dedicated test-runner binary that calls each <code>#[test]</code> function, catches the panic (each test runs on its own thread, so the runner observes the thread dying), and tallies the results.</p>
 <p><code>#[cfg(test)]</code> is the load-bearing attribute. <code>cfg</code> is conditional compilation: the <code>tests</code> module — and any helper functions inside it — is compiled <em>only</em> when the <code>test</code> cfg flag is set, which Cargo does for <code>cargo test</code> but not for <code>cargo build</code>. So your test code, and any test-only dependencies, are entirely absent from the shipped artifact. This is compile-time dead-code elimination by configuration, not by the optimiser.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is closest to OCaml’s <code>let () = assert (...)</code> inline expectations, but with a runner. The sharper contrast is Java/C++: JUnit and GoogleTest cannot, in general, see <code>private</code>/<code>protected</code> members without reflection hacks or <code>friend</code> declarations, so unit tests are pushed to the public surface. Rust’s <code>tests</code> module is a <em>child</em> module of the code under test, and a child module can name its ancestors’ private items. You test privates directly, with no ceremony. The analogy to XCTest’s <code>@testable import</code> is close, but that is an opt-in linker mode; here it falls out of the ordinary module visibility rules.</p>
+<p><strong>🦀 From your toolbox →</strong> Think JUnit, but with the visibility headache removed. In Java a <code>@Test</code> method in <code>src/test/java</code> cannot see a <code>private</code> field without reflection hacks, so unit tests get pushed onto the public surface; in Python you can reach in, but only because nothing is truly private. Rust’s <code>tests</code> module is a <em>child</em> module of the code under test, and a child module can name its ancestors’ private items — so you test privates directly, with no ceremony. The closest thing you’ve used is Swift’s <code>@testable import</code>, which lets a test target see <code>internal</code> members of another module; the difference is that Swift’s version is an opt-in linker mode you switch on per import, whereas in Rust it falls out of the ordinary module-visibility rules with nothing to enable. Where the analogy breaks down: there is no separate “test target” project here at all — the test module lives in the same file and is simply compiled out of release builds.</p>
 </blockquote>
 <h3 id="assertion-macros"><a class="header" href="#assertion-macros">Assertion macros</a></h3>
 <p>Three macros, all from <code>std</code>, all just panic on failure:</p>
@@ -254,9 +254,7 @@ mod tests {
 }
 <span class="boring">}</span></code></pre>
 <p>The test passes iff the body panics. The bare <code>#[should_panic]</code> is dangerously coarse — it would pass if the function panicked for <em>any</em> reason, including an unrelated bug. The <code>expected = "..."</code> argument tightens it: the panic message must <em>contain</em> that substring. Always supply it.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Semantics</em>: a precondition violation is one operational rule for “stuck”. <code>#[should_panic(expected = ...)]</code> is a test that the program reaches a specific stuck configuration — it is a refutation test for a partial function’s domain. Pair it with the type system, which proves the <em>total</em> parts of the contract, and you have proof-by-construction for the totality and proof-by-testing for the boundary.</p>
-</blockquote>
+<p>Two contracts are at work here, and they’re worth separating. The type system already guarantees the <em>always-true</em> parts — <code>percentage</code> can only ever be handed a <code>u8</code>, so “it’s a number, not a string” needs no test. What it can’t express is “the number must be <code>0..=100</code>”: that’s a runtime promise the function enforces with a panic. <code>#[should_panic(expected = ...)]</code> tests exactly that promise — it checks the function rejects an out-of-range input at the right boundary. So the types cover what’s provable at compile time, and <code>#[should_panic]</code> covers the runtime edge the types can’t reach.</p>
 <h3 id="returning-result-from-tests"><a class="header" href="#returning-result-from-tests">Returning <code>Result</code> from tests</a></h3>
 <p>A test may instead return <code>Result&lt;(), E&gt;</code>. It passes on <code>Ok(())</code> and fails on <code>Err</code>. The payoff is that <code>?</code> now works inside the test body, so a chain of fallible operations short-circuits to a failure instead of needing <code>.unwrap()</code> at every step:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -270,6 +268,23 @@ fn round_trips() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
 }
 <span class="boring">}</span></code></pre>
 <p>One sharp edge: you cannot combine <code>#[should_panic]</code> with a <code>Result</code>-returning test. To assert a fallible call returns <code>Err</code>, do <em>not</em> use <code>?</code> on it — write <code>assert!(thing().is_err())</code>, otherwise the <code>?</code> turns the expected <code>Err</code> into a test failure. See <a href="11-error-handling.html">error handling</a> for <code>?</code>, <code>Box&lt;dyn Error&gt;</code>, and the <code>Result</code> machinery this leans on.</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You’re testing a round-trip: open a temp file, write some bytes, read them back, parse them, and check the result. Every one of those steps can fail, and in a <code>()</code>-returning test each would need its own <code>.unwrap()</code>, turning the body into noise. Returning <code>Result</code> lets you <code>?</code> straight through:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[test]
+fn config_round_trips() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let dir = std::env::temp_dir();
+    let path = dir.join("cfg_round_trips.toml");
+    std::fs::write(&amp;path, "port = 8080\n")?;          // ? on io::Error
+    let text = std::fs::read_to_string(&amp;path)?;       // ? on io::Error
+    let port: u16 = text.trim_start_matches("port = ").trim().parse()?; // ? on ParseIntError
+    assert_eq!(port, 8080);
+    Ok(())
+}
+<span class="boring">}</span></code></pre>
+<p>Any failing step short-circuits and the runner reports it as a test failure with the actual error attached — which is far more useful than a generic “unwrap on a None/Err” backtrace. This is the everyday shape for integration tests that talk to the filesystem, a parser, or a network client.</p>
+</blockquote>
 <h2 id="running-tests-cargo-test-mechanics"><a class="header" href="#running-tests-cargo-test-mechanics">Running tests: <code>cargo test</code> mechanics</a></h2>
 <p><code>cargo test</code> compiles in test mode and runs the resulting binary. Arguments before <code>--</code> go to Cargo; arguments after <code>--</code> go to the test runner. <code>cargo test --help</code> and <code>cargo test -- --help</code> document the two halves separately.</p>
 <p><strong>Parallel by default.</strong> Tests run concurrently on a thread pool. This is fast but it imposes a discipline: tests must not share mutable external state — no two tests writing the same file, mutating the same env var, or binding the same fixed port — or they race. The fix is either to make each test self-contained (unique temp paths, ephemeral ports) or to serialise:</p>
@@ -363,6 +378,22 @@ pub fn max(a: i32, b: i32) -&gt; i32 {
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>rustdoc</code> lifts each fenced block into a standalone source file. Unless the block already has a <code>fn main</code>, rustdoc wraps it in one and inserts an implicit <code>extern crate yourcrate;</code>, then compiles and runs it as a tiny program. That is why the example must <code>use</code> your public items by their external path: it is genuinely a separate compilation unit, the same as an integration test. This also means doc tests do <em>not</em> see private items — they are black-box by construction.</p>
 </blockquote>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You ship a library with a function whose doc comment shows a usage example. Six months later you change the signature — say <code>parse(s: &amp;str)</code> becomes <code>parse(s: &amp;str, strict: bool)</code>. With any other language, the example in the docs silently goes stale and the next user copies code that no longer compiles. In Rust, <code>cargo test</code> runs that example as a real test, so the stale doc <em>fails the build</em>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Parses a port number from text.
+///
+/// ```
+/// # use mylib::parse_port;
+/// assert_eq!(parse_port("8080"), Some(8080));
+/// ```
+pub fn parse_port(s: &amp;str) -&gt; Option&lt;u16&gt; {
+    s.parse().ok()
+}
+<span class="boring">}</span></code></pre>
+<p>The <code># </code> prefix on the <code>use</code> line hides that boilerplate from the rendered HTML while still compiling it. The payoff is concrete: your README and API docs are guaranteed-correct example code, checked on every CI run, with no extra test file to maintain. This is why publishing a crate to crates.io almost always means writing doc tests first.</p>
+</blockquote>
 <h2 id="the-wider-toolchain"><a class="header" href="#the-wider-toolchain">The wider toolchain</a></h2>
 <p>Testing is one node in a graph of <code>cargo</code>/<code>rustup</code> tooling. The rest of this chapter is the checklist.</p>
 <h3 id="cargo-check-vs-cargo-build"><a class="header" href="#cargo-check-vs-cargo-build"><code>cargo check</code> vs <code>cargo build</code></a></h3>
@@ -439,9 +470,7 @@ mod tests { /* the test-only case you already met */ }
 <li><strong>A publish is permanent.</strong> A given <code>name@version</code> can never be overwritten or deleted (the registry must stay a reproducible archive for everyone’s <code>Cargo.lock</code>). You bump the version and publish again; you never re-upload the same version.</li>
 <li><strong>To retract a broken release, <code>cargo yank --version 1.2.3</code>.</strong> Yanking prevents <em>new</em> dependency resolutions from selecting that version while leaving existing <code>Cargo.lock</code> files that pin it untouched. <code>--undo</code> reverses it. Yanking does <strong>not</strong> delete code, so it cannot scrub a leaked secret — if you publish a key, rotate it immediately.</li>
 </ul>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> SemVer is a contract about API compatibility, and it maps onto the <em>Further Java</em>/type-system notion of subtyping-as-substitutability. <code>MAJOR.MINOR.PATCH</code>: bump PATCH for backward-compatible fixes, MINOR for backward-compatible additions (a new pub item — adding to the API surface, like a covariant widening), MAJOR for breaking changes (removing/changing a signature — clients are no longer substitutable). Cargo’s resolver assumes this contract: it freely upgrades within a compatible range. <code>cargo semver-checks</code> can mechanically verify you haven’t broken it before publishing.</p>
-</blockquote>
+<p>SemVer is a contract about API compatibility, and the test for each level is just “would existing user code still compile and behave the same?” <code>MAJOR.MINOR.PATCH</code>: bump PATCH for a backward-compatible bug fix (same API, fixed behaviour), MINOR for a backward-compatible addition (a new <code>pub</code> item — old code can’t break because it never named the new thing), MAJOR for a breaking change (removing or changing the signature of something callers already use — their code stops compiling). Cargo’s resolver leans on this promise: it freely upgrades a dependency within a compatible range without asking you. <code>cargo semver-checks</code> can mechanically compare two versions of your crate and tell you whether you’ve broken the contract before you publish.</p>
 <p>To export a flat, convenient public API regardless of your internal module tree, re-export with <code>pub use</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -469,22 +498,23 @@ pub use crate::core::internal::Engine;
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write a <code>#[derive(PartialEq)]</code>-only struct (no <code>Debug</code>) and <code>assert_eq!</code> two instances in a test. Read the exact <code>E0277</code> error, then fix it. Explain <em>why</em> the bound is on <code>Debug</code> and not just <code>PartialEq</code>.</p>
+<p><strong>Predict the error.</strong> A teammate writes <code>assert_eq!(left, right)</code> where the type derives <code>Debug</code> but <em>not</em> <code>PartialEq</code>. Before compiling, predict which trait the error names and roughly what it says — and crucially, will the error point at the <em>type definition</em> or at the <em>macro call site</em>? Then flip it (derives <code>PartialEq</code> but not <code>Debug</code>) and predict that error too. Explain in one sentence why a single macro can demand two different traits.</p>
 </li>
 <li>
-<p>Write two tests that each create and read back the file <code>./scratch.txt</code> with different contents. Run them and observe intermittent failures. Fix it <em>without</em> <code>--test-threads=1</code> — make each test use a unique path (hint: <code>std::env::temp_dir()</code> plus the test name). Why is the env-var/CWD approach the wrong fix?</p>
+<p><strong>Which of these compiles, and why?</strong> Given a fallible helper <code>fn load() -&gt; Result&lt;Config, std::io::Error&gt;</code>, decide for each test whether it compiles and passes, fails to compile, or compiles but fails at runtime:
+(a) <code>#[test] fn t() -&gt; Result&lt;(), std::io::Error&gt; { let c = load()?; assert!(c.is_valid()); Ok(()) }</code>
+(b) <code>#[test] #[should_panic] fn t() -&gt; Result&lt;(), std::io::Error&gt; { load()?; Ok(()) }</code>
+(c) <code>#[test] fn t() { assert!(load().is_err()); }</code> when <code>load()</code> actually returns <code>Ok</code>.
+Explain each verdict.</p>
 </li>
 <li>
-<p>Convert a <code>#[should_panic]</code> test into a <code>Result</code>-returning test that asserts the same function returns <code>Err</code>. Show the wrong version (using <code>?</code> on the expected-<code>Err</code> call) and explain the failure, then the right version with <code>assert!(... .is_err())</code>.</p>
+<p><strong>Design decision: where does this test live?</strong> You’re testing a <code>normalise_path</code> helper that is <em>not</em> <code>pub</code>, plus a <code>Client::connect</code> method that <em>is</em> <code>pub</code> and which you want to exercise exactly the way a downstream user would. For each, decide: unit test (in-module <code>#[cfg(test)]</code>), integration test (<code>tests/</code>), or doc test — and justify the choice in terms of what each tier can see. Then say what would go wrong if you tried to integration-test the private helper.</p>
 </li>
 <li>
-<p>(★) Create a binary-only crate (<code>src/main.rs</code>, no <code>lib.rs</code>) and add <code>tests/it.rs</code> that tries to call a function from <code>main</code>. Capture the <code>E0432</code>. Refactor into <code>lib.rs</code> + thin <code>main.rs</code> so the integration test compiles. Articulate why binaries aren’t linkable as libraries.</p>
+<p><strong>Adapt to avoid a race.</strong> Two tests both run <code>cargo test</code> happily in isolation but fail intermittently together; both call <code>std::env::set_var("MODE", ...)</code> and read it back. Adding <code>--test-threads=1</code> makes them pass. Explain <em>why</em> that fix works but is the wrong long-term answer, then redesign the tests so they pass under the default parallel runner <em>without</em> touching a shared env var. (Hint: pass the mode in as an argument instead of reading global state.)</p>
 </li>
 <li>
-<p>Add a doc-test to a public function with a deliberately wrong expected value in the <code>assert_eq!</code>. Confirm <code>cargo test</code> fails in the <code>Doc-tests</code> section but <code>cargo build</code> succeeds. Then make the example reference a <em>private</em> item and explain the new compile error in terms of doc tests being a separate crate.</p>
-</li>
-<li>
-<p>(★) Take a small numeric routine and add <code>[profile.release] lto = true</code> and <code>codegen-units = 1</code> to <code>Cargo.toml</code>. Build with and without, compare binary size and (using <code>cargo flamegraph</code> or timing) runtime. Then set <code>panic = "abort"</code> and explain why <code>cargo test</code> still uses unwinding regardless of this setting.</p>
+<p><strong>(★) When would you choose A over B?</strong> You maintain a library crate and need both fast iteration and a lean, fast shipping binary. Decide which of these belong in <code>[profile.dev]</code> versus <code>[profile.release]</code>, and which you would <em>not</em> set at all: <code>opt-level = 0</code>, <code>lto = "thin"</code>, <code>codegen-units = 1</code>, <code>panic = "abort"</code>. For <code>panic = "abort"</code>, predict what happens when you then run <code>cargo test</code> — does the abort setting take effect for the test binary? Explain why the harness behaves as it does.</p>
 </li>
 </ol>
 
@@ -523,22 +553,6 @@ pub use crate::core::internal::Engine;
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

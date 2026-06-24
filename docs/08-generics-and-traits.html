@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -177,9 +177,9 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="8-generics--traits"><a class="header" href="#8-generics--traits">8. Generics &amp; Traits</a></h1>
-<p>Two abstraction mechanisms collapse into one design here. <strong>Generics</strong> give you parametric polymorphism over types; <strong>traits</strong> give you <em>bounded</em> polymorphism — a way to say “for all types <code>T</code> <em>that support this interface</em>”. You have met both ideas before under three different names: ML/OCaml’s <code>'a</code> type variables, Haskell’s type classes, and Java’s interfaces with generics. Rust’s contribution is to make the whole thing <em>statically resolved and zero-cost by default</em>, with a coherence discipline that ML and Java both lack. That last point is the one worth fixing in your head: every abstraction in this chapter is compiled away. There is no boxing, no vtable, no reflection, no erasure — unless you explicitly ask for it (which is <a href="09-trait-objects-and-oop.html">chapter 9</a>).</p>
+<p>Two abstraction mechanisms collapse into one design here. <strong>Generics</strong> give you parametric polymorphism over types; <strong>traits</strong> give you <em>bounded</em> polymorphism — a way to say “for all types <code>T</code> <em>that support this interface</em>”. You have met both ideas before under different names: Java’s interfaces plus generics, Swift’s protocols plus generics, OCaml’s <code>'a</code> type variables. Rust’s contribution is to make the whole thing <em>statically resolved and zero-cost by default</em>, with a coherence discipline that Java and OCaml both lack. That last point is the one worth fixing in your head: every abstraction in this chapter is compiled away. There is no boxing, no vtable, no reflection, no erasure — unless you explicitly ask for it (which is <a href="09-trait-objects-and-oop.html">chapter 9</a>).</p>
 <h2 id="generics-are-monomorphised-not-erased"><a class="header" href="#generics-are-monomorphised-not-erased">Generics are monomorphised, not erased</a></h2>
-<p>A generic function is a <em>template</em> over types. The syntax echoes C++ and Java: type parameters live in angle brackets, declared between the name and the value parameters.</p>
+<p>A generic function is a <em>template</em> over types. The syntax echoes Java and Swift: type parameters live in angle brackets, declared between the name and the value parameters.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn largest&lt;T: PartialOrd&gt;(xs: &amp;[T]) -&gt; &amp;T {
@@ -195,13 +195,13 @@
 <p>Read <code>fn largest&lt;T&gt;</code> as “largest is generic over some type <code>T</code>”. The <code>T: PartialOrd</code> is a <em>bound</em> — ignore it for one paragraph and we will return to why it is mandatory.</p>
 <p>The decisive question is what the compiler <em>does</em> with this. Rust <strong>monomorphises</strong>: at every call site, rustc reads off the concrete type argument and stamps out a specialised copy of the function with <code>T</code> substituted. <code>largest(&amp;[1i32, 2, 3])</code> and <code>largest(&amp;['a', 'z'])</code> compile to two entirely separate machine-code functions, <code>largest::&lt;i32&gt;</code> and <code>largest::&lt;char&gt;</code>, each with the comparison inlined to the right instruction. After monomorphisation there is no <code>T</code> left anywhere in the binary.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is <em>exactly</em> C++ template instantiation, and the tradeoff is identical: zero abstraction penalty at runtime, paid for in compile time and code size (the “code bloat” you know from heavily templated C++). It is the <strong>opposite</strong> of Java generics, which use <strong>type erasure</strong> — <code>List&lt;String&gt;</code> and <code>List&lt;Integer&gt;</code> are one class <code>List</code> at runtime, with casts inserted and <code>T</code> reduced to <code>Object</code>. Java pays a uniform boxing/dispatch cost and loses the type at runtime (hence no <code>new T[]</code>); Rust keeps full type information and pays nothing at runtime. The analogy to C++ templates breaks down in one crucial place, covered below: C++ checks a template’s body <em>only when instantiated</em> (duck typing, late errors, infamous error messages), whereas Rust type-checks the generic body <em>once, against its bounds</em>, before any instantiation exists.</p>
+<p><strong>🦀 From your toolbox →</strong> This is the <strong>opposite</strong> of Java generics. Java uses <strong>type erasure</strong> — <code>List&lt;String&gt;</code> and <code>List&lt;Integer&gt;</code> are one class <code>List</code> at runtime, with casts inserted and <code>T</code> reduced to <code>Object</code>. Java pays a uniform boxing/dispatch cost and loses the type at runtime (hence no <code>new T[]</code>); Rust keeps full type information and pays nothing at runtime. Swift sits in between: its generics keep type information through “witness tables” but still dispatch through them by default unless the optimiser specialises. Rust <em>always</em> specialises. The closest light analogy is a C++ template, which also stamps out a copy per type — and shares the same tradeoff: zero runtime penalty, paid for in compile time and code size. The C++ analogy breaks in one crucial place, covered below: C++ checks a template’s body <em>only when instantiated</em> (late errors, infamous error messages), whereas Rust type-checks the generic body <em>once, against its bounds</em>, before any instantiation exists.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> Monomorphisation happens after type-checking, during MIR-to-LLVM lowering. rustc collects the set of “mono items” reachable from <code>main</code> (or from <code>pub</code> API for libraries) and emits one LLVM function per distinct <code>(fn, type-args)</code> pair. Identical instantiations across crates are deduplicated at link time. This is also why generic functions usually must live in a crate’s source (or be marked <code>#[inline]</code>) to be usable downstream — there is nothing to call until a concrete type pins the template down.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Compiler Construction.</em> You studied two implementation strategies for polymorphism: the <strong>boxed/uniform representation</strong> (everything is a pointer, one code copy, runtime dispatch — ML and Java) versus <strong>specialisation/monomorphisation</strong> (one code copy per type, static dispatch). Rust commits to specialisation for generics, which is why a generic <code>Vec&lt;T&gt;</code> can store <code>T</code> <em>unboxed and inline</em> in a flat buffer, exactly as a C++ <code>std::vector&lt;T&gt;</code> does — impossible under erasure.</p>
+<p><strong>🎓 Tripos link →</strong> <em>Compiler Construction.</em> There are two ways a compiler can implement polymorphism. One is a <strong>uniform representation</strong>: everything is a pointer, one copy of the code, the actual type figured out at runtime (this is how Java and OCaml work). The other is <strong>specialisation/monomorphisation</strong>: one copy of the machine code per concrete type, with the type baked in at compile time. Rust commits to specialisation for generics, which is why a generic <code>Vec&lt;T&gt;</code> can store <code>T</code> <em>unboxed and inline</em> in a flat buffer — impossible under erasure, where every element would have to be a boxed pointer.</p>
 </blockquote>
 <p>Generics are not limited to functions. Structs, enums, and <code>impl</code> blocks all take type parameters:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -223,7 +223,7 @@ impl&lt;T&gt; Pair&lt;T&gt; {
 }
 <span class="boring">}</span></code></pre>
 <p>Note the <code>impl&lt;T&gt; Pair&lt;T&gt;</code> repetition. You declare the parameter <em>twice</em>: <code>impl&lt;T&gt;</code> introduces <code>T</code> into scope, and <code>Pair&lt;T&gt;</code> says which type the block is for. This is not redundant — it lets you write <code>impl Pair&lt;i32&gt;</code> to add methods <em>only</em> to the <code>i32</code> specialisation, or constrain it as <code>impl&lt;T: Display&gt; Pair&lt;T&gt;</code> to add methods only when <code>T</code> is printable. The <code>Option&lt;T&gt;</code> and <code>Result&lt;T, E&gt;</code> you have been using since <a href="07-enums-and-pattern-matching.html">enums</a> are nothing but generic enums from the standard library; their definitions are three lines each.</p>
-<h2 id="why-the-bound-is-mandatory-the-c-contrast"><a class="header" href="#why-the-bound-is-mandatory-the-c-contrast">Why the bound is mandatory: the C++ contrast</a></h2>
+<h2 id="why-the-bound-is-mandatory-the-late-vs-early-check-contrast"><a class="header" href="#why-the-bound-is-mandatory-the-late-vs-early-check-contrast">Why the bound is mandatory: the late-vs-early-check contrast</a></h2>
 <p>Drop the <code>PartialOrd</code> bound and the generic <code>largest</code> does <em>not</em> compile:</p>
 <pre><code class="language-text">error[E0369]: binary operation `&gt;` cannot be applied to type `&amp;T`
  |
@@ -234,10 +234,8 @@ help: consider restricting type parameter `T` with trait `PartialOrd`
  |             ++++++++++++++++++++++
 </code></pre>
 <p>This error is the philosophical centre of the chapter. In a C++ template, <code>x &gt; best</code> would be accepted at <em>definition</em> time and only rejected later, per-instantiation, if some <code>T</code> happened to lack <code>operator&gt;</code> — producing a wall of errors pointing into library internals. Rust refuses to type-check a generic body against capabilities the type parameter has not been <em>proven</em> to have. Inside <code>largest</code>, the compiler knows <em>nothing</em> about <code>T</code> except what its bounds promise. <code>T: PartialOrd</code> is a promise that <code>&gt;</code> works; without it, <code>&gt;</code> is simply not in scope for <code>T</code>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Logic and Proof.</em> A bounded generic is <strong>bounded quantification</strong>: <code>largest</code> has the logical type <code>∀T. (T: PartialOrd) ⇒ &amp;[T] → &amp;T</code>. The bound is a <em>constraint on the universally quantified variable</em>. The compiler discharges the proof obligation at each call site (it checks <code>i32: PartialOrd</code>), and inside the body it may <em>assume</em> the constraint holds. This is precisely the difference between unrestricted <code>∀T. P(T)</code> and guarded <code>∀T. C(T) ⇒ P(T)</code> — the body gets <code>C(T)</code> as a hypothesis. C++ templates correspond to the unguarded, untyped version that is only checked after substitution.</p>
-</blockquote>
-<h2 id="traits-type-classes-interfaces-and-shared-behaviour"><a class="header" href="#traits-type-classes-interfaces-and-shared-behaviour">Traits: type classes, interfaces, and shared behaviour</a></h2>
+<p>The intuition is worth stating in plain words: a bound is a <em>contract you must honour at the call site and may assume inside the body</em>. When you call <code>largest(&amp;[1, 2, 3])</code>, the compiler checks once that <code>i32: PartialOrd</code> — that obligation is discharged there, at the call. Inside the function body, you get to treat <code>T: PartialOrd</code> as a given fact and use <code>&gt;</code> freely. The error appears <em>before any call exists</em> precisely because the body must be checkable on the strength of its bounds alone, not on the hope that every future caller happens to pass a comparable type.</p>
+<h2 id="traits-protocols-interfaces-and-shared-behaviour"><a class="header" href="#traits-protocols-interfaces-and-shared-behaviour">Traits: protocols, interfaces, and shared behaviour</a></h2>
 <p>A <strong>trait</strong> is a named set of method signatures — a contract. Types <em>implement</em> a trait to declare they satisfy that contract.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -256,14 +254,13 @@ impl Summary for Tweet {
     }
 }
 <span class="boring">}</span></code></pre>
-<p>The shape <code>impl Trait for Type { ... }</code> is the whole game. It is deliberately <em>separate</em> from the type’s own definition — unlike a Java <code>class Tweet implements Summary</code>, where the interface list is welded to the class declaration. In Rust the type and the trait implementation are independent items, and that separation is what makes traits more powerful than interfaces.</p>
+<p>The shape <code>impl Trait for Type { ... }</code> is the whole game. It is deliberately <em>separate</em> from the type’s own definition — unlike a Java <code>class Tweet implements Summary</code> or a Swift <code>class Tweet: Summary</code>, where the conformance list is welded to the type declaration. In Rust the type and the trait implementation are independent items, and that separation is what makes traits more powerful than interfaces or protocols.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> Three simultaneous analogies, all partly true:</p>
+<p><strong>🦀 From your toolbox →</strong> Two simultaneous analogies, both close:</p>
 <ul>
-<li><strong>Java/Swift interfaces/protocols.</strong> A trait is a list of required methods a type must provide. But Java bolts the implements-list onto the class; Rust lets you implement a trait for a type you didn’t define (subject to the orphan rule below). This is “interfaces done right”: you can make <code>i32</code> implement <em>your</em> trait.</li>
-<li><strong>Haskell type classes.</strong> This is the closest fit. <code>trait</code> ≈ <code>class</code>, <code>impl Trait for T</code> ≈ <code>instance Class T</code>, trait bound <code>T: Trait</code> ≈ context <code>Class t =&gt;</code>. Default methods ≈ default class methods. Associated types ≈ associated type families. If you know type classes, you already know traits; the syntax is the only delta.</li>
-<li><strong>OCaml.</strong> No direct equivalent — OCaml uses functors and explicit module passing for the same job. A trait bound is like an implicit, compiler-inferred functor argument.
-Where every analogy breaks: a trait can be used for <strong>static</strong> dispatch (monomorphised, zero-cost) <em>or</em> <strong>dynamic</strong> dispatch (<code>dyn Trait</code>, a vtable). Java interfaces are always dynamic; this chapter is all static, and <a href="09-trait-objects-and-oop.html">chapter 9</a> is the dynamic half.</li>
+<li><strong>Java interfaces / Swift protocols.</strong> A trait is a list of required methods a type must provide, exactly like a protocol. The big difference: Java and Swift bolt the conformance list onto the type definition, so you can only declare conformance for types you own. Rust lets you implement a trait for a type you didn’t define (subject to the orphan rule below). This is “protocols done right”: you can make <code>i32</code> implement <em>your</em> trait, the way Swift extensions let you add protocol conformance to existing types — except Rust takes it further and lets you add <em>your own</em> trait to <em>standard-library</em> types.</li>
+<li><strong>Python duck typing.</strong> A trait is the explicit, compiler-checked version of “if it has a <code>.summarize()</code> method, treat it as summarizable”. Python checks that at runtime and crashes if the method is missing; Rust checks it at compile time and the method is guaranteed present.
+Where both analogies break: a trait can be used for <strong>static</strong> dispatch (monomorphised, zero-cost) <em>or</em> <strong>dynamic</strong> dispatch (<code>dyn Trait</code>, a vtable). Java interfaces and Swift protocol types are normally dynamic; this chapter is all static, and <a href="09-trait-objects-and-oop.html">chapter 9</a> is the dynamic half.</li>
 </ul>
 </blockquote>
 <h3 id="default-methods"><a class="header" href="#default-methods">Default methods</a></h3>
@@ -286,7 +283,7 @@ impl Summary for Tweet {
     // summarize is inherited for free.
 }
 <span class="boring">}</span></code></pre>
-<p>This is the classic “template method” pattern, but enforced by the type system: the trait author writes the <em>policy</em> (<code>summarize</code>) in terms of a small required <em>primitive</em> (<code>summarize_author</code>). An implementor writes one method and gets the other. Note that a default body can call required methods that have <em>no</em> default — exactly like Haskell’s <code>class</code> defaults, or an abstract base class’s concrete method calling an abstract one. You cannot, however, call the overridden default from within an override; there is no <code>super</code>.</p>
+<p>This is the classic “template method” pattern, but enforced by the type system: the trait author writes the <em>policy</em> (<code>summarize</code>) in terms of a small required <em>primitive</em> (<code>summarize_author</code>). An implementor writes one method and gets the other. It is the same idea as a Swift protocol extension that provides a default method body, or a Java interface <code>default</code> method, or an abstract base class whose concrete method calls an abstract one. You cannot, however, call the overridden default from within an override; there is no <code>super</code>.</p>
 <h2 id="trait-bounds-spelling-and-the-impl-trait-pair"><a class="header" href="#trait-bounds-spelling-and-the-impl-trait-pair">Trait bounds: spelling and the impl Trait pair</a></h2>
 <p>Once a trait exists, you constrain generics with it. There are several equivalent spellings; choosing among them is a style decision with one semantic gotcha.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -316,6 +313,9 @@ where
 fn pair&lt;T: Summary&gt;(a: &amp;T, b: &amp;T);             // a and b must be the SAME type
 <span class="boring">}</span></code></pre>
 <p>If you need two arguments to share one type (to compare them, swap them, store them in one <code>Vec</code>), you <em>must</em> name the parameter <code>&lt;T&gt;</code>; <code>impl Trait</code> cannot express that constraint because each <code>impl Summary</code> is its own type. Reach for <code>where</code> once you have more than one or two bounds — it pulls the noise out from between the function name and its parameters.</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You’re writing a logging helper that should accept <em>anything</em> a caller can already print — a <code>String</code>, an <code>i32</code>, a <code>PathBuf</code>, a custom struct — without forcing them to convert first. Argument-position <code>impl Trait</code> is exactly the tool: <code>fn log_line(label: &amp;str, value: impl Display) { println!("[{label}] {value}"); }</code>. Now <code>log_line("port", 8080)</code>, <code>log_line("host", "localhost")</code>, and <code>log_line("path", some_pathbuf)</code> all compile, each monomorphised to the concrete type, no boxing. You reach for the named <code>&lt;T: Display&gt;</code> form instead the moment two parameters must be the <em>same</em> type — e.g. a <code>fn max_of&lt;T: PartialOrd&gt;(a: T, b: T) -&gt; T</code> where comparing <code>a</code> and <code>b</code> only makes sense if they share a type.</p>
+</blockquote>
 <h3 id="impl-trait-in-return-position-is-a-different-beast"><a class="header" href="#impl-trait-in-return-position-is-a-different-beast">impl Trait in return position is a different beast</a></h3>
 <p>The same <code>impl Trait</code> syntax in <em>return</em> position means something subtly but importantly distinct from its argument-position use.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -342,6 +342,16 @@ help: you could change the return type to be a boxed trait object
 <p><strong>⚠️ Pitfall →</strong> “But both implement <code>Summary</code>!” — yes, but <code>impl Trait</code> return is a <em>single hidden type</em>, not a union. <code>Tweet</code> and <code>Article</code> are different types and the two branches disagree. The compiler’s own fix is the right one: erase to <code>Box&lt;dyn Summary&gt;</code> (a trait object, dynamic dispatch — <a href="09-trait-objects-and-oop.html">chapter 9</a>). The rule of thumb: <code>impl Trait</code> return when there is exactly one concrete type but you’d rather not (or can’t) write its name; <code>Box&lt;dyn Trait&gt;</code> when the type genuinely varies at runtime.</p>
 </blockquote>
 <p>The reason <code>impl Trait</code> exists at all is that some types are <em>unnameable</em> — every closure has a unique anonymous compiler-generated type, and iterator adaptor chains produce types like <code>Map&lt;Filter&lt;Zip&lt;...&gt;&gt;&gt;</code> that are absurd to write by hand. <code>impl Iterator&lt;Item = u32&gt;</code> lets you return them concisely while preserving static dispatch. You will lean on this constantly in <a href="12-closures-and-iterators.html">closures and iterators</a>.</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You’re building a query layer and you want a function that returns the IDs of active users as an iterator, so the caller can chain <code>.take(10)</code> or <code>.collect()</code> without you materialising a <code>Vec</code> first. The concrete type is a monstrous adaptor chain you’d never want to type by hand:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn active_ids(users: &amp;[User]) -&gt; impl Iterator&lt;Item = u64&gt; + '_ {
+    users.iter().filter(|u| u.active).map(|u| u.id)
+}
+<span class="boring">}</span></code></pre>
+<p>The return type stays readable (<code>impl Iterator&lt;Item = u64&gt;</code>), the dispatch stays static, and nothing is allocated. The day you need the function to return <em>one of two different</em> iterator shapes depending on a flag is the day you switch the return type to <code>Box&lt;dyn Iterator&lt;Item = u64&gt;&gt;</code> and pay for one vtable.</p>
+</blockquote>
 <h2 id="associated-types-vs-generic-type-parameters"><a class="header" href="#associated-types-vs-generic-type-parameters">Associated types vs generic type parameters</a></h2>
 <p>A trait can carry <em>associated types</em> — type members chosen by the implementor:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -364,12 +374,12 @@ impl&lt;T&gt; Container for Vec&lt;T&gt; {
     fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt;;
 }
 <span class="boring">}</span></code></pre>
-<p>You could <em>imagine</em> writing this with a generic parameter instead: <code>trait Iterator&lt;Item&gt;</code>. Why does the standard library use an associated type? Because of <em>functional dependency</em>: a given iterator type yields exactly <strong>one</strong> element type. With <code>trait Iterator&lt;Item&gt;</code>, a single type could legally implement <code>Iterator&lt;u8&gt;</code> <em>and</em> <code>Iterator&lt;String&gt;</code>, forcing you to annotate <code>Item</code> at every call (<code>it.next::&lt;u8&gt;()</code>-style) and breaking inference. With an associated type, <code>Item</code> is <strong>an output determined by the implementing type, not an input chosen by the caller</strong> — so <code>it.next()</code> infers cleanly.</p>
+<p>You could <em>imagine</em> writing this with a generic parameter instead: <code>trait Iterator&lt;Item&gt;</code>. Why does the standard library use an associated type? Because a given iterator type yields exactly <strong>one</strong> element type. With <code>trait Iterator&lt;Item&gt;</code>, a single type could legally implement <code>Iterator&lt;u8&gt;</code> <em>and</em> <code>Iterator&lt;String&gt;</code>, forcing you to annotate <code>Item</code> at every call (<code>it.next::&lt;u8&gt;()</code>-style) and breaking inference. With an associated type, <code>Item</code> is <strong>an output determined by the implementing type, not an input chosen by the caller</strong> — so <code>it.next()</code> infers cleanly.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> Decide by counting implementations. <strong>Generic parameter</strong> = the trait can be implemented <em>many times</em> for one type with different parameters (e.g. <code>Add&lt;i32&gt;</code> <em>and</em> <code>Add&lt;Duration&gt;</code> for one type — see below). <strong>Associated type</strong> = at most <em>one</em> implementation makes sense per type, and the type is a <em>consequence</em> of the impl, not a choice (the element type of an iterator, the output of indexing). This is Haskell’s distinction between a multi-parameter type class and an associated <code>type</code> family, verbatim.</p>
+<p><strong>🦀 From your toolbox →</strong> Decide by counting implementations. <strong>Generic parameter</strong> = the trait can be implemented <em>many times</em> for one type with different parameters (e.g. <code>Add&lt;i32&gt;</code> <em>and</em> <code>Add&lt;Duration&gt;</code> for one type — see below). <strong>Associated type</strong> = at most <em>one</em> implementation makes sense per type, and the type is a <em>consequence</em> of the impl, not a choice (the element type of an iterator, the output of indexing). Swift draws the same line: a protocol with an <code>associatedtype Element</code> (one per conformer, like <code>Sequence.Element</code>) versus a generic constraint the caller supplies. If you’ve used Swift’s <code>associatedtype</code>, this is the same mechanism.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Foundations of CS / type inference.</em> An associated type acts as a <strong>type-level function</strong>: <code>&lt;Vec&lt;T&gt; as Iterator&gt;::Item</code> <em>computes</em> to <code>T</code>. Because it is a function (one output per input), the inference engine can run it forwards and the Hindley–Milner-style unifier stays decidable. A generic parameter is an <em>input</em> the unifier must <em>solve for</em>, which is why multiple impls would make <code>Item</code> ambiguous.</p>
+<p><strong>🎓 Tripos link →</strong> <em>Foundations of CS / type inference.</em> You can think of an associated type as a small <em>function on types</em>: given the iterator type, it hands back the element type, and there is exactly one answer. Because the answer is determined (one output per input), the compiler’s type inference can simply look it up and keep going. A generic parameter is the opposite — it’s an <em>unknown the compiler has to solve for</em> — which is why allowing two <code>Iterator&lt;u8&gt;</code> / <code>Iterator&lt;String&gt;</code> impls on one type would leave <code>Item</code> ambiguous and force you to annotate it everywhere.</p>
 </blockquote>
 <h2 id="operator-overloading-is-just-trait-implementation"><a class="header" href="#operator-overloading-is-just-trait-implementation">Operator overloading is just trait implementation</a></h2>
 <p>Rust has no special operator-overloading syntax. <code>+</code> <em>is</em> a call to <code>std::ops::Add::add</code>; <code>[]</code> is <code>Index::index</code>; <code>*</code> (deref) is <code>Deref::deref</code>. Overload an operator by implementing the corresponding trait — and notice it uses an associated type for its <code>Output</code>:</p>
@@ -390,10 +400,10 @@ impl Add for V2 {
 <span class="boring">}</span></code></pre>
 <p><code>Add</code> is <em>generic over the right-hand side</em> with a defaulted parameter — its real signature is <code>trait Add&lt;Rhs = Self&gt;</code>. That default is why <code>impl Add for V2</code> means <code>impl Add&lt;V2&gt; for V2</code>. Because <code>Rhs</code> is a <em>generic parameter</em> (not associated), you may implement <code>Add</code> several times for one type with different operands — <code>Meters + Meters</code> and <code>Meters + Millimeters</code> are two separate impls. This is the textbook case where a generic parameter is correct and an associated type would be wrong: there are genuinely many implementations.</p>
 <blockquote>
-<p><strong>⚙️ Under the hood →</strong> <code>a + b</code> desugars to <code>Add::add(a, b)</code>, monomorphised and inlined to the same instructions you’d write by hand — no indirection. For primitives, the <code>impl Add for i32</code> exists in core and the optimiser folds the call to a single machine <code>add</code>. Rust deliberately does <em>not</em> let you invent <em>new</em> operator glyphs (no C++-style <code>operator""</code> zoo beyond the fixed trait set), keeping parsing and reasoning local.</p>
+<p><strong>⚙️ Under the hood →</strong> <code>a + b</code> desugars to <code>Add::add(a, b)</code>, monomorphised and inlined to the same instructions you’d write by hand — no indirection. For primitives, the <code>impl Add for i32</code> exists in core and the optimiser folds the call to a single machine <code>add</code>. Rust deliberately does <em>not</em> let you invent <em>new</em> operator glyphs, keeping parsing and reasoning local: you can give meaning to the fixed set of built-in operators, but you cannot mint brand-new symbols.</p>
 </blockquote>
 <h2 id="coherence-and-the-orphan-rule"><a class="header" href="#coherence-and-the-orphan-rule">Coherence and the orphan rule</a></h2>
-<p>Here is the discipline that ML and Java lack. Rust guarantees <strong>global uniqueness</strong>: for any (trait, type) pair, there is <em>at most one</em> implementation in the entire program. This property is called <strong>coherence</strong>, and it is what lets <code>a + b</code> or <code>set.insert(x)</code> resolve deterministically without you ever specifying <em>which</em> <code>Add</code> or <code>Hash</code> impl to use. There is only ever one.</p>
+<p>Here is the discipline that Java and OCaml lack. Rust guarantees <strong>global uniqueness</strong>: for any (trait, type) pair, there is <em>at most one</em> implementation in the entire program. This property is called <strong>coherence</strong>, and it is what lets <code>a + b</code> or <code>set.insert(x)</code> resolve deterministically without you ever specifying <em>which</em> <code>Add</code> or <code>Hash</code> impl to use. There is only ever one.</p>
 <p>To preserve coherence across separately-compiled crates, Rust enforces the <strong>orphan rule</strong>: in <code>impl Trait for Type</code>, <em>at least one</em> of <code>Trait</code> or <code>Type</code> must be defined in your crate. You may implement <em>your</em> trait for <code>Vec&lt;T&gt;</code>, and you may implement <code>Display</code> (foreign) for <em>your</em> <code>Tweet</code> — but you cannot implement a foreign trait for a foreign type:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -409,7 +419,7 @@ impl Add for V2 {
 <p><strong>⚠️ Pitfall →</strong> This bites everyone eventually: “I want to add a method to <code>Vec</code>” or “I want <code>serde::Serialize</code> for <code>chrono::DateTime</code>” and both are foreign. The idiomatic fix is the <strong>newtype pattern</strong>: wrap the foreign type in a local one-field tuple struct, <code>struct Wrapper(Vec&lt;i32&gt;)</code>, and implement the trait on <code>Wrapper</code>. The wrapper is local, so the orphan rule is satisfied, and it compiles to nothing (single-field structs are layout-transparent). The <code>#[derive(...)]</code> or a <code>Deref</code> impl restores ergonomic access to the inner value.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Further Java / type systems.</em> Haskell hit this exact problem — “orphan instances” can silently change program behaviour depending on import order, breaking modular reasoning. Rust elevates the informal Haskell convention into a <em>hard compiler rule</em>. The payoff is a soundness guarantee you can state crisply: trait resolution is a <em>function</em> from (trait, type) to impl, total and deterministic, decided entirely at compile time. Java sidesteps the issue by tying implementation to class definition (you simply <em>can’t</em> retro-fit), which is strictly less expressive.</p>
+<p><strong>🎓 Tripos link →</strong> <em>Databases.</em> The win from coherence is the same one you get from a <em>uniqueness constraint</em> on a key: because there is provably at most one <code>impl</code> per (trait, type) pair, looking up “which <code>Add</code> for <code>V2</code>?” is an unambiguous lookup with exactly one row, decided entirely at compile time. Java sidesteps the question a cruder way — it ties an implementation to the class definition, so you simply <em>can’t</em> retro-fit an interface onto a type you don’t own. That keeps things unambiguous too, but it is strictly less expressive than Rust’s “implement it elsewhere, but only once” rule.</p>
 </blockquote>
 <h2 id="conditional-and-blanket-impls"><a class="header" href="#conditional-and-blanket-impls">Conditional and blanket impls</a></h2>
 <p>Trait bounds on <code>impl</code> blocks let you add methods <em>conditionally</em>, depending on what the inner type can do:</p>
@@ -455,7 +465,7 @@ trait OutlinePrint: Display {          // Display is a supertrait
     }
 }
 <span class="boring">}</span></code></pre>
-<p><code>trait OutlinePrint: Display</code> means “you cannot implement <code>OutlinePrint</code> for a type unless it also implements <code>Display</code>”. Inside <code>OutlinePrint</code>’s default methods, <code>Self: Display</code> is therefore a usable hypothesis — hence the <code>self.to_string()</code> call type-checks. This is <em>not</em> inheritance in the OOP sense (no shared fields, no subtyping of values); it is a <em>requirement edge between contracts</em>. Java’s <code>interface B extends A</code> is the closest cousin, and the semantics match: implementing <code>B</code> obliges you to satisfy <code>A</code>.</p>
+<p><code>trait OutlinePrint: Display</code> means “you cannot implement <code>OutlinePrint</code> for a type unless it also implements <code>Display</code>”. Inside <code>OutlinePrint</code>’s default methods, <code>Self: Display</code> is therefore a usable hypothesis — hence the <code>self.to_string()</code> call type-checks. This is <em>not</em> inheritance in the OOP sense (no shared fields, no subtyping of values); it is a <em>requirement edge between contracts</em>. Java’s <code>interface B extends A</code> and Swift’s <code>protocol B: A</code> are the closest cousins, and the semantics match: implementing <code>B</code> obliges you to satisfy <code>A</code>.</p>
 <h2 id="derivable-traits-codegen-you-get-for-free"><a class="header" href="#derivable-traits-codegen-you-get-for-free">Derivable traits: codegen you get for free</a></h2>
 <p><code>#[derive(...)]</code> is a procedural macro (<a href="18-macros.html">chapter 18</a>) that <em>writes a trait impl for you</em> based on your type’s structure. The common ones, and what they generate:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -474,7 +484,16 @@ struct Point { x: i32, y: i32 }
 </ul>
 <p>Derive is generated source code: it monomorphises, costs nothing extra, and fails to compile if a field doesn’t support the trait (you can’t <code>derive(Hash)</code> if a field isn’t <code>Hash</code>). For custom logic, hand-write the <code>impl</code> instead.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Foundations of CS.</em> In OCaml you got structural equality (<code>=</code>) and polymorphic comparison built into the language for free. Rust refuses implicit structural operations — but <code>derive</code> recovers the convenience <em>opt-in and explicitly</em>, per trait, so you always know (and the compiler always knows) precisely which capabilities a type has. No surprise <code>compare</code> on a closure-containing record.</p>
+<p><strong>🔧 In practice →</strong> You’re modelling a domain object — say a <code>Money { cents: i64, currency: Currency }</code> — and you want to use it as a <code>HashMap</code> key, compare two values in a test with <code>assert_eq!</code>, sort a <code>Vec&lt;Money&gt;</code>, and print it while debugging. Rather than hand-write five trait impls, you write one line:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+struct Money { cents: i64, currency: Currency }
+<span class="boring">}</span></code></pre>
+<p>Now <code>map.insert(price, qty)</code> works (<code>Hash + Eq</code>), <code>assert_eq!(a, b)</code> prints a readable diff (<code>Debug + PartialEq</code>), and <code>prices.sort()</code> orders them (<code>Ord</code>). The moment your equality needs custom logic — say two <code>Money</code> values are equal only after normalising currency — you drop <code>PartialEq</code> from the derive list and hand-write that one impl, keeping the rest derived.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Foundations of CS.</em> In OCaml you got structural equality (<code>=</code>) and polymorphic comparison built into the language for free, applied to any value whether or not it made sense. Rust refuses implicit structural operations — but <code>derive</code> recovers the convenience <em>opt-in and explicitly</em>, per trait, so you always know (and the compiler always knows) precisely which capabilities a type has. No surprise comparison on a record that happens to contain a function.</p>
 </blockquote>
 <h2 id="marker-traits-capabilities-with-no-methods"><a class="header" href="#marker-traits-capabilities-with-no-methods">Marker traits: capabilities with no methods</a></h2>
 <p>Some traits have <em>zero</em> methods; they exist purely to tag a type with a compile-time property the compiler reasons about. You have already met <code>Copy</code>. The two that matter most arrive in <a href="13-fearless-concurrency.html">fearless concurrency</a>:</p>
@@ -484,35 +503,48 @@ struct Point { x: i32, y: i32 }
 </ul>
 <p>These are <strong>auto traits</strong>: the compiler <em>derives them automatically and structurally</em> — a struct is <code>Send</code> iff all its fields are <code>Send</code>. You rarely write them by hand. Their entire purpose is to let the type system prove data-race freedom statically: a bound like <code>T: Send</code> on <code>thread::spawn</code> is what <em>makes</em> concurrency fearless, by rejecting at compile time any attempt to ship a non-thread-safe value (like <code>Rc&lt;T&gt;</code>) across a thread boundary.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems.</em> You proved properties about data races informally with happens-before reasoning. <code>Send</code>/<code>Sync</code> encode a slice of that reasoning <em>in the type system</em> as bounded quantification: <code>spawn&lt;F: Send&gt;</code>. Data-race freedom for safe Rust becomes a <em>type-soundness theorem</em> discharged by the borrow checker plus these markers — the absence of races is checked, not hoped for.</p>
+<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems.</em> The whole problem you study there — data races, where two threads touch the same memory and at least one writes — Rust pushes into the type system. <code>Send</code> and <code>Sync</code> are the tags that say “this value is safe to move to / share with another thread”. A function like <code>thread::spawn</code> requires its closure to be <code>Send</code>, so the compiler simply refuses to compile code that would hand a thread-unsafe value (like <code>Rc&lt;T&gt;</code>) to another thread. The races you’d otherwise have to find with careful reasoning are rejected before the program runs.</p>
 </blockquote>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
-<li><strong>Generics monomorphise.</strong> rustc stamps a specialised copy per concrete type — C++ templates, not Java erasure. Zero runtime cost, paid in code size; types survive to runtime so <code>Vec&lt;T&gt;</code> stores <code>T</code> unboxed.</li>
-<li><strong>A generic body is type-checked once against its bounds</strong>, before any instantiation. <code>T</code> can do <em>nothing</em> the bounds don’t promise — bounded quantification, <code>∀T. C(T) ⇒ …</code>. This is why the body errors before any call site exists.</li>
-<li><strong>A trait is a type class / interface done right.</strong> Implementations are separate items, so you can implement your trait for foreign types and foreign traits for your types — subject to the <strong>orphan rule</strong>, which guarantees <strong>coherence</strong>: one impl per (trait, type), globally. Newtype-wrap to escape it.</li>
+<li><strong>Generics monomorphise.</strong> rustc stamps a specialised copy per concrete type — like a C++ template, <em>not</em> like Java erasure. Zero runtime cost, paid in code size; types survive to runtime so <code>Vec&lt;T&gt;</code> stores <code>T</code> unboxed.</li>
+<li><strong>A generic body is type-checked once against its bounds</strong>, before any instantiation. <code>T</code> can do <em>nothing</em> the bounds don’t promise — a bound is a contract checked at the call site and assumed inside the body. This is why the body errors before any call site exists.</li>
+<li><strong>A trait is an interface / protocol done right.</strong> Implementations are separate items, so you can implement your trait for foreign types and foreign traits for your types — subject to the <strong>orphan rule</strong>, which guarantees <strong>coherence</strong>: one impl per (trait, type), globally. Newtype-wrap to escape it.</li>
 <li><strong>Associated type vs generic param = output vs input.</strong> One impl per type (iterator’s <code>Item</code>, index’s <code>Output</code>) → associated type, inference-friendly. Many impls per type (<code>Add&lt;Rhs&gt;</code>) → generic param.</li>
 <li><strong><code>impl Trait</code> argument-position = caller picks (generic); return-position = callee hides one fixed type.</strong> Different types per branch ⇒ you need <code>Box&lt;dyn Trait&gt;</code>, not <code>impl Trait</code>. Operators, derives, and markers (<code>Copy</code>/<code>Send</code>/<code>Sync</code>) are <em>all</em> just traits.</li>
 </ul>
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Write <code>fn largest&lt;T&gt;(xs: &amp;[T]) -&gt; &amp;T</code> and deliberately omit the bound. Read the <code>E0369</code> error. Now add <code>T: PartialOrd</code> — it compiles. Then change the return type to <code>T</code> (by value, returning <code>*best</code>) and explain the new error in terms of <code>T: Copy</code> versus <code>T: Clone</code>. Which bound is the right fix, and why does returning a <em>reference</em> avoid the question entirely?</p>
+<p>You have <code>fn largest&lt;T: PartialOrd&gt;(xs: &amp;[T]) -&gt; &amp;T</code>. A colleague wants the by-value version <code>fn largest&lt;T: PartialOrd&gt;(xs: &amp;[T]) -&gt; T</code> so the caller owns the result. Predict the compile error before trying it, then decide: should the fix be adding <code>T: Copy</code> or <code>T: Clone</code>? Give one concrete element type for which <code>Copy</code> suffices and one for which only <code>Clone</code> will do — and explain why the original <em>reference</em>-returning version needed neither.</p>
 </li>
 <li>
-<p>Define <code>trait Area { fn area(&amp;self) -&gt; f64; }</code> and implement it for <code>Circle</code> and <code>Rectangle</code>. Write <code>fn total_area(shapes: &amp;[???]) -&gt; f64</code>. Try <code>&amp;[impl Area]</code> — it fails. Explain why (hint: <code>impl Trait</code> is one anonymous type; a slice is homogeneous). What two <em>different</em> tools fix this depending on whether the slice is monomorphic or genuinely mixed?</p>
+<p>Here are three signatures. Which compile, and what does each one <em>let the caller do</em> that the others don’t?</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn a(x: &amp;impl Summary, y: &amp;impl Summary);
+fn b&lt;T: Summary&gt;(x: &amp;T, y: &amp;T);
+fn c(x: &amp;dyn Summary, y: &amp;dyn Summary);
+<span class="boring">}</span></code></pre>
+<p>For each, say whether <code>x</code> and <code>y</code> may be different concrete types, and which one(s) you’d pick if the body needs to put <code>x</code> and <code>y</code> into the same <code>Vec</code>.</p>
 </li>
 <li>
-<p><strong>(★)</strong> You want <code>MyVec(Vec&lt;i32&gt;)</code> to be printable with <code>{}</code>. First try <code>impl Display for Vec&lt;i32&gt;</code> directly and read the <code>E0117</code> orphan-rule error. Then fix it with the newtype pattern. Explain precisely which clause of the orphan rule the newtype satisfies, and why a single-field tuple struct adds no runtime cost.</p>
+<p>You’re given a foreign type <code>chrono::DateTime</code> (you don’t own it) and a foreign trait <code>serde::Serialize</code> (you don’t own it either), and you need <code>DateTime</code> to be serializable. Explain why a direct <code>impl Serialize for DateTime</code> is rejected, then describe — in terms of <em>which</em> clause of the orphan rule each option satisfies — the two different escape hatches: the newtype wrapper, and (the one real projects actually use) serde’s <code>#[serde(with = "...")]</code> adapter. Why does the newtype add zero runtime cost?</p>
 </li>
 <li>
-<p>The standard library declares <code>trait Iterator { type Item; … }</code>, not <code>trait Iterator&lt;Item&gt;</code>. Construct a concrete scenario — a single struct you’d <em>want</em> to implement the trait for two ways — that the associated-type version forbids but a generic-parameter version would allow. Then argue why forbidding it makes <code>for x in it</code> infer <code>x</code>’s type without annotations.</p>
+<p>A teammate proposes changing <code>Iterator</code> from <code>trait Iterator { type Item; ... }</code> to <code>trait Iterator&lt;Item&gt; { ... }</code> “for flexibility”. Construct one concrete struct that the generic-parameter version would let you implement <em>two ways</em> but the associated-type version forbids. Then explain what breaks in everyday <code>for x in it { ... }</code> loops if the standard library had taken your teammate’s advice.</p>
 </li>
 <li>
-<p><strong>(★)</strong> Implement <code>Add</code> for a <code>Counter(u32)</code> newtype <em>twice</em>: once for <code>Counter + Counter</code>, once for <code>Counter + u32</code>, using the <code>Rhs</code> parameter. Now try to make <code>Iterator::Item</code> “two-valued” the same way and observe it is impossible. Use this to state the rule for choosing associated type vs generic parameter in your own words, then explain why <code>Add&lt;Rhs = Self&gt;</code> having a <em>default</em> is unrelated to the coherence question.</p>
+<p><strong>(★)</strong> You’re designing a units library. You want <code>Meters + Meters</code>, <code>Meters + Centimeters</code>, and also a single canonical “length of this value” notion per <code>Meters</code>. Decide for each of these whether it should be a <em>generic parameter</em> or an <em>associated type</em>, and implement the <code>Add</code> parts (two impls on <code>Meters</code>). Then state, in your own words, the one-sentence rule for choosing between the two — and explain why the fact that <code>Add&lt;Rhs = Self&gt;</code> has a <em>default</em> is a separate question from coherence.</p>
 </li>
 <li>
-<p>Write a blanket impl: <code>trait Loud { fn shout(&amp;self) -&gt; String; }</code> implemented for <code>impl&lt;T: Display&gt; Loud for T</code> as <code>self.to_string().to_uppercase()</code>. Confirm <code>42.shout()</code> and <code>"hi".shout()</code> both work with no per-type impls. Then add a <em>second</em> blanket impl <code>impl&lt;T: Debug&gt; Loud for T</code> and read the coherence-conflict error. Explain why overlapping blanket impls would violate global uniqueness, and what <code>specialization</code> would have to do to make it sound.</p>
+<p>Suppose Rust let you write <em>two</em> overlapping blanket impls:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;T: Display&gt; Loud for T { /* uppercased Display */ }
+impl&lt;T: Debug&gt;   Loud for T { /* uppercased Debug   */ }
+<span class="boring">}</span></code></pre>
+<p>Pick a single type that matches <em>both</em> bounds (most std types do), and walk through exactly what goes wrong when the compiler tries to resolve <code>that_value.shout()</code>. Use that to explain in one sentence why coherence forbids overlapping impls, and what a hypothetical <code>specialization</code> feature would need to add to make a choice unambiguous.</p>
 </li>
 </ol>
 
@@ -551,22 +583,6 @@ struct Point { x: i32, y: i32 }
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

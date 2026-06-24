@@ -21,7 +21,7 @@ error[E0384]: cannot assign twice to immutable variable `x`
 
 To opt into mutation you write `let mut x = 5;`. This is the inverse of C and Java, where everything is mutable unless you sprinkle `const`/`final`. The default is flipped on purpose: an immutable binding is a fact the compiler (and the reader) can rely on, and — looking ahead — immutability is the cheaper, contention-free half of the borrow rules in [references and borrowing](03-references-and-borrowing.md). `mut` is not just a lint; it is load-bearing type information.
 
-> **🦀 From your toolbox →** Think OCaml `let x = 5` (a binding, not a mutable cell), but with an explicit escape hatch. C's `const int x` is the closest analogy for the *default*, except Rust's `mut` annotates the *binding*, not the type — there is no `const`-poisoning of pointer types the way `const char *` differs from `char *`. The analogy to OCaml's `ref` breaks down too: `mut` does not introduce a level of indirection the way `ref`/`:=` does; the variable *is* the storage and you assign through its name.
+> **🦀 From your toolbox →** Closest to Swift's `let` vs `var`: Swift's `let` is the immutable default and `var` is the opt-in to mutation — Rust just renames `var` to `let mut`. Java's `final` and Kotlin's `val` are the same idea, except Rust flips the default so that *not* writing `mut` is the common case (think "everything is `final` unless you say otherwise"). Python has no equivalent — every name is a rebindable reference — so the Rust discipline will feel stricter than `x = 5` in a script. Where the analogy breaks down: Rust's `mut` annotates the *binding*, not the value's type, and unlike Swift's `var` on a class reference, there's no hidden indirection — the variable *is* the storage, and you assign straight through its name.
 
 ## Shadowing — and why it is not `mut`
 
@@ -33,11 +33,20 @@ let count = count.trim();        // &str, whitespace stripped
 let count: u32 = count.parse().unwrap(); // now a u32 — different type!
 ```
 
-This is exactly OCaml's shadowing, and it is categorically different from `mut`:
+There is nothing like this in Java, Swift, or Python — re-using a name there always *reassigns* the same variable (and in Java/Swift the type is locked, so you couldn't go from `String` to `int` anyway). Rust's shadowing is a genuinely new binding, and it is categorically different from `mut`:
 
 - Shadowing introduces a *new variable* (possibly a new type, as above: `&str` then `u32`). `mut` keeps the same variable and forbids changing its type.
 - Shadowing requires the `let` keyword every time, so an accidental re-assignment without `let` is still caught.
 - After a chain of shadowing transformations, the final binding can be immutable. You get the ergonomics of "transform in place" without giving up the guarantee that the value won't change *after* you're done with it.
+
+> **🔧 In practice →** Shadowing shines when you parse-and-narrow an input. Picture a request handler that receives a port as text: you want a validated `u16` by the end, but the raw form is a `&str`. Instead of inventing `port_str`, `port_trimmed`, `port_num`, you keep one name and let its type sharpen as you go:
+> ```rust
+> let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+> let port = port.trim();              // &str
+> let port: u16 = port.parse().unwrap_or(8080); // now a validated u16
+> // from here on `port` is the immutable, final value — no leftover string lying around
+> ```
+> The intermediate `&str` is gone, so nobody downstream can accidentally use the un-parsed version. That "the old shape is unreachable now" guarantee is exactly what `mut` can't give you.
 
 A scope-local shadow reverts when the scope ends:
 
@@ -66,9 +75,9 @@ static GREETING: &str = "hello";      // a single object with a 'static address
 
 Convention: `SCREAMING_SNAKE_CASE` for both.
 
-## Type inference: local Hindley–Milner, not global
+## Type inference: local, not global
 
-Inside a function body Rust infers types the way you expect from OCaml — you rarely annotate locals:
+Inside a function body Rust infers types the way you expect from Swift (`let v = [1, 2, 3]`) or modern Java's `var` — you rarely annotate locals:
 
 ```rust
 let v = vec![1, 2, 3];   // Vec<i32>
@@ -81,9 +90,14 @@ But the inference is deliberately *local*. **Function signatures are never infer
 fn add(x: i32, y: i32) -> i32 { x + y }
 ```
 
-This is a hard rule, and it is a design choice, not a limitation of the algorithm. OCaml will happily infer the type of `let add x y = x + y` across the whole module. Rust refuses at the function boundary so that (a) type errors stay local and produce comprehensible messages instead of cascading across files, and (b) the public API of a function is documented and stable regardless of its body. The cost is a few annotations; the payoff is that inference within a body can be aggressive precisely because the boundaries are pinned.
+This is a hard rule, and it is a design choice, not a limitation of the algorithm. OCaml will happily infer the type of `let add x y = x + y` across the whole module. Rust deliberately stops at the function boundary so that (a) type errors stay local and produce comprehensible messages instead of cascading across files, and (b) the public API of a function is documented and stable regardless of its body — much like Swift and Java, where method signatures are always spelled out even though locals can be inferred. The cost is a few annotations; the payoff is that inference within a body can be aggressive precisely because the boundaries are pinned.
 
-> **🎓 Tripos link →** *Foundations of Computer Science.* This is Hindley–Milner with the let-generalisation scoped to the function body and the principal type at each `fn` boundary fixed by annotation rather than inferred. Unlike the global unification you saw in OCaml, Rust solves a constraint set per function, seeded by the signature. The inference is also influenced *backwards* by later use (note how `let guess: u32 = "42".parse().unwrap();` lets `parse` pick its return type from the annotation) — that's unification flowing both directions, not C-style forward-only declaration.
+> **🔧 In practice →** The fact that inference flows *backwards* from how you use a value — not just forwards from where it's created — is what makes `.collect()` and `.parse()` pleasant. You write the target type once on the binding and the method figures out what to produce:
+> ```rust
+> let port: u16 = "8080".parse().unwrap();          // parse() reads u16 off the annotation
+> let names: Vec<String> = rows.iter().map(|r| r.name.clone()).collect();
+> ```
+> Without the annotation on `port`, Rust can't tell *which* `parse` you meant (parse to `u16`? `i64`? `f32`?) and asks you to say. So the rule of thumb: annotate the binding, and let the call site infer the rest. This is the same "the variable's declared type steers the call" idea you've used with Swift's `let x: Int = ...` and Java's explicit target types.
 
 ## Scalar types: sized, explicit, non-coercing
 
@@ -95,11 +109,11 @@ This is a hard rule, and it is a design choice, not a limitation of the algorith
 | Boolean | `bool` (1 byte) | `_Bool` | only `true`/`false`, no int coercion |
 | Character | `char` (4 bytes) | — | a Unicode scalar, not a C `char` |
 
-Three things that will bite C and OCaml muscle memory:
+Three things that will bite muscle memory built on Java, Swift, or Python:
 
-**Sizes are in the name.** There is no implementation-defined `int`. `i32` is 32 bits everywhere. `isize`/`usize` are pointer-width (the moral equivalent of `ptrdiff_t`/`size_t`), and indexing a collection yields a `usize` — using a different width as an index is a type error, not a silent conversion.
+**Sizes are in the name.** There is no implementation-defined `int`. `i32` is 32 bits everywhere — closer to Java's guaranteed-width `int`/`long` than to C's wobbly `int`. `isize`/`usize` are pointer-width, and indexing a collection yields a `usize` — using a different width as an index is a type error, not a silent conversion. (Swift's `Int` and `Array` index type `Int` is the nearest cousin: an explicit width tied to the platform.)
 
-**No implicit numeric coercion. None.** This is the single biggest break from C's arithmetic. `let x: i64 = some_i32;` does not compile; you must write `some_i32 as i64` or `i64::from(some_i32)`. C's integer-promotion and the entire usual-arithmetic-conversions ritual simply do not exist. Mixing an `i32` and a `u8` in `+` is a compile error. The reason is the invariant again: silent widening/narrowing is a classic source of bugs (sign flips, truncation), so Rust forces the conversion to be written, where it is auditable.
+**No implicit numeric coercion. None.** This is the single biggest surprise if you're used to Java, Swift, or Python. `let x: i64 = some_i32;` does not compile; you must write `some_i32 as i64` or `i64::from(some_i32)`. Java will silently widen an `int` to a `long` for you; Swift makes you write `Int64(x)` (so Swift will already feel familiar here); Python just promotes everything to arbitrary-precision integers. Rust takes the strict-Swift stance and applies it everywhere: mixing an `i32` and a `u8` in `+` is a compile error. The reason is the invariant again: silent widening/narrowing is a classic source of bugs (sign flips, truncation), so Rust forces the conversion to be written, where it is auditable.
 
 ```rust
 let a: i32 = 1000;
@@ -148,32 +162,32 @@ A `char` is **4 bytes** and holds exactly one Unicode scalar value (any code poi
 
 ## Compound types: tuples and fixed arrays
 
-**Tuples** are anonymous, fixed-arity, heterogeneous products — straight out of OCaml:
+**Tuples** are anonymous, fixed-size, mixed-type groupings — the same idea as Swift's `(Int, Double, UInt8)` tuples or Python's `(500, 6.4, 1)`, but with the element types fixed at compile time:
 
 ```rust
 let t: (i32, f64, u8) = (500, 6.4, 1);
-let (x, y, z) = t;        // destructuring let
-let first = t.0;          // positional access via .N
+let (x, y, z) = t;        // destructuring let — like Swift/Python tuple unpacking
+let first = t.0;          // positional access via .N (Swift uses .0 too)
 ```
 
-The empty tuple `()` is the **unit type**, and it matters enormously — it is Rust's "no meaningful value," the type of an expression evaluated for effect. (OCaml's `unit`, exactly.) We'll lean on it the moment we discuss expressions below.
+The empty tuple `()` is the **unit type**, and it matters enormously — it is Rust's "no meaningful value," the type of an expression evaluated only for its effect. Think Swift's `Void` (which is literally a typealias for the empty tuple `()`) or the implicit `None`-returning function in Python. We'll lean on it the moment we discuss expressions below.
 
-**Arrays** `[T; N]` are fixed-length, stack-allocated, homogeneous — like C arrays but with the length as part of the type:
+**Arrays** `[T; N]` are fixed-length, stack-allocated, same-type-throughout — closest to Java's `int[]` or Swift's `Array`, except the length `N` is baked into the *type* and they can't grow:
 
 ```rust
 let xs: [i32; 5] = [1, 2, 3, 4, 5];
 let zeros = [0u8; 16];    // [value; count]: sixteen zero bytes
 ```
 
-The crucial delta from C: **indexing is bounds-checked.** `xs[10]` does not read adjacent memory; it *panics* with `index out of bounds: the len is 5 but the index is 10`. When the index is a compile-time constant the check is elided; when it comes from runtime data the check happens at runtime. This is the array-out-of-bounds half of "memory safety" made concrete — Rust traps instead of letting you stroll off the end the way C does. The compiler cannot know a user-supplied index in advance, so it inserts a guard; safety beats the saved comparison.
+The crucial point: **indexing is bounds-checked.** `xs[10]` does not read adjacent memory; it *panics* with `index out of bounds: the len is 5 but the index is 10`. This is the same safety net you get from Java's `ArrayIndexOutOfBoundsException`, Swift's array trap, or Python's `IndexError` — Rust just calls it a *panic*. When the index is a compile-time constant the check is elided; when it comes from runtime data the check happens at runtime. The difference from a hand-written C array, where reading past the end silently scribbles over (or reads) whatever memory is next door, is exactly the "memory safety" guarantee made concrete. The compiler cannot know a user-supplied index in advance, so it inserts a guard; safety beats the saved comparison.
 
 For a growable, heap-backed sequence you want `Vec<T>`, and for a borrowed *view* into either an array or a `Vec` you want a *slice* `&[T]` — these, and why `[T; N]` / `Vec<T>` / `&[T]` form a family, are the subject of [slices and the owned/borrowed duality](05-slices-and-duality.md).
 
-> **🦀 From your toolbox →** `[T; N]` is C's `T arr[N]` with the length promoted into the type (so `[i32; 4]` and `[i32; 5]` are *distinct types* and a function taking one rejects the other — unlike C, where arrays decay to bare pointers and lose their length at the first opportunity). The decay-to-pointer move has no equivalent; Rust keeps the length, which is exactly what makes bounds checks and the `for x in arr` loop below possible.
+> **🦀 From your toolbox →** Unlike Java's `int[]` or Swift's `Array` — where the length is a runtime property of the object — Rust folds the length into the *type*. So `[i32; 4]` and `[i32; 5]` are genuinely *distinct types*, and a function taking `[i32; 4]` flatly rejects a `[i32; 5]`. (Java and Swift would accept any `int[]`/`[Int]` and discover a length mismatch only at runtime, if at all.) Where the analogy breaks down: in C, a bare array hands its length away the instant you pass it — it becomes just a pointer to the first element, and the size is lost. Rust never does that; it keeps the length attached, which is precisely what makes the bounds checks and the `for x in arr` loop below possible. If you've only met C's "arrays are really pointers" rule as a footgun, Rust's stance is "the length is part of who you are."
 
 ## The big one: Rust is expression-oriented
 
-If you internalise one thing from this chapter, make it this. Like OCaml and unlike C/Java, **almost everything in Rust is an expression that evaluates to a value.** Blocks, `if`, `match`, and `loop` all produce values. The distinction Rust draws is:
+If you internalise one thing from this chapter, make it this. Unlike Java or Python — where `if`, loops, and blocks are *statements* that produce nothing — **almost everything in Rust is an expression that evaluates to a value.** This will feel most familiar from Swift, where `switch` and `if` can be used as expressions, and from OCaml, where it's the whole language. Blocks, `if`, `match`, and `loop` all produce values. The distinction Rust draws is:
 
 - **Statements** perform an action and evaluate to nothing (`let y = 6;` is a statement; a `fn` definition is a statement).
 - **Expressions** evaluate to a value (`5 + 6`, a function call, a macro call, a block `{ … }`).
@@ -184,7 +198,7 @@ A `let` binding is a *statement*, and it does **not** itself evaluate to a value
 // let x = (let y = 6);  // error: expected expression, found `let` statement
 ```
 
-This is the opposite of C, where assignment is an expression returning the assigned value (the source of `if (x = 0)` bugs). Rust amputates that footgun by making `let` a statement.
+This is the opposite of Java and C, where assignment is itself an expression returning the assigned value — the source of the classic `if (x = 0)` typo (you meant `==`). Rust removes that footgun entirely by making `let` a statement, so `if x = 0` simply doesn't parse.
 
 ### Blocks evaluate to their trailing expression
 
@@ -199,7 +213,7 @@ let y = {
 
 The semicolon is the pivotal piece of punctuation in Rust, and it does the opposite of what it does in C. A trailing semicolon **discards** the value and turns the expression into a statement whose value is `()`. Drop the semicolon and the expression's value becomes the block's value. This rule unifies `let x = { … }` with function return below.
 
-> **🎓 Tripos link →** *Semantics of Programming Languages.* In big-step operational semantics, a Rust block is `⟨e₁; e₂; …; eₙ⟩` where the value of the whole is the value of `eₙ`. A trailing semicolon is the rule `e ; ⤳ ()` — it sequences `e` for its side effects and yields unit. This is precisely OCaml's `e1; e2` sequencing, where `e1 : unit`, generalised: in Rust *every* non-final statement is implicitly forced to type-check as a statement, and the type of the block is the type of its tail expression (or `()` if there is none).
+> **🎓 Tripos link →** *Semantics of Programming Languages* — the intuition, no formalism. Read a block top to bottom: each line that ends in a semicolon is run for its effect and then thrown away (its value becomes `()`); the final line, if you leave the semicolon off, *is* the block's value. That's the whole rule. If you've used OCaml, it's the `e1; e2` sequencing you already know — run `e1` for effect, hand back `e2` — just generalised to a stack of statements followed by one tail expression. The mental model to carry: **semicolon = "and then discard"; no semicolon on the last line = "this is the answer."**
 
 ### Functions return their tail expression
 
@@ -226,7 +240,7 @@ fn classify(n: i32) -> &'static str {
 
 A function with no `->` returns `()` implicitly — that is what `main` and `fn another()` do. This is why `()` is not a curiosity: it is the value of every "void" function and every semicolon-terminated block.
 
-**No function overloading.** Unlike C++ and Java, you cannot define two functions with the same name and different parameter types. Names are unique within a scope; the polymorphism you'd reach for overloading to express is done with *generics* and *traits* instead (see [generics and traits](08-generics-and-traits.md)). And there is no `void f(int) {}` vs `void f(float) {}` — one name, one function.
+**No function overloading.** Unlike Java, Swift, or C++ — where you can write `f(int)` and `f(float)` as two functions sharing a name — Rust lets a name refer to exactly one function within a scope. The "same operation, many types" need that you'd solve with overloading (or with Java/Swift method overloads) is met instead by *generics* and *traits* (see [generics and traits](08-generics-and-traits.md)). One name, one function; the polymorphism moves into the type parameters.
 
 ## Control flow as expressions
 
@@ -252,7 +266,22 @@ let result = loop {
 };                                            // result == 20
 ```
 
-This is the idiomatic "retry until success, then hand the result back" construct — there is no equivalent in C, where `break` is value-less. (`while` and `for` do *not* yield values this way; their type is always `()`, because they may run zero times and there'd be no value to produce.)
+This is the idiomatic "retry until success, then hand the result back" construct — there's no direct equivalent in Java, Swift, or Python, where `break` carries no value and you'd need a mutable variable declared *outside* the loop plus a flag. (`while` and `for` do *not* yield values this way; their type is always `()`, because they may run zero times and there'd be no value to produce.)
+
+> **🔧 In practice →** This is the clean way to write a retry-with-backoff. Say you're polling a flaky service and want the response back once it succeeds, without a mutable `result` variable hanging around afterwards:
+> ```rust
+> let mut attempt = 0;
+> let response = loop {
+>     attempt += 1;
+>     match try_fetch() {
+>         Ok(body) => break body,                 // hand the success out of the loop
+>         Err(_) if attempt < 5 => continue,      // try again
+>         Err(e) => break_on_giving_up(e),        // (or break with a fallback)
+>     }
+> };
+> // `response` is now a plain, immutable binding holding the value the loop produced
+> ```
+> Compare the Java/Swift shape: declare `String response = null;` before the loop, mutate it inside, and hope every path sets it. Rust's `break body` makes the loop itself the expression that produces `response`, so the binding can stay immutable and there's no "did I forget to assign it?" gap.
 
 ### `while` is the conditional loop
 
@@ -309,7 +338,7 @@ let label = match n {
 };
 ```
 
-> **🎓 Tripos link →** *Foundations of Computer Science.* This is OCaml's `match … with` — including the exhaustiveness analysis. The C `switch` is the false friend: it has fall-through, no exhaustiveness guarantee, and operates only on integers/enums. Rust's `match` is a total function from the matched value's type to the result type, and the compiler discharges the proof of totality (Curry–Howard: the wildcard `_` is the case that makes the function total). Forget a variant of an `enum` and you get a compile error, not a silent default.
+> **🎓 Tripos link →** *Foundations of Computer Science.* This is OCaml's `match … with`, exhaustiveness check and all — and it's the close cousin of Swift's `switch`, which also forces you to handle every case (or write `default`). The false friend is Java's / C's `switch`: it falls through unless you `break`, makes no promise that you covered every case, and works only on a handful of types. Rust's `match` insists that *some* arm fires for every possible value — the wildcard `_` is how you say "everything else." Forget a variant of an `enum` and you get a compile error, not a silent fall-through to nothing. The plain takeaway: the compiler turns "did I handle every case?" from a code-review worry into a guarantee.
 
 ## Comments and a note on `println!`
 
@@ -327,20 +356,33 @@ You have seen `println!("{x}")`. The trailing `!` means it is a **macro**, not a
 
 ## Exercises
 
-1. Predict the compiler's verdict, then check: `let mut s = "hi"; s = s.len();`. What error code, and why is `mut` the wrong tool? Rewrite it so it compiles.
-2. Write `fn abs_diff(a: i32, b: i32) -> i32` *without* using `return` and without an explicit `if … return`. Now add a single semicolon somewhere in the body that makes it fail to compile, and state the exact error message you expect.
-3. (★) Without running it, give the value and type of each `let` below, or mark it a compile error and name the cause:
+These go a little beyond what the chapter spelled out — most ask you to *predict* what the compiler will say, *adapt* an idea to a new shape, or *choose* between two tools and justify it.
+
+1. **Which of these compile, and why?** For each line decide whether it's accepted or rejected, and name the rule in play. (Assume each is its own `main`.)
    ```rust
-   let a = { let x = 2; x * x };
-   let b = if a > 3 { a } else { "small" };
-   let c = loop { break a + 1; };
-   let d = { 7; };
+   let a = if true { 1 } else { 2 };          // (i)
+   let b = if true { 1 };                      // (ii)
+   let c: i64 = 5_i32;                          // (iii)
+   let d = 5_i32 + 5_i64;                       // (iv)
+   let e = if 1 { "yes" } else { "no" };        // (v)
    ```
-4. `let big: u8 = 200; let sum = big + big;` — describe what happens in a debug build vs a `--release` build, and rewrite the line three ways using the explicit overflow-method families so that (a) it clamps, (b) it signals failure, (c) it wraps deliberately.
-5. Rewrite this index loop as an idiomatic `for`, and explain in one sentence what runtime work the compiler is now free to omit:
+   For the ones that fail, what's the one-line fix that keeps the obvious intent?
+
+2. **`mut` vs shadowing — a design call.** You're cleaning a user-supplied string: trim it, then later you also need its length as a number. Sketch the bindings two ways — once with `let mut`, once with shadowing — and say which you'd ship and why. (Hint: think about what type the final binding has, and whether anything downstream could still reach the raw, un-trimmed string.)
+
+3. **Predict the overflow behaviour.** Given `let big: u8 = 200;`, state what happens for each of the following in a *debug* build and in a `--release` build, and pick which one you'd actually write if the value is a running byte counter that should stop counting once it maxes out (and say why):
+   ```rust
+   let x = big + big;                 // (a)
+   let y = big.wrapping_add(big);     // (b)
+   let z = big.saturating_add(big);   // (c)
+   let w = big.checked_add(big);      // (d)  — what's the type of `w`?
+   ```
+
+4. **Adapt the loop, then explain the speedup.** Rewrite the index loop below as an idiomatic `for`, then explain in one sentence what runtime work the `for` version lets the compiler skip that the indexed version forces it to do on *every* iteration.
    ```rust
    let v = [3, 1, 4, 1, 5];
    let mut i = 0;
    while i < v.len() { println!("{}", v[i]); i += 1; }
    ```
-6. (★) Using a labeled `loop`, write a search over a 2-D array `[[i32; 4]; 4]` that, on finding the first element greater than 10, breaks out of *both* loops and binds that element to a `let` outside the loops. (Hint: combine a loop label with `break`'s value-carrying form. Why can't you do this with `for`?)
+
+5. (★) **When does `loop`-with-value beat `while`?** You want to read lines until you hit one that parses as a positive integer, and bind *that integer* to an immutable variable for the rest of the function. Write it with a `loop` that uses `break value`. Then describe the shape you'd be stuck with if you tried the same thing with `while` (what extra variable would you need, and what guarantee would you lose?). Bonus: why can a `for` loop never stand in for this `break value` pattern?

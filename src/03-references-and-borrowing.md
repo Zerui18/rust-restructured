@@ -2,7 +2,7 @@
 
 [Ownership](02-ownership-and-moves.md) gave us a destructive default: passing a value by value *moves* it, and the source name is invalidated. That is exactly right for transferring responsibility for a resource, and exactly wrong for the overwhelmingly common case where a function just wants to *look at* — or *temporarily mutate* — a value it has no intention of keeping. Threading ownership in and then back out by return value (the tuple-juggling you saw at the end of module 02) is intolerable as a calling convention.
 
-The fix is **borrowing**: creating a *reference* to a value without taking ownership of it. A reference is a non-owning pointer. Crucially, Rust attaches a static discipline to references — *aliasing XOR mutability* — that turns the reference type into a machine-checked proof of two distinct safety properties at once: freedom from data races and freedom from iterator invalidation. This is the chapter where Rust stops looking like a careful C++ and starts looking like nothing you have used before.
+The fix is **borrowing**: creating a *reference* to a value without taking ownership of it. A reference is a non-owning pointer. Crucially, Rust attaches a static discipline to references — *aliasing XOR mutability* — that turns the reference type into a machine-checked guarantee of two distinct safety properties at once: freedom from data races and freedom from iterator invalidation. This is the chapter where Rust stops looking like a careful C++ and starts looking like nothing you have used before.
 
 ## References are pointers with a verb attached
 
@@ -22,7 +22,7 @@ fn main() {
 
 The function signature `s: &String` is a *contract*: "I will read your `String`, I will not keep it, give it back when I'm done." When `s` goes out of scope at the closing brace, only the reference is dropped — there is nothing to free, because the reference is not the owner. That single fact is what eliminates the return-the-value-back dance.
 
-> **🦀 From your toolbox →** A `&T` is morally a C++ `const T&` and a `&mut T` is a `T&`. The analogy is *load-bearing only for the data layout* — both are just addresses, identical to a `const T*` / `T*` at the ABI level (a non-null, aligned, dereferenceable pointer). It breaks down completely on guarantees. A C++ `T&` promises nothing: you can have a dozen mutable references to the same object live at once, alias them through raw pointers, and read one while writing another. Rust's references carry a compiler-enforced exclusivity invariant that C++ references do not have, do not check, and cannot express. Equally: a `&T` is *not* a Swift `inout` (that is closer to `&mut`), and it is *not* an OCaml `ref` cell (that is a heap-allocated mutable box, i.e. interior mutability — see [smart pointers](15-smart-pointers.md)).
+> **🦀 From your toolbox →** The closest bridge is Swift's `inout`, but it lines up with `&mut`, not `&`. When you write `func bump(_ n: inout Int)` and call `bump(&count)`, Swift passes a temporary writable handle to `count`, and the caller keeps the variable afterward — that is essentially a `&mut`. A plain `&T` (shared, read-only) has no direct Swift counterpart, because Swift's value types are copied when you pass them and its reference types (classes) are freely aliasable. In Java and Python, *every* object you pass is already passed by a shared, aliasable reference — so a `&T` feels familiar, but the analogy breaks down hard on the next rule: Java and Python place no limit on how many writable references to one object can be live at once, and Rust does. Hold that thought.
 
 ## The law: aliasing XOR mutability
 
@@ -62,9 +62,9 @@ let m = &mut s;         // error[E0502]: cannot borrow `s` as mutable because it
 println!("{r} {m}");
 ```
 
-> **🎓 Tripos link →** From *Concurrent and Distributed Systems*: a **data race** is concurrent access to a shared location where at least one access is a write and there is no synchronisation. The aliasing-XOR-mutability law is precisely the negation of that definition applied at every program point, including single-threaded ones. If only shared references are live, every access is a read — no race. If a `&mut` is live, the law guarantees it is the *only* path to that value — no aliasing, so no race. Rust lifts a runtime concurrency hazard into a static invariant of the type system. We will see in [fearless concurrency](13-fearless-concurrency.md) that this is not an analogy but the actual mechanism: the `Send`/`Sync` traits build directly on the fact that `&mut T` is unaliased, so "no data races at compile time" is a *theorem*, not a slogan.
+> **🎓 Tripos link →** From *Concurrent and Distributed Systems*: a **data race** is concurrent access to a shared location where at least one access is a write and there is no synchronisation. The aliasing-XOR-mutability law is precisely the negation of that situation, enforced at every program point — even single-threaded ones. If only shared references are live, every access is a read, so there is nothing to race. If a `&mut` is live, the law guarantees it is the *only* path to that value, so there is no second accessor to race against. Rust takes a hazard you normally only catch at runtime (or never) and turns it into something the compiler refuses to let you write. We will see in [fearless concurrency](13-fearless-concurrency.md) that this is not just an analogy: the `Send`/`Sync` machinery builds directly on the fact that a live `&mut T` is unaliased, which is how "no data races" becomes a compile-time guarantee rather than a hope.
 
-The same law also kills **iterator invalidation** — a single-threaded bug that has nothing to do with concurrency. In C++, `v.push_back(x)` may reallocate the backing buffer and dangle every outstanding iterator and pointer into `v`; the standard says it's UB and the compiler says nothing. Rust forbids it structurally:
+The same law also kills **iterator invalidation** — a single-threaded bug that has nothing to do with concurrency. In C++, `v.push_back(x)` may reallocate the backing buffer and dangle every outstanding iterator and pointer into `v`; the standard says it's undefined behaviour and the compiler says nothing. (Java and Python catch the analogous "modified the list while iterating it" bug, but only at runtime — `ConcurrentModificationException` or surprising skipped elements.) Rust forbids it structurally, at compile time:
 
 ```rust
 let mut v = vec![1, 2, 3];
@@ -75,7 +75,22 @@ println!("{first}");
 
 `Vec::push` has signature `fn push(&mut self, _)`, so calling it requires a `&mut v`. But `first` is a live `&v[0]`. Mutable-while-shared is illegal, so the program does not compile — the very same rule, the very same error code, defending against a completely different failure mode. *Aliasing XOR mutability* is the single invariant from which both data-race-freedom and pointer-stability fall out.
 
-> **⚙️ Under the hood →** Because a live `&mut T` is provably the *only* live access path to its referent, rustc can hand LLVM the `noalias` attribute on `&mut` parameters — the equivalent of decorating every `&mut` argument with C's `restrict`, but soundly and automatically. The optimiser may keep the pointee in a register across calls, reorder loads/stores around it, and skip reloads, because no other pointer can touch that memory. Hand-written C earns `restrict` only where the programmer swears an aliasing oath the compiler cannot verify; Rust earns it everywhere `&mut` appears, for free, with a proof.
+> **🔧 In practice →** This is the rule you will trip over the very first time you write a loop that edits a collection. Say you are scanning a `Vec<Job>` and want to add a retry job whenever you find a failed one:
+> ```rust
+> for job in &jobs {            // &jobs is a live shared borrow for the whole loop
+>     if job.failed {
+>         jobs.push(retry_of(job)); // E0502: needs &mut jobs while &jobs is live
+>     }
+> }
+> ```
+> The borrow checker stops you because growing `jobs` could reallocate and dangle the very `job` reference you're holding — exactly the iterator-invalidation crash that bites you at runtime in Java or Python. The idiomatic fix is to collect the new work first, then apply it once the read-only borrow has ended:
+> ```rust
+> let retries: Vec<Job> = jobs.iter().filter(|j| j.failed).map(retry_of).collect();
+> jobs.extend(retries);        // no live borrow of jobs here — fine
+> ```
+> You will reach for this "gather-then-mutate" shape constantly; the compiler is naming a real bug, not nagging.
+
+> **⚙️ Under the hood →** Because a live `&mut T` is provably the *only* live access path to its referent, rustc can hand LLVM the `noalias` attribute on `&mut` parameters — the equivalent of decorating every `&mut` argument with C's `restrict`, but soundly and automatically. The optimiser may keep the pointee in a register across calls, reorder loads/stores around it, and skip reloads, because no other pointer can touch that memory. Hand-written C earns `restrict` only where the programmer swears an aliasing oath the compiler cannot verify; Rust earns it everywhere `&mut` appears, for free.
 
 ## Non-lexical lifetimes: a borrow ends at its last use
 
@@ -105,7 +120,7 @@ fn main() {
 }
 ```
 
-> **🎓 Tripos link →** This is exactly the dataflow framework from *Compiler Construction* and the *region* discipline from *Semantics of Programming Languages*. Each borrow is assigned a *region* (a set of CFG points) constrained so the borrow's region covers every path from its introduction to each use. The checker proves the program well-typed iff no two regions violate the aliasing-XOR-mutability constraint where they overlap. "Last use" is just liveness analysis: a borrow is dead once it is no longer live in the standard backward-flow sense. The earlier, purely lexical checker (pre-2018) was a strictly weaker approximation that rejected sound programs; NLL is the same soundness theorem with a tighter region inference.
+> **🎓 Tripos link →** The "when does a borrow end" question is exactly the **liveness analysis** you meet in *Compiler Construction*: a variable (here, a borrow) is *live* at a program point if its value will still be used on some path forward, and *dead* once its last use is behind it. NLL is that backward dataflow applied to borrows — each borrow gets a region covering every path from where it's created to each place it's used, and the checker only complains where two such regions overlap in a forbidden way. The earlier, purely lexical checker (pre-2018) was a cruder approximation that ended every borrow at the closing brace, and so rejected perfectly safe programs that NLL now accepts.
 
 ## Shared references are `Copy`; `&mut` is not
 
@@ -154,13 +169,15 @@ fn dangle() -> &String {   // error[E0106]: missing lifetime specifier
 }
 ```
 
-The compiler's reasoning: the return type is a borrowed `&String`, but it can only borrow from something that outlives the call, and the only candidate is `s`, which dies when the function returns. There is no valid lender, so the program is ill-typed. The fix is to return the value by ownership — *move it out* — so the caller owns it and nothing is freed:
+The compiler's reasoning: the return type is a borrowed `&String`, but it can only borrow from something that outlives the call, and the only candidate is `s`, which dies when the function returns. There is no valid lender, so the program is rejected. The fix is to return the value by ownership — *move it out* — so the caller owns it and nothing is freed:
 
 ```rust
 fn no_dangle() -> String {
     String::from("local")  // ownership moves to the caller; no deallocation
 }
 ```
+
+> **🔧 In practice →** This is the single most reassuring guarantee Rust gives you, and it pays off the moment you port habits from another language. In Swift, ARC keeps an object alive as long as *some* reference points at it; in Java, the garbage collector does the same; in Python, reference counting plus a cycle collector. All three keep your program from reading freed memory — but at the cost of a runtime collector and non-deterministic cleanup timing. Rust reaches the same safety with *zero* runtime machinery: the borrow checker proves at compile time that no reference can outlive what it points at, so cleanup happens at a known point (the end of the owner's scope) and a dangling pointer is simply not a program you can write. Concretely, if you find yourself writing a helper like `fn first_word(&self) -> &str` that hands back a slice into your own buffer, the compiler guarantees the caller can't hold that slice past the buffer's life — so you can expose internal views safely instead of defensively copying the way you might in Java or Swift.
 
 > **⚠️ Pitfall →** The error `E0106: missing lifetime specifier` is one of the first walls every newcomer hits, and the message is initially baffling because it points at lifetimes rather than at the dangling pointer. The compiler genuinely cannot tell *which* input the output should borrow from (here: none), so it demands you name the relationship explicitly. When you see E0106 on a function that returns a reference built from a local, the diagnosis is almost always "you meant to return an owned value" — drop the `&` from the return type. When you *did* mean to return a borrow of an input, you need to annotate the connection. Both roads lead to [lifetimes](04-lifetimes.md), which is the entire subject of the next module; for now, internalise only that dangling is *impossible*, not merely *discouraged*.
 
@@ -195,7 +212,7 @@ fn main() {
 
 The same aliasing law governs receivers, which is why you cannot call a `&mut self` method on a value you are simultaneously borrowing immutably — that is the `Vec::push` case from earlier, dressed as method-call syntax. `self` (by-value) is reserved for builder-style consuming transforms and conversions (`into_*`); reach for it only when the operation logically destroys or transforms-away the original. We cover defining these in [structs and methods](06-structs-and-methods.md).
 
-> **🦀 From your toolbox →** This is C++'s `const`/non-`const`/by-value member function distinction (`u32 value() const`, `void bump()`, `u32 into_inner() &&`), and the parallel is unusually tight — `&self` ≈ `const`-qualified, `self` ≈ rvalue-ref-qualified `&&` consuming method. Where it breaks: a C++ non-`const` method gives you no exclusivity, so two callers can interleave mutations through aliasing references with no diagnostic; and `const` in C++ is shallow and castable-away (`const_cast`), whereas `&self` exclusivity is enforced globally and cannot be subverted in safe code. Also note `self`-by-value *moves* and statically poisons the caller's binding — there is no C++ equivalent of the compiler then *forbidding* later use of the moved-from object.
+> **🦀 From your toolbox →** In Java you signal "this method only reads" by convention or by `final` fields; in Swift you mark a method `mutating` when it changes a value-type's stored properties, and leave it unmarked when it only reads. Rust's `&self` vs `&mut self` makes that distinction *explicit in the type and enforced*: a `&self` method is Swift's non-`mutating`, a `&mut self` method is Swift's `mutating`, and Swift's compiler even forbids calling a `mutating` method through a `let` — which is almost exactly Rust forbidding `c.bump()` when `c` isn't `mut`. Where Rust goes further than all three: `self`-by-value methods (like `into_inner`) *consume* the receiver, and the compiler then forbids any later use of the moved-from binding. Java and Python have no equivalent — the object lives on, garbage-collected whenever — and Swift's value semantics copy rather than poison the original. The C++ touch, if you want one: `&self` is like a `const` method and `self`-by-value is like a method that's allowed to gut its receiver, but unlike C++ `const`, Rust's read-only promise can't be cast away.
 
 ## A subtlety: borrows can be disjoint
 
@@ -226,34 +243,30 @@ This *disjoint-field* (or "split") borrowing is essential in practice and is why
 
 ## Exercises
 
-1. Predict the exact error code before compiling, then check:
+1. **Predict the error, name the receiver.** Before compiling, say which line fails and with which error code, then explain in one sentence *why* — naming the receiver type that `push` requires:
    ```rust
    let mut s = String::from("x");
    let r = &s;
    s.push('y');
    println!("{r}");
    ```
-   Explain in one sentence why `push` is the offending call, naming its receiver type.
+   Now: would deleting the final `println!("{r}")` line make it compile? Answer using the NLL rule about when `r`'s borrow ends.
 
-2. The following *fails* lexically but you can make it compile by moving exactly one line, changing nothing else. Do it, and state which NLL property your edit relies on.
+2. **Which compile, and why?** Three sibling functions claim to read a `Counter` and return its value. Decide which compile and which don't, *without* running them, and give the one-line reason for each:
    ```rust
-   let mut v = vec![10, 20];
-   let head = &v[0];
-   v.push(30);
-   println!("{head}");
+   fn a(c: &Counter) -> u32 { c.value() }
+   fn b(c: &Counter) -> u32 { c.bump(); c.value() }     // bump is &mut self
+   fn d(c: Counter)  -> u32 { let v = c.value(); v }
    ```
+   For the one that fails, state the minimal change to its *signature* that fixes it, and what that change forces on every caller.
 
-3. Write a function `swap_fields(p: &mut Pair)` for the `Pair` struct above that swaps `left` and `right` in place. Then explain why you do *not* need two `&mut` borrows to do it, and what would happen to the disjoint-field example if you tried to call `swap_fields(&mut p)` while `a` (a `&mut p.left`) was still live.
+3. **Design decision: `&mut self` vs `self`.** You are writing a `StringBuilder` with an `append(...)` method. Sketch the two receiver choices — `fn append(&mut self, part: &str)` versus `fn append(self, part: &str) -> Self` — and decide which you would ship. State one concrete calling pattern that each style makes pleasant and the other makes awkward. (Hint: think about chaining `b.append("a").append("b")` versus reusing `b` in a loop.)
 
-4. (★) `&mut T` is not `Copy`, yet this compiles and prints `7`. Explain precisely, in terms of reborrowing and which binding is "frozen" when, why it is sound:
+4. **Adapt the disjoint-borrow rule.** The two-field split borrow compiles. Predict what happens if you change `Pair` to hold its data in an array, `struct Pair { vals: [i32; 2] }`, and try:
    ```rust
-   fn add(n: &mut i32, k: i32) { *n += k; }
-   let mut x = 0;
-   let r = &mut x;
-   add(r, 3);
-   add(r, 4);
-   println!("{}", *r);
+   let a = &mut p.vals[0];
+   let b = &mut p.vals[1];
    ```
-   Then change the second call to `let r2 = r; add(r2, 4);` and explain why *that* moves while the call form did not.
+   Will the borrow checker accept it? Explain *why* the array case differs from the named-field case in terms of what the checker can and cannot "see," and name the helper you'd reach for to split the array soundly.
 
-5. (★) Without using `unsafe`, write a function that *attempts* to return a reference to a `String` it computes internally, observe the E0106 error, and then produce **two** different fixes: one that returns an owned `String`, and one that takes the storage as a `&mut` out-parameter and returns `()`. Argue which design you would ship and why, referencing the cost model from [ownership](02-ownership-and-moves.md).
+5. (★) **Two fixes, one shipping decision.** Write a function that tries to return a reference to a `String` it builds internally, observe the E0106 error, then produce **two** working designs: one that returns an owned `String`, and one that takes a `&mut String` out-parameter and writes into it (returning `()`). Argue which you would ship, referencing the cost model from [ownership](02-ownership-and-moves.md) — and name one realistic situation (e.g. filling a reused buffer inside a hot loop) where the *less obvious* design actually wins.

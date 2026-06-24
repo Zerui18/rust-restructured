@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -177,18 +177,18 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="15-smart-pointers--interior-mutability"><a class="header" href="#15-smart-pointers--interior-mutability">15. Smart Pointers &amp; Interior Mutability</a></h1>
-<p>A <em>smart pointer</em> is a struct that owns the data it points to, behaves like a pointer (you dereference it with <code>*</code>), and runs custom code when it dies. You know the idea cold: a smart pointer is to a raw pointer what C++’s <code>std::unique_ptr&lt;T&gt;</code> and <code>std::shared_ptr&lt;T&gt;</code> are to <code>T*</code> — RAII, with ownership of a resource tied to a stack object’s lifetime and the destructor releasing it.</p>
+<p>A <em>smart pointer</em> is a struct that owns the data it points to, behaves like a pointer (you dereference it with <code>*</code>), and runs custom code when it dies. The core idea is the same one Swift’s ARC gives you for free: an object’s storage is tied to a handle, and the handle’s lifetime decides when the storage is released. In Java you’d lean on the garbage collector for the “release” half; here a stack object’s scope drives cleanup deterministically, the way a destructor runs at the end of a scope in C++ — except the timing is exact and decided at compile time, not whenever a collector happens to run.</p>
 <p>What is <em>genuinely new</em> in Rust is not the pattern but how cleanly it composes with the type system. A reference (<code>&amp;T</code>, <a href="03-references-and-borrowing.html">borrowing</a>) borrows; a smart pointer typically <em>owns</em>. Two traits make a struct “smart”:</p>
 <ul>
 <li><code>Deref</code> (and <code>DerefMut</code>) — lets <code>*p</code> and method calls see through the wrapper to the inner <code>T</code>. This is the autoderef machinery from <a href="06-structs-and-methods.html">method resolution</a>.</li>
 <li><code>Drop</code> — the destructor, the deterministic cleanup hook from <a href="02-ownership-and-moves.html">ownership</a>.</li>
 </ul>
-<p>This chapter covers the four you will actually reach for — <code>Box&lt;T&gt;</code>, <code>Rc&lt;T&gt;</code>, <code>RefCell&lt;T&gt;</code>, <code>Weak&lt;T&gt;</code> — and the pattern that ties them together: <em>interior mutability</em>, the controlled escape hatch from Rust’s aliasing-XOR-mutability rule. The headline insight: <strong><code>RefCell</code> and <code>Rc</code> do not weaken the borrow rules; they move enforcement from compile time to run time.</strong> You trade a static guarantee for a dynamic one — paying in panics and atomic increments, not in undefined behaviour.</p>
+<p>This chapter covers the four you will actually reach for — <code>Box&lt;T&gt;</code>, <code>Rc&lt;T&gt;</code>, <code>RefCell&lt;T&gt;</code>, <code>Weak&lt;T&gt;</code> — and the pattern that ties them together: <em>interior mutability</em>, the controlled escape hatch from Rust’s aliasing-XOR-mutability rule. The headline insight: <strong><code>RefCell</code> and <code>Rc</code> do not weaken the borrow rules; they move enforcement from compile time to run time.</strong> You trade a static guarantee for a dynamic one — paying in panics and reference-count bumps, not in undefined behaviour.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> The C++ map is almost one-to-one: <code>Box&lt;T&gt;</code> ≈ <code>unique_ptr&lt;T&gt;</code>, <code>Rc&lt;T&gt;</code> ≈ <code>shared_ptr&lt;T&gt;</code> (but non-atomic), <code>Arc&lt;T&gt;</code> ≈ <code>shared_ptr&lt;T&gt;</code> (atomic), <code>Weak&lt;T&gt;</code> ≈ <code>weak_ptr&lt;T&gt;</code>, <code>RefCell&lt;T&gt;</code> ≈ a member marked <code>mutable</code> <em>plus</em> a runtime borrow flag C++ does not give you. Where it breaks down: C++’s <code>mutable</code>/<code>const_cast</code> mutate through a <code>const</code> reference with <strong>zero</strong> checking — you can alias-and-mutate freely and the UB is on you. <code>RefCell</code> checks the aliasing rule dynamically and <em>panics</em> rather than silently corrupting.</p>
+<p><strong>🦀 From your toolbox →</strong> Map these onto memory tools you already know. <code>Rc&lt;T&gt;</code> is Swift’s ARC, made explicit: a value with a count of strong owners, freed the instant the count hits zero — except you can <em>see</em> the count (<code>Rc::strong_count</code>) and you choose when sharing happens (<code>Rc::clone</code>). <code>Arc&lt;T&gt;</code> is the same thing but safe to share across threads, like an <code>@Sendable</code>-safe reference. Java gives you sharing too, but a garbage collector decides <em>when</em> the memory goes away; Rust frees it deterministically at a known point. Python’s <code>sys.getrefcount</code> object model is the closest mental match to <code>Rc</code>: an integer count that drops storage at zero. Where the analogy breaks down: Swift’s ARC and Python’s refcounting <em>also</em> let you mutate shared objects freely, because both languages accept the data-race risk; Rust splits sharing (<code>Rc</code>) from mutation (<code>RefCell</code>) so the aliasing rule survives. (A light C++ touch if you’ve seen it: <code>Rc</code>/<code>Arc</code>/<code>Weak</code> line up with <code>shared_ptr</code>/<code>shared_ptr</code>/<code>weak_ptr</code>.)</p>
 </blockquote>
 <h2 id="boxt-one-owner-on-the-heap"><a class="header" href="#boxt-one-owner-on-the-heap"><code>Box&lt;T&gt;</code>: one owner, on the heap</a></h2>
-<p><code>Box&lt;T&gt;</code> is the minimal smart pointer: it heap-allocates a <code>T</code>, stores the pointer on the stack, owns the allocation, and frees it on drop. No reference count, no runtime check — same cost model as <code>unique_ptr&lt;T&gt;</code>.</p>
+<p><code>Box&lt;T&gt;</code> is the minimal smart pointer: it heap-allocates a <code>T</code>, stores the pointer on the stack, owns the allocation, and frees it on drop. No reference count, no runtime check — just a single owned heap value with automatic cleanup.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let boxed: Box&lt;i32&gt; = Box::new(42);
@@ -202,7 +202,7 @@ println!("{}", *boxed); // 42 — deref reads through to the heap
 <li><strong>Cheap moves of large values</strong> — moving a <code>Box&lt;[u8; 1_000_000]&gt;</code> copies 8 bytes (the pointer), not a megabyte.</li>
 </ol>
 <h3 id="recursive-types-the-sizing-problem"><a class="header" href="#recursive-types-the-sizing-problem">Recursive types: the sizing problem</a></h3>
-<p>Consider a binary-tree node, the kind of sum type you wrote constantly in OCaml:</p>
+<p>Consider a binary-tree node, the kind of variant type you’d write as an <code>enum</code> in Swift or a <code>type</code> in OCaml:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>enum Tree {
@@ -210,7 +210,7 @@ println!("{}", *boxed); // 42 — deref reads through to the heap
     Branch(Tree, Tree), // does NOT compile
 }
 <span class="boring">}</span></code></pre>
-<p>The compiler must compute <code>size_of::&lt;Tree&gt;()</code> at compile time to lay the type out (monomorphisation needs concrete sizes). <code>Branch</code> contains two <code>Tree</code>s — the size equation <code>size(Tree) = size(i32) + 2 * size(Tree) + tag</code> has no finite solution.</p>
+<p>The compiler must compute <code>size_of::&lt;Tree&gt;()</code> at compile time to lay the type out. <code>Branch</code> contains two <code>Tree</code>s — the size equation <code>size(Tree) = size(i32) + 2 * size(Tree) + tag</code> has no finite solution.</p>
 <blockquote>
 <p><strong>⚠️ Pitfall →</strong> This is <code>error[E0072]: recursive type \</code>Tree` has infinite size<code>. rustc even suggests the fix: "insert some indirection (e.g., a </code>Box<code>, </code>Rc<code>, or </code>&amp;`)“. The point of indirection is that a pointer has a <em>fixed</em> size (8 bytes on a 64-bit target) regardless of what it points at. Box the recursive field:</p>
 </blockquote>
@@ -227,10 +227,13 @@ let t = Tree::Branch(
 );
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>⚙️ Under the hood →</strong> In OCaml every value is uniformly boxed — a variant is a tagged pointer, so recursion is free and you never think about it. Rust unboxes by default: an <code>enum</code> is laid out inline as a tag plus the largest variant, exactly like a tagged union in C. That is why <em>you</em> must insert the indirection. <code>size_of::&lt;Tree&gt;()</code> becomes <code>size_of</code> of the tag plus two <code>usize</code> pointers; the actual subtrees live on the heap, “next to one another” rather than nested inside one another.</p>
+<p><strong>⚙️ Under the hood →</strong> In Swift, a class instance is always a reference (a pointer behind the scenes), so a recursive class never has a sizing problem — you never think about it. An <code>indirect enum</code> in Swift adds exactly the boxing Rust forces you to write by hand. Rust unboxes by default: a plain <code>enum</code> is laid out inline as a tag plus the largest variant, like a tagged union in C. That is why <em>you</em> must insert the indirection. <code>size_of::&lt;Tree&gt;()</code> becomes the size of the tag plus two pointer-sized fields; the actual subtrees live on the heap, “next to one another” rather than nested inside one another.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> Foundations of Computer Science: an OCaml <code>type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree</code> is your <code>Box</code>ed enum, except OCaml’s runtime boxes silently. Compiler Construction: the inability to size a recursive non-indirected type is precisely why every real compiler represents recursive ADTs with pointers in its IR — Rust just makes the indirection a visible, named choice in the source.</p>
+<p><strong>🔧 In practice →</strong> You hit this the first time you model a real recursive shape — a JSON value, an expression tree for a small interpreter, a linked list. Say you’re writing a tiny calculator and parse <code>2 * (3 + 4)</code> into an AST: <code>enum Expr { Num(f64), Add(Box&lt;Expr&gt;, Box&lt;Expr&gt;), Mul(Box&lt;Expr&gt;, Box&lt;Expr&gt;) }</code>. The <code>Box</code> on each operand is what lets <code>Mul</code> hold an <code>Add</code> hold two <code>Num</code>s without the type being infinitely large, and <code>Box::new</code> is where each subtree gets its own heap slot. Drop the root and the whole tree frees itself bottom-up.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Foundations of Computer Science: the OCaml <code>type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree</code> you wrote there is your <code>Box</code>ed enum — OCaml’s runtime just does the boxing silently. Compiler Construction: the inability to size a recursive non-indirected type is exactly why every real compiler stores recursive ADTs as pointers in its intermediate representation. Rust makes that indirection a visible, named choice in the source instead of a runtime default.</p>
 </blockquote>
 <h2 id="deref-and-deref-coercion-making-a-wrapper-transparent"><a class="header" href="#deref-and-deref-coercion-making-a-wrapper-transparent"><code>Deref</code> and deref coercion: making a wrapper transparent</a></h2>
 <p>What makes <code>Box&lt;T&gt;</code> feel like a <code>T</code> rather than an opaque struct? The <code>Deref</code> trait. Implementing it lets you customise the unary <code>*</code> operator.</p>
@@ -263,7 +266,7 @@ greet(&amp;owned);  // &amp;String coerced to &amp;str via String: Deref&lt;Targ
 <span class="boring">}</span></code></pre>
 <p><code>&amp;owned</code> is <code>&amp;String</code>, but <code>String: Deref&lt;Target = str&gt;</code>, so <code>&amp;String → &amp;str</code> automatically. With a <code>Box&lt;String&gt;</code> it would chain twice: <code>&amp;Box&lt;String&gt; → &amp;String → &amp;str</code>. This is why APIs take <code>&amp;str</code> and <code>&amp;[T]</code> (the borrowed <a href="05-slices-and-duality.html">slice</a> forms) rather than <code>&amp;String</code> and <code>&amp;Vec&lt;T&gt;</code> — callers with the owned form get coerced for free, and callers with a literal <code>&amp;str</code> pay nothing.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> This is the autoderef chain from <a href="06-structs-and-methods.html">method resolution</a>, now generalised to function arguments. C++ has an analogue in <code>operator-&gt;</code> chaining and user-defined conversions, but C++ conversions are a notorious foot-gun (implicit, hard to predict, contribute to overload ambiguity). Rust’s coercion is deliberately narrow: it fires only across <code>Deref</code>/<code>DerefMut</code> impls, only on references, and only to reach a known target type — never to manufacture an arbitrary value.</p>
+<p><strong>🦀 From your toolbox →</strong> This is the autoderef chain from <a href="06-structs-and-methods.html">method resolution</a>, now generalised to function arguments. The closest thing you’ve used is Swift’s implicit bridging — passing a <code>String</code> where an <code>NSString</code> is wanted, or the way a subclass passes where a superclass is expected — and Java’s reference widening (a <code>String</code> flows into an <code>Object</code> parameter). The crucial difference is that Rust’s coercion is deliberately narrow: it fires only across <code>Deref</code>/<code>DerefMut</code> impls, only on references, and only to reach a known target type — never to manufacture a brand-new value out of thin air, so it can’t surprise you the way an implicit numeric conversion can.</p>
 </blockquote>
 <p>There are exactly three coercion directions, and the asymmetry is load-bearing:</p>
 <ul>
@@ -291,8 +294,11 @@ fn main() {
     let _a = Connection { id: 1 };
     let _b = Connection { id: 2 };
 } // prints "closing connection 2" then "closing connection 1"</code></pre>
-<p>Values drop in <strong>reverse order of declaration</strong> — <code>_b</code> before <code>_a</code> — because scopes nest like a stack. This matches C++ destructor ordering and the move-aware drop semantics from <a href="02-ownership-and-moves.html">ownership</a>: a value is dropped exactly once, at the end of its final owner’s scope, and a moved-from value is <em>not</em> dropped (the compiler statically tracks that its ownership left).</p>
-<p>Two rules that trip up C++ programmers:</p>
+<p>Values drop in <strong>reverse order of declaration</strong> — <code>_b</code> before <code>_a</code> — because scopes nest like a stack. This is the deterministic, move-aware drop from <a href="02-ownership-and-moves.html">ownership</a>: a value is dropped exactly once, at the end of its final owner’s scope, and a moved-from value is <em>not</em> dropped (the compiler statically tracks that its ownership left).</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> <code>Drop</code> is how you write a “this resource is released when this variable dies” guard, which in Java you’d express with <code>try-with-resources</code> and in Swift with a manual <code>defer</code> or a <code>deinit</code>. A file handle, a database connection from a pool, a held lock — wrap it in a type with a <code>Drop</code> impl and the cleanup is automatic at scope exit, even on an early <code>return</code> or a <code>?</code>-propagated error. The standard library’s <code>MutexGuard</code> works exactly this way: you <code>lock()</code>, use the data, and the lock releases the moment the guard leaves scope — no explicit <code>unlock()</code> to forget.</p>
+</blockquote>
+<p>Two rules to watch for:</p>
 <ul>
 <li><strong>You cannot call <code>.drop()</code> manually.</strong> <code>c.drop()</code> is <code>error[E0040]: explicit use of destructor method</code>. If Rust let you, it would still run the automatic drop at end of scope, producing a double-free — exactly the bug the ownership system exists to prevent.</li>
 <li><strong>To drop early, use the free function <code>std::mem::drop</code></strong> (in the prelude): <code>drop(c)</code>. It simply takes <code>c</code> <em>by value</em>, moving ownership in, and the value dies at the end of <code>drop</code>’s body. Because ownership moved, the compiler knows not to drop <code>c</code> again at end of scope.</li>
@@ -304,7 +310,7 @@ drop(c);                      // closes now
 // c is moved-out; not dropped again at scope end
 <span class="boring">}</span></code></pre>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> Programming in C and C++: this is RAII and the rule of “the destructor runs once, deterministically, at scope exit”. The delta from C++ is that the <em>move</em> is type-checked — in C++ a moved-from object is left in a valid-but-unspecified state and its destructor still runs; in Rust the moved-from binding is statically dead and has no destructor call at all. There is no “valid but unspecified” zombie state to reason about.</p>
+<p><strong>🎓 Tripos link →</strong> Programming in C and C++: this is RAII and the rule of “the destructor runs once, deterministically, at scope exit”. The delta from C++ is that the <em>move</em> is type-checked — in C++ a moved-from object is left in a valid-but-unspecified state and its destructor still runs; in Rust the moved-from binding is statically dead and has no destructor call at all. There is no “valid but unspecified” leftover object to reason about.</p>
 </blockquote>
 <h2 id="rct-shared-ownership-by-reference-counting"><a class="header" href="#rct-shared-ownership-by-reference-counting"><code>Rc&lt;T&gt;</code>: shared ownership by reference counting</a></h2>
 <p>Single ownership is the common case, but sometimes a value is genuinely owned by several places at once — a node referenced by many edges in a graph, an immutable config shared across subsystems. You cannot express this with <code>Box</code> (one owner) or <code>&amp;</code> (a borrow needs a single owner to outlive it, forcing lifetime gymnastics). <code>Rc&lt;T&gt;</code> — <em>reference counted</em> — keeps a count of owners and frees the data when the count hits zero.</p>
@@ -321,14 +327,14 @@ println!("count = {}", Rc::strong_count(&amp;a)); // 3
 <p><code>Rc::clone</code> does <strong>not</strong> deep-copy the <code>Vec</code> — it bumps a <code>usize</code> counter and hands back another pointer to the same heap allocation. The idiom is to write <code>Rc::clone(&amp;a)</code> rather than <code>a.clone()</code>, even though both work, precisely <em>because</em> the explicit form signals “this is a cheap refcount bump, not an expensive deep clone” to a reader scanning for performance problems.</p>
 <p>There is no manual decrement — <code>Rc</code>’s own <code>Drop</code> impl decrements as each handle leaves scope. When <code>strong_count</code> reaches 0, the inner value is dropped and the heap freed.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>Rc&lt;T&gt;</code> is <code>std::shared_ptr&lt;T&gt;</code> with one crucial difference: <strong>the count is non-atomic</strong>, so <code>Rc</code> is <em>not</em> <code>Send</code>/<code>Sync</code> and the compiler forbids moving it across threads. <code>shared_ptr</code>’s count is always atomic, so you pay for thread-safety whether you need it or not. Rust splits the choice: <code>Rc&lt;T&gt;</code> for single-threaded (cheap <code>inc</code>/<code>dec</code>), <code>Arc&lt;T&gt;</code> for cross-thread (atomic <code>lock xadd</code>). The API is identical; only the synchronisation cost differs.</p>
+<p><strong>🦀 From your toolbox →</strong> This <em>is</em> Swift’s ARC and Python’s reference counting, with the bookkeeping made visible. In Swift you never write the retain/release calls; in Python the interpreter bumps the count on every assignment. <code>Rc</code> makes you say <code>Rc::clone</code> to bump it, which is the point — sharing becomes a deliberate, greppable act. One crucial difference from both: <strong><code>Rc</code>’s count is non-atomic</strong>, so the compiler forbids moving it across threads (<code>Rc</code> is not <code>Send</code>/<code>Sync</code>). Swift’s ARC and Python’s GIL-protected count are always thread-safe-ish, paying that cost everywhere. Rust splits the choice: <code>Rc&lt;T&gt;</code> for single-threaded (a cheap increment), <code>Arc&lt;T&gt;</code> for cross-thread (an atomic increment). The API is identical; only the synchronisation cost differs.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> Concurrent and Distributed Systems: an atomic increment is a cache-line ping under contention. <code>Rc</code> exists so single-threaded code does not pay that tax. We return to <code>Arc&lt;T&gt;</code> — the thread-safe twin — in <a href="13-fearless-concurrency.html">fearless concurrency</a>, where <code>Send + Sync</code> are the bounds that gate which one you may use.</p>
+<p><strong>🎓 Tripos link →</strong> Concurrent and Distributed Systems: an atomic increment forces every core to agree on the new count, which under contention bounces a cache line between CPUs. <code>Rc</code> exists so single-threaded code does not pay that tax. We return to <code>Arc&lt;T&gt;</code> — the thread-safe twin — in <a href="13-fearless-concurrency.html">fearless concurrency</a>, where <code>Send + Sync</code> are the bounds that decide which one you may use.</p>
 </blockquote>
 <p>The critical limitation: <code>Rc&lt;T&gt;</code> gives you <strong>shared, immutable</strong> access. <code>Rc&lt;T&gt;</code> derefs to <code>&amp;T</code>, never <code>&amp;mut T</code>. If you could get <code>&amp;mut T</code> out of one of several <code>Rc</code> handles, you would have a mutable reference aliased by other handles — a data race in the making, exactly the situation the borrow rules forbid. To mutate shared data you must combine <code>Rc</code> with interior mutability, which is the next piece.</p>
 <h2 id="interior-mutability-refcellt-and-the-runtime-borrow-check"><a class="header" href="#interior-mutability-refcellt-and-the-runtime-borrow-check">Interior mutability: <code>RefCell&lt;T&gt;</code> and the runtime borrow check</a></h2>
-<p>Rust’s defining rule, from <a href="03-references-and-borrowing.html">borrowing</a>: at any moment a piece of data has <em>either</em> one <code>&amp;mut</code> <em>or</em> any number of <code>&amp;</code>, never both — aliasing XOR mutability. The borrow checker proves this statically. But static analysis is necessarily conservative (the halting problem guarantees no checker accepts <em>every</em> safe program), so some genuinely-safe programs are rejected.</p>
+<p>Rust’s defining rule, from <a href="03-references-and-borrowing.html">borrowing</a>: at any moment a piece of data has <em>either</em> one <code>&amp;mut</code> <em>or</em> any number of <code>&amp;</code>, never both — aliasing XOR mutability. The borrow checker proves this statically. But static analysis is necessarily conservative — no checker can accept <em>every</em> safe program — so some genuinely-safe programs are rejected.</p>
 <p><em>Interior mutability</em> is the pattern for those programs: a type that lets you mutate its contents through a shared <code>&amp;</code>, with the aliasing rule still enforced — but <strong>dynamically, at run time, by the type itself</strong>. <code>RefCell&lt;T&gt;</code> is the workhorse.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -358,12 +364,14 @@ let r2 = cell.borrow_mut(); // PANIC: already borrowed: BorrowMutError
 <p><strong>⚠️ Pitfall →</strong> This code <em>compiles</em> — the borrow checker cannot see the violation, since both <code>borrow_mut</code> calls are just method calls returning a guard. At run time the second one panics with <code>already borrowed: BorrowMutError</code>. The cure is to scope your guards tightly: let the <code>RefMut</code> from the first call drop (end its statement or open a <code>{ }</code> block) before requesting the second. The bug class here is “I’m holding a guard longer than I think” — the equivalent of forgetting to release a lock.</p>
 </blockquote>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>RefCell</code> is the missing safety net on C++’s <code>mutable</code>. A <code>mutable</code> member lets a <code>const</code> method mutate it — with <em>no</em> aliasing check whatsoever, so you can hand out two mutable aliases and the compiler is silent right up until the data race. <code>RefCell</code> gives you the same “mutate through const” capability but verifies aliasing-XOR-mutability dynamically and fails loudly. The cost: a couple of <code>usize</code> fields and a branch per borrow.</p>
+<p><strong>🦀 From your toolbox →</strong> Think of <code>RefCell</code> as the disciplined version of mutating shared state in Swift or Python. In those languages a method on a shared object can quietly mutate it and the language never checks whether someone else is reading at the same time — you find out by debugging a corrupted value. <code>RefCell</code> gives you the same “mutate through a shared handle” power but verifies the aliasing-XOR-mutability rule <em>dynamically</em> and fails loudly with a panic the instant two accesses overlap. The cost is small: a couple of <code>usize</code> fields and a branch per borrow.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>RefCell&lt;T&gt;</code> is <code>{ borrow_flag: Cell&lt;isize&gt;, value: UnsafeCell&lt;T&gt; }</code>. <code>UnsafeCell&lt;T&gt;</code> is the <em>only</em> legitimate way in Rust to get a <code>*mut T</code> from a <code>&amp;T</code> — it is the primitive that tells the compiler “do not assume the data behind this <code>&amp;</code> is immutable.” <code>borrow()</code>/<code>borrow_mut()</code> are a safe API wrapping <code>unsafe</code> code: they check the flag, hand out the pointer, and the <code>Ref</code>/<code>RefMut</code> guards restore the flag on drop. The “safe outside, unsafe inside” sandwich is exactly how all of <code>std</code>’s sound abstractions over raw memory are built (see <a href="16-unsafe-and-ffi.html">unsafe</a>).</p>
 </blockquote>
-<p>When would you want this? The classic case is a method that must mutate internal state but whose signature must stay <code>&amp;self</code> — for instance implementing a trait whose method is declared <code>fn send(&amp;self, msg: &amp;str)</code>. You cannot change the trait to <code>&amp;mut self</code> to suit one implementation. A mock that records the messages it was asked to send needs to push to a <code>Vec</code> from inside <code>&amp;self</code>:</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> The classic case is when an interface fixes a method to <code>&amp;self</code> but your implementation needs to remember something. Picture writing a test double for a <code>Logger</code> trait: the trait says <code>fn log(&amp;self, line: &amp;str)</code> — you can’t change it to <code>&amp;mut self</code> to suit your one mock — yet your mock needs to record every line so the test can assert on it later. <code>RefCell</code> is the bridge.</p>
+</blockquote>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::cell::RefCell;
@@ -382,7 +390,7 @@ impl Logger for Capture {
     }
 }
 <span class="boring">}</span></code></pre>
-<p>This is the standard pattern for test doubles and observers in Rust: the interface is immutable, the implementation needs to mutate, <code>RefCell</code> bridges the two.</p>
+<p>This is the standard pattern for test doubles, mocks, and observers in Rust: the interface is immutable, the implementation needs to mutate, <code>RefCell</code> bridges the two. The same shape shows up for memoization caches and lazy-initialised fields — anywhere a <code>&amp;self</code> method legitimately needs to update hidden state.</p>
 <h3 id="cellt-the-cheaper-sibling"><a class="header" href="#cellt-the-cheaper-sibling"><code>Cell&lt;T&gt;</code>: the cheaper sibling</a></h3>
 <p><code>Cell&lt;T&gt;</code> is interior mutability without handing out references at all. Instead of <code>borrow</code>/<code>borrow_mut</code>, you <code>get()</code> a copy out or <code>set()</code> a whole new value in (or <code>replace</code>/<code>take</code>). Because it never lends a reference into the interior, there is nothing to alias, so it needs <strong>no runtime flag and never panics</strong>.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -394,7 +402,7 @@ counter.set(counter.get() + 1); // get/set, no borrow guards
 <span class="boring">}</span></code></pre>
 <p>Use <code>Cell&lt;T&gt;</code> for small <code>Copy</code> values (counters, flags) where copy-in/copy-out is fine; use <code>RefCell&lt;T&gt;</code> when you need a reference to a non-<code>Copy</code> interior (a <code>Vec</code>, a <code>String</code>) and are willing to pay for the runtime borrow tracking.</p>
 <h2 id="the-rcrefcellt-pattern-shared-and-mutable"><a class="header" href="#the-rcrefcellt-pattern-shared-and-mutable">The <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> pattern: shared <em>and</em> mutable</a></h2>
-<p>Now combine the two. <code>Rc&lt;T&gt;</code> = multiple owners but immutable. <code>RefCell&lt;T&gt;</code> = single owner but mutable through <code>&amp;</code>. Nest them — <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> — and you get <strong>multiple owners of mutable data</strong>, the building block for graphs, adjacency lists, observer registries, and any shared-mutable structure you would have built with <code>shared_ptr&lt;T&gt;</code> in C++.</p>
+<p>Now combine the two. <code>Rc&lt;T&gt;</code> = multiple owners but immutable. <code>RefCell&lt;T&gt;</code> = single owner but mutable through <code>&amp;</code>. Nest them — <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> — and you get <strong>multiple owners of mutable data</strong>, the building block for graphs, adjacency lists, observer registries, and any shared-mutable structure. If you’ve built a graph in Java with shared object references, or in Swift with classes pointing at each other, this is the Rust spelling of that same shape.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::cell::RefCell;
@@ -412,7 +420,7 @@ println!("{}", shared.borrow()); // 15 — all three see the same cell
 <span class="boring">}</span></code></pre>
 <p><code>Rc</code> provides the shared ownership; <code>RefCell</code> provides the mutability the <code>Rc</code> alone would deny you; the runtime borrow check inside <code>RefCell</code> keeps the aliasing rule intact even though three handles point at the same data. Read the type inside-out: “a reference-counted, shared handle to a runtime-borrow-checked mutable <code>T</code>.”</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> Logic and Proof / type safety: <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> is a worked example of <em>trading a static invariant for a dynamic one without losing soundness</em>. The compile-time proof “no aliased mutation” is replaced by a runtime check that <em>establishes the same proposition at each borrow</em> and aborts (panics) if it cannot. Safety — no UB, no data race — is preserved; only the <em>time</em> of enforcement and the <em>failure mode</em> (panic vs. compile error) change.</p>
+<p><strong>🎓 Tripos link →</strong> Type safety, in plain terms: <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> is a worked example of <em>trading a compile-time guarantee for a run-time check without losing safety</em>. The compiler normally proves “no aliased mutation” before the program runs; here that same fact is checked again at each <code>borrow</code>/<code>borrow_mut</code>, and the program aborts with a panic if the check fails. Nothing about safety is lost — still no undefined behaviour, still no data race — only the <em>moment</em> of checking (run time, not compile time) and the <em>failure mode</em> (a clean panic instead of a compile error) change.</p>
 </blockquote>
 <h2 id="reference-cycles-leak--and-weakt-breaks-them"><a class="header" href="#reference-cycles-leak--and-weakt-breaks-them">Reference cycles leak — and <code>Weak&lt;T&gt;</code> breaks them</a></h2>
 <p>Here is the one guarantee Rust does <strong>not</strong> make: it does not promise the absence of memory leaks. A leak is memory-<em>safe</em> (no dangling, no UB), so it is outside the ownership system’s mandate. <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> gives you the rope to hang yourself: build a cycle of <code>Rc</code>s pointing at each other and the strong counts never reach zero, so the destructors never run.</p>
@@ -432,8 +440,8 @@ let b = Rc::new(Node { next: RefCell::new(None) });
 *b.next.borrow_mut() = Some(Rc::clone(&amp;a)); // b -&gt; a, a's count = 2
 // drop a and b at scope end: each count drops 2 -&gt; 1, never 0. LEAKED.
 <span class="boring">}</span></code></pre>
-<p>When <code>a</code> and <code>b</code> go out of scope their <em>local</em> handles drop, taking each count from 2 to 1 — but each node still holds an <code>Rc</code> to the other, so neither hits zero, neither <code>Node</code> is freed, and the two allocations are stranded forever. This is the textbook <code>shared_ptr</code> cycle, and Rust inherits it for the same reason C++ does: reference counting cannot collect cycles.</p>
-<p>The fix is <code>Weak&lt;T&gt;</code> — a <em>non-owning</em> reference, the analogue of <code>std::weak_ptr&lt;T&gt;</code>. A <code>Weak&lt;T&gt;</code> points into an <code>Rc</code>’s allocation but does <strong>not</strong> contribute to the strong count, so it does not keep the value alive. You create one with <code>Rc::downgrade(&amp;rc)</code>. Because the pointee may already be dead, you cannot dereference a <code>Weak</code> directly: you call <code>.upgrade()</code>, which returns <code>Option&lt;Rc&lt;T&gt;&gt;</code> — <code>Some</code> if the value is alive (bumping the strong count while you hold the result), <code>None</code> if it was dropped. The <code>Option</code> is the type system forcing you to handle the dangling case; there is no path to a raw, possibly-dangling pointer.</p>
+<p>When <code>a</code> and <code>b</code> go out of scope their <em>local</em> handles drop, taking each count from 2 to 1 — but each node still holds an <code>Rc</code> to the other, so neither hits zero, neither <code>Node</code> is freed, and the two allocations are stranded forever. This is the same trap that bites Swift programmers who create a strong reference cycle between two ARC objects, and for the same reason: plain reference counting cannot collect cycles. (A tracing garbage collector like Java’s <em>can</em>, which is the one thing it buys you here.)</p>
+<p>The fix is <code>Weak&lt;T&gt;</code> — a <em>non-owning</em> reference, the analogue of Swift’s <code>weak</code> reference. A <code>Weak&lt;T&gt;</code> points into an <code>Rc</code>’s allocation but does <strong>not</strong> contribute to the strong count, so it does not keep the value alive. You create one with <code>Rc::downgrade(&amp;rc)</code>. Because the pointee may already be dead, you cannot dereference a <code>Weak</code> directly: you call <code>.upgrade()</code>, which returns <code>Option&lt;Rc&lt;T&gt;&gt;</code> — <code>Some</code> if the value is alive (bumping the strong count while you hold the result), <code>None</code> if it was dropped. The <code>Option</code> is the type system forcing you to handle the dangling case; there is no path to a raw, possibly-dangling pointer.</p>
 <p>The canonical use is a tree where children own nothing upward but need to find their parent. Ownership must point <em>down</em> (a parent owns its children; dropping the parent drops the subtree), so the upward edge must be weak:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -472,20 +480,20 @@ assert_eq!(parent_value, Some(5));
 <span class="boring">}</span></code></pre>
 <p><code>Rc&lt;T&gt;</code> carries two counts: <code>strong_count</code> (owners — drives deallocation) and <code>weak_count</code> (outstanding <code>Weak</code>s — does <em>not</em>). When <code>branch</code> is dropped its strong count falls to 0 and its <code>Node</code> is freed <em>despite</em> <code>leaf.parent</code> still holding a <code>Weak</code> to it; afterwards <code>leaf.parent.borrow().upgrade()</code> simply returns <code>None</code>. No cycle, no leak, no dangling — the <code>Weak</code> cleanly observes its target’s death.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> Exactly the <code>shared_ptr</code>/<code>weak_ptr</code> discipline from C++: make the “back-edge” (child→parent, observer→subject, cache→entry) a <code>weak_ptr</code>/<code>Weak</code> so it does not pin the object alive, and <code>.lock()</code>/<code>.upgrade()</code> it to a real owner only for the duration of use. The difference is that C++’s <code>weak_ptr::lock()</code> returning a null <code>shared_ptr</code> is easy to forget to check; Rust’s <code>upgrade()</code> returns <code>Option&lt;Rc&lt;T&gt;&gt;</code> and the type system <em>forces</em> the <code>None</code> branch.</p>
+<p><strong>🦀 From your toolbox →</strong> This is exactly Swift’s <code>weak</code> / <code>unowned</code> discipline. In Swift you mark the back-edge (child→parent, delegate→owner, observer→subject) <code>weak</code> so it doesn’t pin the object alive, then unwrap the optional when you actually use it. <code>Weak&lt;T&gt;</code> is the same idea: make the back-edge a <code>Weak</code>, and <code>.upgrade()</code> it to a real owner only for the duration of use. The one improvement over Swift is that a Swift <code>weak var</code> silently becomes <code>nil</code> and it’s easy to forget the unwrap; Rust’s <code>upgrade()</code> returns <code>Option&lt;Rc&lt;T&gt;&gt;</code> and the compiler <em>forces</em> you to handle the <code>None</code> branch before you can touch the value.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> An <code>Rc&lt;T&gt;</code> allocation is one heap block: <code>{ strong: Cell&lt;usize&gt;, weak: Cell&lt;usize&gt;, value: T }</code>. <code>strong</code> reaching 0 runs <code>T</code>’s destructor and the value’s storage is logically gone; the <em>block itself</em> is freed only once <code>weak</code> also reaches 0 (any live <code>Weak</code> must keep the counts readable so <code>upgrade</code> can check them). <code>Arc&lt;T&gt;</code> is byte-identical except both counts are atomics. This is why a leaked cycle wastes the full <code>T</code> plus both counters — and why a <code>Weak</code>-only “leak” still costs you the two-<code>usize</code> header until the last <code>Weak</code> dies.</p>
 </blockquote>
 <h2 id="when-to-reach-for-which"><a class="header" href="#when-to-reach-for-which">When to reach for which</a></h2>
 <pre><code class="language-text">Need              ┌────────────────────────────────────────────────────────┐
-one owner,        │ Box&lt;T&gt;        unique_ptr; heap; recursive types;        │
-move it cheaply   │               trait objects; cheap large moves          │
+one owner,        │ Box&lt;T&gt;        heap; recursive types; trait objects;     │
+move it cheaply   │               cheap large moves                         │
                   ├────────────────────────────────────────────────────────┤
-many owners,      │ Rc&lt;T&gt;         shared_ptr (non-atomic); single-threaded; │
+many owners,      │ Rc&lt;T&gt;         refcount (non-atomic); single-threaded;   │
 read-only         │               immutable access only                    │
                   ├────────────────────────────────────────────────────────┤
-many owners,      │ Arc&lt;T&gt;        shared_ptr (atomic); cross-thread         │
+many owners,      │ Arc&lt;T&gt;        refcount (atomic); cross-thread           │
 across threads    │               (see ch.13)                               │
                   ├────────────────────────────────────────────────────────┤
 mutate through    │ RefCell&lt;T&gt;    runtime borrow check, panics on violation;│
@@ -502,38 +510,35 @@ non-owning edge   │                                                         �
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
 <li>A smart pointer is a struct that <strong>owns</strong> its pointee and implements <code>Deref</code> (acts like a reference) and usually <code>Drop</code> (RAII cleanup). <code>Box</code>/<code>Rc</code>/<code>Arc</code>/<code>RefCell</code> are <code>std</code>’s safe abstractions over heap and ownership.</li>
-<li><code>Box&lt;T&gt;</code> = <code>unique_ptr</code>: single owner, heap, fixed pointer size — the indirection that makes recursive types sizable and trait objects/large moves cheap.</li>
+<li><code>Box&lt;T&gt;</code> = single owner on the heap with a fixed pointer size — the indirection that makes recursive types sizable and trait objects/large moves cheap.</li>
 <li><code>Deref</code> + deref coercion is the autoderef chain extended to function arguments; it is fully compile-time, hence why APIs take <code>&amp;str</code>/<code>&amp;[T]</code>. <code>&amp;U → &amp;mut U</code> is the one coercion that is forbidden, because a <code>&amp;</code> cannot prove it is unique.</li>
-<li><strong>The headline:</strong> <code>Rc</code> + <code>RefCell</code> move borrow-rule enforcement from compile time to run time. <code>RefCell</code> checks aliasing-XOR-mutability dynamically and <em>panics</em> — unlike C++’s <code>mutable</code>/<code>const_cast</code>, which check nothing and risk UB.</li>
+<li><strong>The headline:</strong> <code>Rc</code> + <code>RefCell</code> move borrow-rule enforcement from compile time to run time. <code>RefCell</code> checks aliasing-XOR-mutability dynamically and <em>panics</em> rather than risking the silent corruption you’d get from mutating freely shared state in Swift or Python.</li>
 <li>Rust prevents UB, not leaks: <code>Rc</code> cycles leak because strong counts never hit zero. <code>Weak&lt;T&gt;</code> is the non-owning back-edge that breaks them; <code>upgrade()</code> returns <code>Option&lt;Rc&lt;T&gt;&gt;</code> so the dangling case is type-checked away.</li>
 </ul>
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Define <code>enum Json { Null, Bool(bool), Num(f64), Arr(Vec&lt;Json&gt;), Obj(Vec&lt;(String, Json)&gt;) }</code>. Does it compile <em>without</em> any <code>Box</code>? Explain precisely why <code>Vec&lt;Json&gt;</code> does <strong>not</strong> trigger <code>E0072</code> even though it is recursive — what is <code>size_of::&lt;Vec&lt;Json&gt;&gt;()</code> and where does the indirection actually live?</p>
+<p><strong>Predict the layout.</strong> Given <code>enum Json { Null, Bool(bool), Num(f64), Arr(Vec&lt;Json&gt;), Obj(Vec&lt;(String, Json)&gt;) }</code>, decide <em>without compiling</em> whether it builds with no <code>Box</code> at all, then justify it: what is <code>size_of::&lt;Vec&lt;Json&gt;&gt;()</code> and where does the recursion’s indirection physically live? Contrast this with why <code>enum Tree { Leaf(i32), Branch(Tree, Tree) }</code> does <em>not</em> build — what’s different about a field being a <code>Vec&lt;Json&gt;</code> versus a bare <code>Json</code>?</p>
 </li>
 <li>
-<p>Write a function <code>fn last(list: &amp;Rc&lt;List&gt;) -&gt; i32</code> over the cons list <code>enum List { Cons(i32, Rc&lt;List&gt;), Nil }</code>. Now try to make it iterative with a <code>let mut cur = list;</code> loop reassigning <code>cur</code> to the tail. You will hit a borrow/lifetime error — diagnose it and fix it without cloning the <code>Rc</code> on every step. (★)</p>
-</li>
-<li>
-<p>The following panics at run time but compiles. Identify the exact panic message and the line, then fix it by adjusting <em>scope</em> only (no new types, no <code>clone</code>):</p>
+<p><strong>Which compiles, and why?</strong> For each line below, predict compile vs. runtime-panic vs. clean run, and state the reason in one sentence:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use std::cell::RefCell;
-let v = RefCell::new(vec![1, 2, 3]);
-let first = v.borrow();
-v.borrow_mut().push(4);
-println!("{:?}", *first);
+</span>let cell = RefCell::new(vec![1, 2, 3]);
+let a = cell.borrow();
+let b = cell.borrow();          // (i)
+let c = cell.borrow_mut();      // (ii)
 <span class="boring">}</span></code></pre>
+<p>Then reorder the three so that all of them succeed, changing nothing but where each binding’s scope ends.</p>
 </li>
 <li>
-<p>You have <code>let data: Rc&lt;RefCell&lt;Vec&lt;i32&gt;&gt;&gt; = Rc::new(RefCell::new(vec![]));</code> shared across two handles. Write code that borrows it mutably in an outer scope and, <em>while that guard is live</em>, calls a helper that also tries to <code>borrow_mut</code>. Explain why the compiler does not catch this and what the runtime behaviour is. How would you restructure to make the conflict a compile error instead?</p>
+<p><strong>Choose the tool.</strong> For each scenario, pick exactly one of <code>Box</code>, <code>Rc</code>, <code>Rc&lt;RefCell&lt;_&gt;&gt;</code>, or <code>Weak</code>, and defend the choice in a sentence: (a) a config object read by five subsystems and never modified after startup; (b) the parent pointer of a tree node, where parents own children; (c) the single payload of a <code>Box&lt;dyn Error&gt;</code> you return from a function; (d) a counter that several closures in the same thread each need to increment.</p>
 </li>
 <li>
-<p>Build a doubly linked list node <code>struct Node { value: i32, next: RefCell&lt;Option&lt;Rc&lt;Node&gt;&gt;&gt;, prev: RefCell&lt;Option&lt;Weak&lt;Node&gt;&gt;&gt; }</code>. Construct three nodes A↔B↔C, then add an <code>impl Drop for Node</code> that prints the value. Confirm by running that all three drop. Now change <code>prev</code> from <code>Weak</code> to <code>Rc</code> and explain, with reference to the strong counts, exactly which nodes leak and why none of them print on drop. (★)</p>
+<p><strong>Adapt the mock.</strong> Take the <code>Capture</code> logger from this chapter and add a method <code>fn count(&amp;self) -&gt; usize</code> that returns how many lines were logged, plus <code>fn clear(&amp;self)</code> that empties the buffer — both must keep the <code>&amp;self</code> signature. Which <code>RefCell</code> methods do you call inside each, and is there any ordering of calls to <code>log</code>, <code>count</code>, and <code>clear</code> in a single statement that would panic? Explain. (★)</p>
 </li>
 <li>
-<p>Implement a <code>MyRc&lt;T&gt;</code> from scratch using <code>Box</code>, a raw <code>*mut</code>, and a <code>Cell&lt;usize&gt;</code> count (you will need a small <code>unsafe</code> block for the allocation/free). Make <code>clone</code> bump the count and <code>drop</code> decrement-and-maybe-free. Then explain in one paragraph why your <code>MyRc</code> is unsound across threads and what single trait bound the real <code>Rc</code> lacks (and <code>Arc</code> has) that the compiler uses to stop you from sending it between threads.</p>
+<p><strong>Find the leak by counting.</strong> Sketch a doubly linked list of three nodes A↔B↔C where <code>next</code> is <code>Rc&lt;Node&gt;</code> and <code>prev</code> is <code>Weak&lt;Node&gt;</code>, then write out the strong count of B at the moment all three local bindings drop, and conclude whether B is freed. Now mentally switch <code>prev</code> to <code>Rc&lt;Node&gt;</code>: redo B’s strong count and explain exactly why no node’s <code>Drop</code> ever runs.</p>
 </li>
 </ol>
 
@@ -572,22 +577,6 @@ println!("{:?}", *first);
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

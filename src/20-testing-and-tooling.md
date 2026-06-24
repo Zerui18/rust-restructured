@@ -33,7 +33,7 @@ A test *passes* if the function returns normally and *fails* if it panics. That 
 
 `#[cfg(test)]` is the load-bearing attribute. `cfg` is conditional compilation: the `tests` module — and any helper functions inside it — is compiled *only* when the `test` cfg flag is set, which Cargo does for `cargo test` but not for `cargo build`. So your test code, and any test-only dependencies, are entirely absent from the shipped artifact. This is compile-time dead-code elimination by configuration, not by the optimiser.
 
-> **🦀 From your toolbox →** This is closest to OCaml's `let () = assert (...)` inline expectations, but with a runner. The sharper contrast is Java/C++: JUnit and GoogleTest cannot, in general, see `private`/`protected` members without reflection hacks or `friend` declarations, so unit tests are pushed to the public surface. Rust's `tests` module is a *child* module of the code under test, and a child module can name its ancestors' private items. You test privates directly, with no ceremony. The analogy to XCTest's `@testable import` is close, but that is an opt-in linker mode; here it falls out of the ordinary module visibility rules.
+> **🦀 From your toolbox →** Think JUnit, but with the visibility headache removed. In Java a `@Test` method in `src/test/java` cannot see a `private` field without reflection hacks, so unit tests get pushed onto the public surface; in Python you can reach in, but only because nothing is truly private. Rust's `tests` module is a *child* module of the code under test, and a child module can name its ancestors' private items — so you test privates directly, with no ceremony. The closest thing you've used is Swift's `@testable import`, which lets a test target see `internal` members of another module; the difference is that Swift's version is an opt-in linker mode you switch on per import, whereas in Rust it falls out of the ordinary module-visibility rules with nothing to enable. Where the analogy breaks down: there is no separate "test target" project here at all — the test module lives in the same file and is simply compiled out of release builds.
 
 ### Assertion macros
 
@@ -88,7 +88,7 @@ mod tests {
 
 The test passes iff the body panics. The bare `#[should_panic]` is dangerously coarse — it would pass if the function panicked for *any* reason, including an unrelated bug. The `expected = "..."` argument tightens it: the panic message must *contain* that substring. Always supply it.
 
-> **🎓 Tripos link →** From *Semantics*: a precondition violation is one operational rule for "stuck". `#[should_panic(expected = ...)]` is a test that the program reaches a specific stuck configuration — it is a refutation test for a partial function's domain. Pair it with the type system, which proves the *total* parts of the contract, and you have proof-by-construction for the totality and proof-by-testing for the boundary.
+Two contracts are at work here, and they're worth separating. The type system already guarantees the *always-true* parts — `percentage` can only ever be handed a `u8`, so "it's a number, not a string" needs no test. What it can't express is "the number must be `0..=100`": that's a runtime promise the function enforces with a panic. `#[should_panic(expected = ...)]` tests exactly that promise — it checks the function rejects an out-of-range input at the right boundary. So the types cover what's provable at compile time, and `#[should_panic]` covers the runtime edge the types can't reach.
 
 ### Returning `Result` from tests
 
@@ -105,6 +105,23 @@ fn round_trips() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 One sharp edge: you cannot combine `#[should_panic]` with a `Result`-returning test. To assert a fallible call returns `Err`, do *not* use `?` on it — write `assert!(thing().is_err())`, otherwise the `?` turns the expected `Err` into a test failure. See [error handling](11-error-handling.md) for `?`, `Box<dyn Error>`, and the `Result` machinery this leans on.
+
+> **🔧 In practice →** You're testing a round-trip: open a temp file, write some bytes, read them back, parse them, and check the result. Every one of those steps can fail, and in a `()`-returning test each would need its own `.unwrap()`, turning the body into noise. Returning `Result` lets you `?` straight through:
+>
+> ```rust
+> #[test]
+> fn config_round_trips() -> Result<(), Box<dyn std::error::Error>> {
+>     let dir = std::env::temp_dir();
+>     let path = dir.join("cfg_round_trips.toml");
+>     std::fs::write(&path, "port = 8080\n")?;          // ? on io::Error
+>     let text = std::fs::read_to_string(&path)?;       // ? on io::Error
+>     let port: u16 = text.trim_start_matches("port = ").trim().parse()?; // ? on ParseIntError
+>     assert_eq!(port, 8080);
+>     Ok(())
+> }
+> ```
+>
+> Any failing step short-circuits and the runner reports it as a test failure with the actual error attached — which is far more useful than a generic "unwrap on a None/Err" backtrace. This is the everyday shape for integration tests that talk to the filesystem, a parser, or a network client.
 
 ## Running tests: `cargo test` mechanics
 
@@ -218,6 +235,22 @@ Doc-comment mechanics worth knowing:
 
 > **⚙️ Under the hood →** `rustdoc` lifts each fenced block into a standalone source file. Unless the block already has a `fn main`, rustdoc wraps it in one and inserts an implicit `extern crate yourcrate;`, then compiles and runs it as a tiny program. That is why the example must `use` your public items by their external path: it is genuinely a separate compilation unit, the same as an integration test. This also means doc tests do *not* see private items — they are black-box by construction.
 
+> **🔧 In practice →** You ship a library with a function whose doc comment shows a usage example. Six months later you change the signature — say `parse(s: &str)` becomes `parse(s: &str, strict: bool)`. With any other language, the example in the docs silently goes stale and the next user copies code that no longer compiles. In Rust, `cargo test` runs that example as a real test, so the stale doc *fails the build*:
+>
+> ```rust
+> /// Parses a port number from text.
+> ///
+> /// ```
+> /// # use mylib::parse_port;
+> /// assert_eq!(parse_port("8080"), Some(8080));
+> /// ```
+> pub fn parse_port(s: &str) -> Option<u16> {
+>     s.parse().ok()
+> }
+> ```
+>
+> The `# ` prefix on the `use` line hides that boilerplate from the rendered HTML while still compiling it. The payoff is concrete: your README and API docs are guaranteed-correct example code, checked on every CI run, with no extra test file to maintain. This is why publishing a crate to crates.io almost always means writing doc tests first.
+
 ## The wider toolchain
 
 Testing is one node in a graph of `cargo`/`rustup` tooling. The rest of this chapter is the checklist.
@@ -316,7 +349,7 @@ Two rules that bite if ignored:
 - **A publish is permanent.** A given `name@version` can never be overwritten or deleted (the registry must stay a reproducible archive for everyone's `Cargo.lock`). You bump the version and publish again; you never re-upload the same version.
 - **To retract a broken release, `cargo yank --version 1.2.3`.** Yanking prevents *new* dependency resolutions from selecting that version while leaving existing `Cargo.lock` files that pin it untouched. `--undo` reverses it. Yanking does **not** delete code, so it cannot scrub a leaked secret — if you publish a key, rotate it immediately.
 
-> **🎓 Tripos link →** SemVer is a contract about API compatibility, and it maps onto the *Further Java*/type-system notion of subtyping-as-substitutability. `MAJOR.MINOR.PATCH`: bump PATCH for backward-compatible fixes, MINOR for backward-compatible additions (a new pub item — adding to the API surface, like a covariant widening), MAJOR for breaking changes (removing/changing a signature — clients are no longer substitutable). Cargo's resolver assumes this contract: it freely upgrades within a compatible range. `cargo semver-checks` can mechanically verify you haven't broken it before publishing.
+SemVer is a contract about API compatibility, and the test for each level is just "would existing user code still compile and behave the same?" `MAJOR.MINOR.PATCH`: bump PATCH for a backward-compatible bug fix (same API, fixed behaviour), MINOR for a backward-compatible addition (a new `pub` item — old code can't break because it never named the new thing), MAJOR for a breaking change (removing or changing the signature of something callers already use — their code stops compiling). Cargo's resolver leans on this promise: it freely upgrades a dependency within a compatible range without asking you. `cargo semver-checks` can mechanically compare two versions of your crate and tell you whether you've broken the contract before you publish.
 
 To export a flat, convenient public API regardless of your internal module tree, re-export with `pub use`:
 
@@ -348,14 +381,16 @@ Cargo is extensible with zero plumbing: any executable on `$PATH` named `cargo-f
 
 ## Exercises
 
-1. Write a `#[derive(PartialEq)]`-only struct (no `Debug`) and `assert_eq!` two instances in a test. Read the exact `E0277` error, then fix it. Explain *why* the bound is on `Debug` and not just `PartialEq`.
+1. **Predict the error.** A teammate writes `assert_eq!(left, right)` where the type derives `Debug` but *not* `PartialEq`. Before compiling, predict which trait the error names and roughly what it says — and crucially, will the error point at the *type definition* or at the *macro call site*? Then flip it (derives `PartialEq` but not `Debug`) and predict that error too. Explain in one sentence why a single macro can demand two different traits.
 
-2. Write two tests that each create and read back the file `./scratch.txt` with different contents. Run them and observe intermittent failures. Fix it *without* `--test-threads=1` — make each test use a unique path (hint: `std::env::temp_dir()` plus the test name). Why is the env-var/CWD approach the wrong fix?
+2. **Which of these compiles, and why?** Given a fallible helper `fn load() -> Result<Config, std::io::Error>`, decide for each test whether it compiles and passes, fails to compile, or compiles but fails at runtime:
+   (a) `#[test] fn t() -> Result<(), std::io::Error> { let c = load()?; assert!(c.is_valid()); Ok(()) }`
+   (b) `#[test] #[should_panic] fn t() -> Result<(), std::io::Error> { load()?; Ok(()) }`
+   (c) `#[test] fn t() { assert!(load().is_err()); }` when `load()` actually returns `Ok`.
+   Explain each verdict.
 
-3. Convert a `#[should_panic]` test into a `Result`-returning test that asserts the same function returns `Err`. Show the wrong version (using `?` on the expected-`Err` call) and explain the failure, then the right version with `assert!(... .is_err())`.
+3. **Design decision: where does this test live?** You're testing a `normalise_path` helper that is *not* `pub`, plus a `Client::connect` method that *is* `pub` and which you want to exercise exactly the way a downstream user would. For each, decide: unit test (in-module `#[cfg(test)]`), integration test (`tests/`), or doc test — and justify the choice in terms of what each tier can see. Then say what would go wrong if you tried to integration-test the private helper.
 
-4. (★) Create a binary-only crate (`src/main.rs`, no `lib.rs`) and add `tests/it.rs` that tries to call a function from `main`. Capture the `E0432`. Refactor into `lib.rs` + thin `main.rs` so the integration test compiles. Articulate why binaries aren't linkable as libraries.
+4. **Adapt to avoid a race.** Two tests both run `cargo test` happily in isolation but fail intermittently together; both call `std::env::set_var("MODE", ...)` and read it back. Adding `--test-threads=1` makes them pass. Explain *why* that fix works but is the wrong long-term answer, then redesign the tests so they pass under the default parallel runner *without* touching a shared env var. (Hint: pass the mode in as an argument instead of reading global state.)
 
-5. Add a doc-test to a public function with a deliberately wrong expected value in the `assert_eq!`. Confirm `cargo test` fails in the `Doc-tests` section but `cargo build` succeeds. Then make the example reference a *private* item and explain the new compile error in terms of doc tests being a separate crate.
-
-6. (★) Take a small numeric routine and add `[profile.release] lto = true` and `codegen-units = 1` to `Cargo.toml`. Build with and without, compare binary size and (using `cargo flamegraph` or timing) runtime. Then set `panic = "abort"` and explain why `cargo test` still uses unwinding regardless of this setting.
+5. **(★) When would you choose A over B?** You maintain a library crate and need both fast iteration and a lean, fast shipping binary. Decide which of these belong in `[profile.dev]` versus `[profile.release]`, and which you would *not* set at all: `opt-level = 0`, `lto = "thin"`, `codegen-units = 1`, `panic = "abort"`. For `panic = "abort"`, predict what happens when you then run `cargo test` — does the abort setting take effect for the test binary? Explain why the harness behaves as it does.

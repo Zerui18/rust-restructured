@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+            window.path_to_searchindex_js = "searchindex-66f52993.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -177,7 +177,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="9-trait-objects-dynamic-dispatch--oop"><a class="header" href="#9-trait-objects-dynamic-dispatch--oop">9. Trait Objects, Dynamic Dispatch &amp; “OOP”</a></h1>
-<p><a href="08-generics-and-traits.html">Generics and traits</a> gave you <em>static</em> polymorphism: <code>fn render&lt;T: Draw&gt;(x: &amp;T)</code> is, after monomorphisation, a family of distinct functions — one per concrete <code>T</code>, each with the call to <code>draw</code> resolved at compile time and eligible for inlining. That is the Java-with-erasure story turned inside out (Compiler Construction): where Java keeps one bytecode body and erases the type, Rust keeps the type and clones the body.</p>
+<p><a href="08-generics-and-traits.html">Generics and traits</a> gave you <em>static</em> polymorphism: <code>fn render&lt;T: Draw&gt;(x: &amp;T)</code> is, after monomorphisation, a family of distinct functions — one per concrete <code>T</code>, each with the call to <code>draw</code> resolved at compile time and eligible for inlining. That is the Java-with-erasure story turned inside out (Compiler Construction): where Java keeps one bytecode body and erases the type, Rust keeps the type and clones the body, stamping out a separate copy per concrete type.</p>
 <p>Monomorphisation has a hard precondition: <strong>the set of concrete types must be known when the generic is instantiated.</strong> A <code>Vec&lt;T&gt;</code> is homogeneous — every element is the same <code>T</code>. The moment you want a <em>heterogeneous</em> collection — a list of GUI widgets where the library author cannot enumerate the widget types because downstream crates will invent new ones — static dispatch cannot help. You need a single type that erases the concrete identity of its contents but retains the ability to call a known set of methods. That type is <code>dyn Trait</code>, and reaching it costs a pointer indirection per call. This chapter covers that machinery, the rules that make it sound, and the question underneath: is Rust OOP, and if not, what replaces inheritance?</p>
 <h2 id="dyn-trait-is-an-unsized-type-behind-a-fat-pointer"><a class="header" href="#dyn-trait-is-an-unsized-type-behind-a-fat-pointer"><code>dyn Trait</code> is an unsized type behind a fat pointer</a></h2>
 <p><code>dyn Draw</code> is a real type, but a peculiar one: it has no statically known size. A <code>Button</code> is 12 bytes, a <code>SelectBox</code> is 32, and <code>dyn Draw</code> could be either — so <code>dyn Draw</code> is <code>!Sized</code> (does not implement the <code>Sized</code> marker trait). You can never hold one by value on the stack, since the compiler cannot reserve space for an object of unknown size; you touch it through a pointer: <code>&amp;dyn Draw</code>, <code>&amp;mut dyn Draw</code>, <code>Box&lt;dyn Draw&gt;</code>, <code>Rc&lt;dyn Draw&gt;</code>.</p>
@@ -201,10 +201,10 @@
 <p><strong>⚙️ Under the hood →</strong> The vtable is <em>not</em> embedded in the value — this is the crucial divergence from C++. A <code>Button</code> instance contains zero overhead: no vptr field, no per-object cost, identical layout whether or not <code>Draw</code> is implemented. The vtable lives wherever the <code>&amp;dyn</code> is constructed. A single concrete type can have <em>many</em> vtables (one per trait it’s viewed through: <code>&amp;dyn Draw</code>, <code>&amp;dyn Debug</code>, …), and they are coined at the <code>&amp;value as &amp;dyn Trait</code> coercion site, deduplicated into read-only static memory by the linker.</p>
 </blockquote>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> In C++ a class with a virtual method carries a hidden <code>vptr</code> <em>inside every object</em>; <code>sizeof(Button)</code> grows and the vtable is reachable from the object alone. In Rust the object stays thin and the vtable rides alongside the pointer: a C++ <code>Button*</code> is one word and self-describing; a Rust <code>&amp;dyn Draw</code> is two words but a <code>&amp;Button</code> carries no type info at all. Java is closer to C++ — every object header has a class pointer used for dispatch and <code>instanceof</code>. Rust has no object header and no built-in <code>instanceof</code>; <code>dyn Any</code> (<a href="17-advanced-traits-and-types.html">Chapter 17</a>) bolts on downcasting explicitly. The analogy breaks hardest here: <strong>Rust separates “the value” from “the trait view of the value,”</strong> which is why the same <code>Button</code> can sit behind a <code>&amp;dyn Draw</code> and a <code>&amp;dyn Debug</code> at once with no extra storage in the <code>Button</code>.</p>
+<p><strong>🦀 From your toolbox →</strong> In Java, every object header carries a hidden class pointer used both for dynamic dispatch and for <code>instanceof</code> — the type info travels <em>inside</em> the object. Swift does much the same for classes, and a class with overridable methods has a per-instance vtable pointer. Rust flips this: the object stays thin and the vtable rides alongside the <em>reference</em>. A Java reference is one word and self-describing (it can always find its own class); a Rust <code>&amp;dyn Draw</code> is two words, but a plain <code>&amp;Button</code> carries no type info at all — it’s just an address. (If you’ve seen C++, the closest light touch is that a class with a virtual method grows a hidden pointer inside every object; Rust never does that.) Rust also has no object header and no built-in <code>instanceof</code>; <code>dyn Any</code> (<a href="17-advanced-traits-and-types.html">Chapter 17</a>) bolts on downcasting explicitly. The analogy breaks hardest here: <strong>Rust separates “the value” from “the trait view of the value,”</strong> which is why the same <code>Button</code> can sit behind a <code>&amp;dyn Draw</code> and a <code>&amp;dyn Debug</code> at once with no extra storage in the <code>Button</code>.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the dispatch-table mechanism from Compiler Construction with one choice flipped: there the vtable pointer is a field of the object emitted by the class-layout pass. Rust’s “witness table” model — pass the table alongside the value rather than embedding it — is the same scheme Swift uses for protocol witness tables and Haskell for dictionary-passing of type-class methods. It is the operational reading of bounded parametric polymorphism: a <code>dyn Trait</code> is an existential <code>∃T. (T, vtable_Trait&lt;T&gt;)</code>, the type packaging the witness that <code>T: Trait</code>.</p>
+<p><strong>🎓 Tripos link →</strong> This is the dispatch-table mechanism from Compiler Construction with one choice flipped: in a typical class-layout pass the vtable pointer is emitted as a <em>field of the object</em>. Rust passes the table <em>alongside</em> the value instead of embedding it. Concretely: when you write <code>&amp;button as &amp;dyn Draw</code>, the compiler bundles the address of the button with a pointer to a small static table of that type’s <code>Draw</code> method addresses, and method calls jump through that table. Same dispatch idea, different place to keep the table.</p>
 </blockquote>
 <h2 id="static-vs-dynamic-dispatch-the-explicit-tradeoff"><a class="header" href="#static-vs-dynamic-dispatch-the-explicit-tradeoff">Static vs dynamic dispatch: the explicit tradeoff</a></h2>
 <p>You now have two ways to write “operate on anything that implements <code>Draw</code>”:</p>
@@ -221,6 +221,22 @@ fn render_dynamic(item: &amp;dyn Draw)  { item.draw(); }    // one body, indirec
 <li><strong>Compile-time blowup matters</strong> (huge generic function, embedded binary size): <code>dyn</code> collapses N monomorphisations into one.</li>
 </ul>
 <p>The cost of <code>dyn</code> is real but usually small — one cache-resident indirect call. Reach for it when you genuinely need runtime heterogeneity, not reflexively.</p>
+<blockquote>
+<p><strong>🔧 In practice →</strong> You’re building a logging layer and want callers to plug in any number of sinks at runtime — stdout, a file, a network socket, a test buffer — chosen from config you read at startup, not at compile time. You can’t name the set of sink types in advance, and you want them all in one list:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>trait Sink { fn write_line(&amp;mut self, line: &amp;str); }
+
+struct Logger { sinks: Vec&lt;Box&lt;dyn Sink&gt;&gt; }
+
+impl Logger {
+    fn log(&amp;mut self, line: &amp;str) {
+        for s in &amp;mut self.sinks { s.write_line(line); }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>A <code>Vec&lt;Box&lt;dyn Sink&gt;&gt;</code> is exactly right here: the config decides at runtime which sinks exist, and a third-party crate can add a <code>SyslogSink</code> without you recompiling <code>Logger</code>. The one indirect call per sink is invisible next to the I/O it’s doing. If instead you had <em>one</em> known sink type and a hot loop, you’d drop the <code>dyn</code> and make <code>Logger&lt;S: Sink&gt;</code> generic.</p>
+</blockquote>
 <h2 id="a-worked-example-the-extensibility-boundary"><a class="header" href="#a-worked-example-the-extensibility-boundary">A worked example: the extensibility boundary</a></h2>
 <p>The canonical motivation is a library whose author cannot know all the types its users will plug in. A widget framework defines the contract:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -258,9 +274,9 @@ let c = Canvas {
 };
 c.repaint();
 <span class="boring">}</span></code></pre>
-<p>This is structurally duck typing — “if it answers <code>paint</code>, it goes in the list” — but Rust checks the duck statically: no runtime <code>respondsTo:</code>, no <code>NoSuchMethodError</code>. The coercion <code>Box::new(Gauge{..}) as Box&lt;dyn Render&gt;</code> only typechecks because <code>Gauge: Render</code>, and that is the <em>only</em> place the check happens.</p>
+<p>This is structurally duck typing — “if it answers <code>paint</code>, it goes in the list” — but Rust checks the duck statically: no runtime <code>respondsTo:</code>, no <code>NoSuchMethodError</code>. If you’ve leaned on Python’s duck typing, this is the same instinct (“I only care that it has a <code>paint</code> method”) with the check moved to compile time. The coercion <code>Box::new(Gauge{..}) as Box&lt;dyn Render&gt;</code> only typechecks because <code>Gauge: Render</code>, and that is the <em>only</em> place the check happens.</p>
 <blockquote>
-<p><strong>⚠️ Pitfall →</strong> Put a <code>String</code> in that <code>Vec</code> and you get <code>error[E0277]: the trait bound </code>String: Draw<code>is not satisfied … required for the cast from</code>Box<string><code>to</code>Box<dyn draw="">``. The error names the coercion site, not the eventual <code>.paint()</code> call — because the unsizing coercion from <code>Box&lt;String&gt;</code> to <code>Box&lt;dyn Render&gt;</code> is exactly where the witness <code>String: Render</code> must be produced, and it cannot be. The fix is either to pass a type that implements the trait or to <code>impl Render for String</code>.</dyn></string></p>
+<p><strong>⚠️ Pitfall →</strong> Put a <code>String</code> into that <code>Vec&lt;Box&lt;dyn Render&gt;&gt;</code> and the compiler rejects it at the insertion site: <code>error[E0277]: the trait bound String: Render is not satisfied</code>, with a note that it is required for the cast from <code>Box&lt;String&gt;</code> to <code>Box&lt;dyn Render&gt;</code>. The error names the coercion site, not the eventual <code>.paint()</code> call — the unsizing coercion from <code>Box&lt;String&gt;</code> to <code>Box&lt;dyn Render&gt;</code> is exactly where the proof that <code>String: Render</code> must be produced, and it cannot be. The fix is either to store a type that implements the trait, or to <code>impl Render for String</code>.</p>
 </blockquote>
 <h2 id="object-safety-now-called-dyn-compatibility"><a class="header" href="#object-safety-now-called-dyn-compatibility">Object safety, now called <em>dyn compatibility</em></a></h2>
 <p>Not every trait can become a <code>dyn Trait</code>. To build the vtable above, each method must be callable knowing only <code>&amp;self</code> (a thin reference to unknown-but-<code>Sized</code> data) plus the vtable. Methods that violate this are excluded, and a trait is <strong>dyn-compatible</strong> (the modern name for “object-safe”) only if <em>every</em> method is dispatchable. The two rules you will hit:</p>
@@ -284,7 +300,7 @@ c.repaint();
 <span class="boring">}</span></code></pre>
 <p><code>where Self: Sized</code> tells the compiler “this method does not exist for the unsized <code>dyn Widget</code>,” so it does not block vtable construction; you can still call it on a concrete <code>Button</code>. Note <code>clone_box</code> returns a <em>boxed trait object</em>, not <code>Self</code> — the idiomatic way to “clone a trait object” precisely because returning <code>Self</code> is forbidden.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is type soundness from Semantics, stated as a representability constraint. A vtable is a finite record of function pointers; a method’s signature must be expressible as a single such pointer over a thin <code>self</code>. Generic methods (infinitely many instantiations) and by-value <code>Self</code> (size unknown to the caller) have no uniform representation, so admitting them would let you construct a call the runtime cannot perform — the type system forbids it up front rather than failing at dispatch. A <code>&amp;dyn Trait</code> <em>always</em> has a valid vtable for every method it exposes.</p>
+<p><strong>🎓 Tripos link →</strong> Think of this as a plain representability constraint (the intuition behind type-checking in Semantics of Programming Languages, stated without the formalism). A vtable is a finite list of function addresses, and each entry has to be <em>one</em> address that works over a thin <code>self</code>. A generic method would need a different address for every type you might instantiate it with — infinitely many, so there’s no single slot to put. A method returning <code>Self</code> by value would need the caller to set aside room for a result whose size it can’t know once the concrete type is erased. Both have no uniform representation, so the compiler refuses to build the table at all rather than letting you make a call the machine couldn’t carry out. The guarantee you get back: a <code>&amp;dyn Trait</code> <em>always</em> has a valid vtable entry for every method it exposes.</p>
 </blockquote>
 <h2 id="is-rust-object-oriented"><a class="header" href="#is-rust-object-oriented">Is Rust object-oriented?</a></h2>
 <p>Score it against the usual triad:</p>
@@ -302,7 +318,7 @@ c.repaint();
 </ul>
 <p>The deeper objection is that inheritance over-shares: a subclass inherits <em>all</em> of the parent, including methods that may not make sense for it (the classic <code>Square extends Rectangle</code> with independent <code>setWidth</code>/<code>setHeight</code>). Traits let a type opt into exactly the capabilities it has, with no “single inheritance” restriction.</p>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> From Further Java: a Java <code>interface</code> is the honest analogue of a Rust <code>trait</code>, and <code>class C implements I1, I2</code> maps to <code>impl I1 for C</code> / <code>impl I2 for C</code>. The break: Java still has <code>extends</code> for classes (concrete inheritance) and Rust has nothing like it — no <code>super</code>, no protected fields, no abstract base class with state. Where Java would use an abstract base class to share both state and behaviour, Rust forces you to split it: shared <em>behaviour</em> goes in a trait’s default methods; shared <em>state</em> goes in a struct you embed by composition and delegate to. From C++: there is no <code>: public Base</code>, no virtual inheritance, no diamond problem — because there is no implementation inheritance to form a diamond.</p>
+<p><strong>🦀 From your toolbox →</strong> A Java <code>interface</code> is the honest analogue of a Rust <code>trait</code>, and <code>class C implements I1, I2</code> maps cleanly to <code>impl I1 for C</code> / <code>impl I2 for C</code>. Swift’s <code>protocol</code> plays the same role — <code>struct C: P1, P2</code> becomes <code>impl P1 for C</code> / <code>impl P2 for C</code> — and Swift even has protocol extensions with default method bodies, exactly like a trait’s default methods. The break: Java still has <code>extends</code> for classes and Swift has class inheritance, and Rust has <em>nothing</em> like it — no <code>super</code>, no protected fields, no abstract base class carrying state. Where Java or Swift would use an abstract base class to share both state and behaviour, Rust forces you to split it: shared <em>behaviour</em> goes in a trait’s default methods; shared <em>state</em> goes in a struct you embed by composition and delegate to. (Light C++ touch: there is also no <code>: public Base</code> and so no diamond problem — there’s no implementation inheritance to form a diamond in the first place.)</p>
 </blockquote>
 <h2 id="one-pattern-two-ways-the-state-machine"><a class="header" href="#one-pattern-two-ways-the-state-machine">One pattern, two ways: the state machine</a></h2>
 <p>The sharpest way to feel the difference is to implement the same FSM twice: a blog post with states <em>Draft → PendingReview → Published</em>, where only a published post yields its content and illegal transitions are no-ops.</p>
@@ -414,7 +430,24 @@ assert_eq!("shipped the borrow checker", post.content());
 <p><strong>⚙️ Under the hood →</strong> Typestate is zero-cost. The three structs have identical layout; <code>request_review</code> is a move of the <code>String</code> (often a no-op reinterpretation, since the layouts match) and produces no vtable, no heap box, no <code>Option</code> dance. The trait-object version, by contrast, heap-allocates a fresh <code>Box&lt;dyn State&gt;</code> on every transition and pays an indirection on every <code>content</code> call. Typestate trades runtime checks and allocations for <em>compile-time</em> state tracking — you pay nothing at runtime for a guarantee the OOP version enforces only dynamically, and partially.</p>
 </blockquote>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> Curry-Howard at work (Logic and Proof): the type <code>PendingReviewPost</code> is a <em>proof token</em> that a review was requested, and <code>approve: PendingReviewPost → Post</code> can only be called if you hold that proof. You cannot fabricate a <code>Post</code> without constructing the chain <code>DraftPost → PendingReviewPost → Post</code>, because the constructors are private and the only routes between types are the transition methods. The reachable states and transitions of the FSM become exactly the inhabited types and the typed functions between them; an illegal transition is a term that does not typecheck. The same idea generalises to a <code>PhantomData&lt;State&gt;</code> marker when you want one struct parameterised by a state type rather than three distinct structs.</p>
+<p><strong>🔧 In practice →</strong> Typestate shines on resource and protocol APIs where calling things out of order is a real bug. Picture a TCP-style connection that must be opened, then sent on, then closed — and where you must never write to a closed socket. Encode each stage as its own type:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Closed;
+struct Open { fd: i32 }
+
+impl Closed {
+    fn connect(self, addr: &amp;str) -&gt; Open { /* ... */ Open { fd: 3 } }
+}
+impl Open {
+    fn send(&amp;mut self, bytes: &amp;[u8]) { /* ... */ }
+    fn close(self) -&gt; Closed { /* ... */ Closed }   // consumes self
+}
+<span class="boring">}</span></code></pre>
+<p>Once you call <code>close</code>, the <code>Open</code> value is <em>moved away</em> and gone — <code>send</code> on it won’t even compile, so “write after close” is impossible to express. Builder APIs use the same trick to enforce “you must set the URL before calling <code>.build()</code>”. This is the high-value reason to reach for typestate: turning a class of runtime misuse into a compile error, with zero runtime cost.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Foundations of Computer Science (the OCaml course) gives the intuition: there, the only way to obtain a value of a given type is to build it with one of that type’s constructors. Here it’s the same discipline, enforced by privacy. The only route to a <code>Post</code> (the published one) is the chain <code>DraftPost → PendingReviewPost → Post</code>, because the constructors are private and the transition methods are the only doors between the types. Holding a <code>PendingReviewPost</code> is itself evidence that a review was requested — you couldn’t have got one any other way. So the reachable states of the FSM become exactly the types you can construct, and the legal transitions become the functions between them; an illegal transition is simply a call that doesn’t typecheck. The same idea generalises to a <code>PhantomData&lt;State&gt;</code> marker when you want one struct parameterised by a state type rather than three distinct structs.</p>
 </blockquote>
 <p>The lesson is not “never use trait objects.” It is: <strong>when the legal transitions are known at compile time and you want misuse to be a compile error, prefer typestate; reach for <code>dyn</code> when the set of types is open or genuinely runtime-chosen.</strong> The trait-object state pattern earns its keep when downstream code must add new states the library cannot foresee — the same extensibility argument as <code>Canvas</code>.</p>
 <h2 id="the-decision-guide-impl-trait-vs-dyn-trait-vs-generic-bound"><a class="header" href="#the-decision-guide-impl-trait-vs-dyn-trait-vs-generic-bound">The decision guide: <code>impl Trait</code> vs <code>dyn Trait</code> vs generic bound</a></h2>
@@ -433,41 +466,39 @@ fn take_dyn(x: &amp;dyn Render) { /* one body, indirect */ }
 <li><strong><code>fn f(x: &amp;dyn Trait)</code>:</strong> dynamic dispatch, one compiled body. Use when you need argument heterogeneity or want to curb monomorphisation bloat in a large function.</li>
 </ul>
 <blockquote>
-<p><strong>🦀 From your toolbox →</strong> <code>-&gt; impl Trait</code> is morally OCaml’s existential-but-monomorphic return: the caller sees an abstract type. <code>Box&lt;dyn Trait&gt;</code> is the genuine boxed existential <code>∃T. T</code> — closest to a C++ <code>std::unique_ptr&lt;Base&gt;</code> or a Java interface-typed reference, indirection and all. <code>fn f&lt;T: Trait&gt;</code> is C++ templates / OCaml <code>'a</code> with a constraint, monomorphised like a template instantiation. The break from C++ templates: Rust typechecks the <em>generic body</em> against the bound <code>T: Trait</code> once, before any instantiation (<a href="08-generics-and-traits.html">generics and traits</a>), so you get a clean error at the definition rather than a wall of instantiation errors at the use site.</p>
+<p><strong>🦀 From your toolbox →</strong> <code>-&gt; impl Trait</code> is “the caller sees an abstract type it can only use through the trait” — like a Java method declared to return an <code>interface</code> type, except Rust pins it to <em>one</em> hidden concrete type and inlines it (no boxing). <code>Box&lt;dyn Trait&gt;</code> is the one that genuinely behaves like a Java interface-typed reference or a Swift class reference held through a protocol: a heap value reached by indirection, where the concrete type is erased and dispatch goes through a table. <code>fn f&lt;T: Trait&gt;</code> is closest to Java generics — but where Java erases <code>T</code> to one bytecode body, Rust monomorphises into a separate stamped-out copy per type (Compiler Construction). One nicety over many template-style systems: Rust typechecks the <em>generic body</em> against the bound <code>T: Trait</code> once, at the definition (<a href="08-generics-and-traits.html">generics and traits</a>), so you get a clean error where the function is written rather than a wall of errors at each call site.</p>
 </blockquote>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
-<li><code>dyn Trait</code> is an unsized type; you only ever hold it behind a pointer, and that pointer is <strong>fat</strong> — <code>(data ptr, vtable ptr)</code>, two words. The vtable is per-(type, trait), lives in static memory, and is <em>not</em> embedded in the value (unlike C++/Java vptrs), so concrete values stay thin and one value can be viewed through many independent vtables.</li>
+<li><code>dyn Trait</code> is an unsized type; you only ever hold it behind a pointer, and that pointer is <strong>fat</strong> — <code>(data ptr, vtable ptr)</code>, two words. The vtable is per-(type, trait), lives in static memory, and is <em>not</em> embedded in the value (unlike a Java object’s class pointer or a C++ vptr), so concrete values stay thin and one value can be viewed through many independent vtables.</li>
 <li><strong>Static dispatch</strong> (generics, <code>impl Trait</code>) is monomorphised: N copies, direct inlinable calls, no runtime cost. <strong>Dynamic dispatch</strong> (<code>dyn</code>) is one body plus a vtable indirection: thin binary, runtime heterogeneity, no inlining. Choose <code>dyn</code> only when you need runtime mixing or an open extensibility boundary.</li>
 <li><strong>Dyn-compatibility</strong> (object safety) excludes generic methods and by-value/return <code>Self</code>, because a vtable slot must be a single function pointer over a thin <code>self</code>. Gate convenience methods with <code>where Self: Sized</code> to keep a trait usable as <code>dyn</code>.</li>
 <li>Rust has encapsulation and polymorphism but <strong>no inheritance</strong>: implementation reuse comes from default trait methods + composition; subtype polymorphism from trait bounds or trait objects. This dodges the fragile-base-class problem by design.</li>
-<li>The <strong>typestate</strong> pattern encodes each FSM state as a type, with transitions consuming <code>self</code> and returning the next state’s type; illegal transitions become non-existent methods, so misuse fails to compile (Curry-Howard: the type is a proof of reachability). It is zero-cost. Prefer it over the trait-object state pattern when the states are closed and you want compile-time enforcement.</li>
+<li>The <strong>typestate</strong> pattern encodes each FSM state as a type, with transitions consuming <code>self</code> and returning the next state’s type; illegal transitions become non-existent methods, so misuse fails to compile. It is zero-cost. Prefer it over the trait-object state pattern when the states are closed and you want compile-time enforcement.</li>
 </ul>
 <h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
 <ol>
 <li>
-<p>Construct a <code>Box&lt;dyn Iterator&lt;Item = u32&gt;&gt;</code> from <code>(0..5).map(|x| x * x)</code> and print <code>size_of_val</code> of the box’s pointee versus <code>size_of::&lt;Box&lt;dyn Iterator&lt;Item=u32&gt;&gt;&gt;()</code>. Explain why the latter is 16 bytes regardless of the underlying iterator’s size.</p>
+<p><strong>Predict the coercion.</strong> You have <code>let v: Vec&lt;Box&lt;dyn Render&gt;&gt; = vec![Box::new(Gauge { value: 0.5 })];</code> and now you try to read <code>v[0].value</code> directly. Before compiling, say what happens and why — then say which single line you’d add to the <code>Render</code> trait to make the gauge’s percentage reachable through the trait object. (The point: a <code>dyn Render</code> exposes the <em>trait’s</em> surface, not the concrete type’s fields.)</p>
 </li>
 <li>
-<p>Write a trait <code>Shape { fn area(&amp;self) -&gt; f64; fn unit() -&gt; Self; }</code>. Try to use it as <code>&amp;dyn Shape</code>. Read the resulting <code>E0038</code> carefully, then refactor so <code>area</code> remains dispatchable through <code>dyn Shape</code> while <code>unit</code> is still callable on concrete types. (Two correct fixes exist — find both.)</p>
-</li>
-<li>
-<p>(★) Take the trait-object blog <code>Post</code>. Add a <code>reject(&amp;mut self)</code> transition sending <code>PendingReview</code> back to <code>Draft</code>. Now attempt to give <code>State</code> a <em>default</em> <code>reject</code> body returning <code>self</code>. Explain the exact compiler error, tie it to a named dyn-compatibility rule, and show the minimal change that makes the default body legal while keeping <code>State</code> dyn-compatible.</p>
-</li>
-<li>
-<p>In the typestate blog, add a <code>Scheduled</code> state between <code>PendingReview</code> and <code>Published</code>, reachable by <code>schedule(self) -&gt; ScheduledPost</code>, with <code>publish(self) -&gt; Post</code>. Then write a <code>main</code> that <em>tries</em> to call <code>.approve()</code> on a <code>ScheduledPost</code>. Show the error and argue why this guarantee is strictly stronger than the trait-object version’s runtime no-op.</p>
-</li>
-<li>
-<p>Explain why this fails to compile and give two different fixes (one using <code>dyn</code>, one using an enum):</p>
+<p><strong>Which compiles, and why?</strong> Three traits, each used as <code>&amp;dyn T</code>. Without running the compiler, decide for each whether it is dyn-compatible, and name the rule:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>fn pick(flag: bool) -&gt; impl Render {
-    if flag { Gauge { value: 1.0 } } else { Label { text: "x".into() } }
-}
+</span>trait A { fn id(&amp;self) -&gt; u32; }
+trait B { fn merge(&amp;self, other: &amp;Self) -&gt; Self; }
+trait C { fn tag&lt;T: Into&lt;String&gt;&gt;(&amp;self, t: T) -&gt; String; }
 <span class="boring">}</span></code></pre>
+<p>For the two that fail, propose the smallest signature change that keeps the method <em>useful on concrete types</em> while letting the trait still be used as <code>&amp;dyn T</code>.</p>
 </li>
 <li>
-<p>(★) A <code>Vec&lt;Box&lt;dyn Render&gt;&gt;</code> cannot be <code>.clone()</code>d even if every concrete widget is <code>Clone</code>, because <code>Clone</code> is not dyn-compatible (it has <code>fn clone(&amp;self) -&gt; Self</code>). Design a <code>RenderClone</code> super-trait with a <code>clone_box(&amp;self) -&gt; Box&lt;dyn Render&gt;</code> method, blanket-implement it for all <code>T: Render + Clone</code>, and wire up <code>impl Clone for Box&lt;dyn Render&gt;</code> so the vector clones. Explain precisely which dyn-compatibility rule <code>clone_box</code> sidesteps that <code>clone</code> violates.</p>
+<p><strong>Choose the tool.</strong> For each scenario, pick <code>-&gt; impl Trait</code>, <code>Box&lt;dyn Trait&gt;</code>, or a generic bound <code>&lt;T: Trait&gt;</code>, and justify in one sentence: (a) a function that returns the iterator <code>data.iter().filter(...).map(...)</code>; (b) a <code>parse</code> function that returns one of three different error-formatter types depending on a runtime flag; (c) a hot inner routine called only with <code>Vec&lt;f64&gt;</code> that you want fully inlined.</p>
+</li>
+<li>
+<p>(★) <strong>Strengthen the blog state machine.</strong> Take the <em>trait-object</em> <code>Post</code> and try to add a <code>reject(&amp;mut self)</code> transition (PendingReview → Draft) by giving <code>State</code> a <em>default</em> <code>fn reject(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt; { self }</code>. Predict the compiler’s reaction, name the dyn-compatibility rule involved, and then explain how the <em>typestate</em> version would model <code>reject</code> instead — and what misuse it would catch at compile time that the trait-object version cannot.</p>
+</li>
+<li>
+<p><strong>Cost reasoning, no code to write.</strong> A teammate makes every function in a math-heavy module take <code>&amp;dyn Add</code>-style trait objects “to keep the binary small.” On a tight numeric loop, explain concretely what runtime costs this introduces that a generic bound would avoid, and name one situation where their instinct is actually the right call.</p>
 </li>
 </ol>
 
@@ -506,22 +537,6 @@ fn take_dyn(x: &amp;dyn Render) { /* one body, indirect */ }
         <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
         <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
         <script>

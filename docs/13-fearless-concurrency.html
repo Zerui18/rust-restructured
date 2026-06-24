@@ -1,0 +1,551 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Fearless Concurrency - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="13-fearless-concurrency"><a class="header" href="#13-fearless-concurrency">13. Fearless Concurrency</a></h1>
+<p>You have written concurrent C with <code>pthread_mutex_t</code>, Java with <code>synchronized</code>, and argued about CSP in Concurrent &amp; Distributed Systems. You know the central pain: the lock and the data it protects are two separate objects, linked only by a convention living in a comment, in your head, or in a wiki nobody reads. Forget the convention once — touch the data without the lock, or hand a raw pointer to another thread — and you get a data race: undefined behaviour, a heisenbug that survives review and reproduces only under load in production.</p>
+<p>Rust’s thesis for this chapter is bold and, once seen, obvious: <strong>the ownership and borrowing rules that gave you memory safety in <a href="02-ownership-and-moves.html">chapter 2</a> and <a href="03-references-and-borrowing.html">chapter 3</a> give you data-race freedom <em>for the same price</em>.</strong> There is no separate concurrency-safety subsystem. The borrow checker that rejected <code>&amp;mut</code> aliasing in single-threaded code is the <em>same</em> checker that rejects sharing-without-synchronisation across threads. Two marker traits, <code>Send</code> and <code>Sync</code>, thread that guarantee through the type system. The community calls the result <em>fearless concurrency</em>: not because concurrency becomes easy, but because the entire class of bug that made it terrifying — the data race — is now a compile error.</p>
+<p>One honest caveat up front, because it is the most common over-claim: <strong>Rust prevents data races, not deadlocks, not race conditions in the general sense, not livelock.</strong> You can still write two threads that lock A-then-B and B-then-A and wedge forever. The compiler proves the absence of <em>unsynchronised concurrent access</em>; it does not prove your synchronisation <em>logic</em> is correct.</p>
+<h2 id="a-data-race-precisely"><a class="header" href="#a-data-race-precisely">A data race, precisely</a></h2>
+<p>Borrowing the definition from Concurrent &amp; Distributed Systems: a <strong>data race</strong> occurs when two or more threads access the same memory location concurrently, at least one access is a write, and there is no synchronisation (happens-before edge) ordering them. All three conditions are necessary. Remove any one — make all accesses reads, or serialise them behind a lock, or never share the location — and the race is gone.</p>
+<p>Now compare to the single-threaded rule you already internalised. Rust’s borrow checker enforces <strong>aliasing XOR mutability</strong>: at any program point a value has either any number of shared references <code>&amp;T</code>, <em>or</em> exactly one exclusive reference <code>&amp;mut T</code>, never both. Stare at that next to the data-race definition:</p>
+<ul>
+<li>“at least one access is a write” ⟺ you need <code>&amp;mut T</code>,</li>
+<li>“two or more threads access the same location” ⟺ you need aliasing,</li>
+<li>and aliasing-XOR-mutability says you cannot have both at once.</li>
+</ul>
+<p>The single-threaded rule that prevents iterator invalidation and use-after-free is <em>structurally the same</em> rule that prevents data races. The only missing piece is teaching the type system <em>which</em> types may cross a thread boundary at all, and which references may be shared across one. That is exactly what <code>Send</code> and <code>Sync</code> encode, and we get to them at the end.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> In CDS a data race is undefined behaviour at the memory-model level; the standard mitigations (locks, message passing) are <em>disciplines</em> the programmer must apply correctly. Rust reframes the discipline as a <em>typing judgement</em>. “This program has no data races” becomes a theorem the type checker discharges — a soundness property in the sense of Semantics of Programming Languages. The aliasing-XOR-mutability invariant is the lemma; data-race freedom is a corollary.</p>
+</blockquote>
+<h2 id="threads-spawn-joinhandle-and-why-static"><a class="header" href="#threads-spawn-joinhandle-and-why-static">Threads: <code>spawn</code>, <code>JoinHandle</code>, and why <code>'static</code></a></h2>
+<p>Rust’s standard library uses a 1:1 threading model — one OS thread per <code>std::thread</code>, the same processes-and-threads picture from Computer Architecture &amp; OS. You create one by handing <code>thread::spawn</code> a closure:</p>
+<pre class="playground"><code class="language-rust">use std::thread;
+
+fn main() {
+    let handle = thread::spawn(|| {
+        let mut total = 0u64;
+        for i in 1..=1_000 { total += i; }
+        total
+    });
+
+    // ... main thread does its own work here ...
+
+    let sum = handle.join().unwrap(); // block until the thread finishes
+    println!("worker computed {sum}");
+}</code></pre>
+<p><code>spawn</code> returns a <code>JoinHandle&lt;T&gt;</code>, where <code>T</code> is the closure’s return type. It is an owned handle to the running thread. Calling <code>.join()</code> blocks the current thread until the spawned one terminates and returns a <code>Result&lt;T, _&gt;</code> — <code>Err</code> if that thread panicked. Note that <code>join</code> returns the closure’s value, so threads are not just fire-and-forget side-effect engines; they are computations you await.</p>
+<p>If you never join, the handle is dropped and the thread is detached — and crucially, <strong>when <code>main</code> returns, the process exits and all surviving spawned threads are killed mid-flight</strong>, finished or not. The <code>JoinHandle</code> is your only lever to wait.</p>
+<h3 id="the-static-bound-and-why-it-must-be-there"><a class="header" href="#the-static-bound-and-why-it-must-be-there">The <code>'static</code> bound and why it must be there</a></h3>
+<p>Here is the signature that governs everything (slightly simplified):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn spawn&lt;F, T&gt;(f: F) -&gt; JoinHandle&lt;T&gt;
+where
+    F: FnOnce() -&gt; T + Send + 'static,
+    T: Send + 'static,
+<span class="boring">}</span></code></pre>
+<p>Two bounds on the closure <code>F</code>: <code>Send</code> (we will return to it) and <code>'static</code>. The <code>'static</code> bound is the one that bites first, and the reason is a pure lifetime argument from <a href="04-lifetimes.html">chapter 4</a>. The spawned thread may run for <em>any</em> duration — it can outlive the stack frame that spawned it. So any reference the closure captures must be valid for the rest of the program, i.e. its region must be <code>'static</code>. A borrow of a local variable has a region that ends when that local goes out of scope; the compiler cannot prove the thread finishes first, so it refuses.</p>
+<p>Watch it fail:</p>
+<pre class="playground"><code class="language-rust">use std::thread;
+
+fn main() {
+    let labels = vec!["alpha", "beta", "gamma"];
+    let handle = thread::spawn(|| {
+        println!("{labels:?}"); // borrows `labels`
+    });
+    handle.join().unwrap();
+}</code></pre>
+<pre><code class="language-text">error[E0373]: closure may outlive the current function, but it borrows `labels`,
+              which is owned by the current function
+ --&gt; src/main.rs:5:32
+  |
+5 |     let handle = thread::spawn(|| {
+  |                                ^^ may outlive borrowed value `labels`
+6 |         println!("{labels:?}");
+  |                    ------ `labels` is borrowed here
+  |
+note: function requires argument type to outlive `'static`
+help: to force the closure to take ownership of `labels` ... use the `move` keyword
+</code></pre>
+<p>This is not pedantry about a case that “obviously” works because we join immediately. The danger is concrete. Imagine the main thread dropped <code>labels</code> right after spawning:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let labels = vec!["alpha", "beta", "gamma"];
+let handle = thread::spawn(|| println!("{labels:?}"));
+drop(labels);            // freed here
+handle.join().unwrap();  // thread may only now read it — use-after-free
+<span class="boring">}</span></code></pre>
+<p>The OS scheduler decides when the spawned thread actually runs. It might not touch <code>labels</code> until after <code>drop</code> has freed the backing allocation. That is a use-after-free across threads — precisely the bug C lets you ship. Rust forbids the <em>borrow</em> in the first place, so the dangerous version cannot be written.</p>
+<h3 id="move-transferring-ownership-across-the-boundary"><a class="header" href="#move-transferring-ownership-across-the-boundary"><code>move</code>: transferring ownership across the boundary</a></h3>
+<p>The fix the compiler suggests is <code>move</code>. As in <a href="12-closures-and-iterators.html">chapter 12</a>, <code>move</code> forces the closure to capture by value rather than by reference. For <code>Vec&lt;String&gt;</code> that means the heap-owning struct is <em>moved</em> into the closure, and the closure (now owning <code>'static</code> data) satisfies the bound:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let labels = vec!["alpha", "beta", "gamma"];
+let handle = thread::spawn(move || {
+    println!("{labels:?}");
+});
+// labels is no longer usable here — it was moved into the new thread.
+handle.join().unwrap();
+<span class="boring">}</span></code></pre>
+<p>Ownership has physically crossed the thread boundary. The main thread can no longer name <code>labels</code>, so the use-after-free is impossible <em>by construction</em>: there is no second owner to free it early.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>move</code> is C++’s <code>std::move</code> applied to a lambda’s capture list — <code>[v = std::move(v)]() { ... }</code>. The difference is enforcement. In C++ nothing stops you capturing by reference (<code>[&amp;]</code>) into a <code>std::thread</code> that outlives the referent; you get a dangling reference and a data race, and the compiler is silent. Rust’s <code>'static</code> bound makes the C++ footgun a type error. The analogy breaks down on detach semantics too: a C++ <code>std::thread</code> destructor <em>terminates the program</em> if you forget to <code>join</code>/<code>detach</code>; Rust’s <code>JoinHandle</code> quietly detaches on drop.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> A <code>move</code> closure capturing a <code>Vec</code> is a compiler-synthesised struct holding the vector’s three words (pointer, length, capacity) by value — no boxing for the capture itself. <code>spawn</code> then <code>Box</code>es that closure onto the heap and hands the box to the OS thread-creation call (<code>pthread_create</code> on this platform), because the new thread needs a stable, owned entry point. The <code>JoinHandle</code> wraps the OS thread id plus a channel for the return value. <code>join</code> is a <code>pthread_join</code> plus reading that value out.</p>
+</blockquote>
+<h2 id="message-passing-channels-as-csp"><a class="header" href="#message-passing-channels-as-csp">Message passing: channels as CSP</a></h2>
+<p>The first of Rust’s two concurrency idioms is message passing, captured by the Go-inflected slogan “do not communicate by sharing memory; share memory by communicating.” This is the channel — directly the channel of CSP from Concurrent &amp; Distributed Systems, and the substrate of the actor model.</p>
+<p><code>std::sync::mpsc</code> gives you a channel. The name is the design: <strong>multiple producer, single consumer.</strong> <code>channel()</code> returns a <code>(Sender&lt;T&gt;, Receiver&lt;T&gt;)</code> pair.</p>
+<pre class="playground"><code class="language-rust">use std::sync::mpsc;
+use std::thread;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let payload = String::from("ping");
+        tx.send(payload).unwrap();
+        // payload is gone here — ownership left through the channel.
+    });
+
+    let got = rx.recv().unwrap();
+    println!("received: {got}");
+}</code></pre>
+<p><code>tx.send(v)</code> enqueues <code>v</code>; it returns <code>Result&lt;(), SendError&lt;T&gt;&gt;</code>, erroring only if the receiver has already been dropped (the channel is <em>closed</em> when either half drops). <code>rx.recv()</code> blocks until a value arrives or the channel closes, returning <code>Result&lt;T, RecvError&gt;</code>. There is also <code>try_recv</code> for a non-blocking poll, useful when the consumer has other work between checks.</p>
+<p>The deep point is what the type system does to <code>send</code>. Its signature is <code>fn send(&amp;self, t: T) -&gt; Result&lt;...&gt;</code> — it takes <code>T</code> <strong>by value</strong>. So sending <em>moves ownership of the payload into the channel</em>, and from there to the receiver. The classic CSP intuition “the message is now theirs, not mine” is enforced as an ownership transfer. Try to keep using a sent value and you get the same E0382 that any move-after-use produces:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>thread::spawn(move || {
+    let payload = String::from("ping");
+    tx.send(payload).unwrap();
+    println!("still mine? {payload}"); // ERROR: borrow of moved value
+});
+<span class="boring">}</span></code></pre>
+<pre><code class="language-text">error[E0382]: borrow of moved value: `payload`
+  |
+  | tx.send(payload).unwrap();
+  |         ------- value moved here
+  | println!("still mine? {payload}");
+  |                        ^^^^^^^ value borrowed here after move
+</code></pre>
+<p>There is <em>no separate rule</em> for channels. “After you send a value you may not touch it” — the CSP correctness condition you would otherwise enforce by discipline — falls straight out of move semantics. Single ownership <em>is</em> the channel discipline.</p>
+<p><code>Receiver&lt;T&gt;</code> is an iterator: <code>for msg in rx</code> blocks for each message and ends cleanly when the channel closes. For multiple producers, <strong>clone the sender</strong> — each clone is an independent handle into the same queue:</p>
+<pre class="playground"><code class="language-rust">use std::sync::mpsc;
+use std::thread;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    for worker in 0..3 {
+        let tx = tx.clone();           // one sender per producer thread
+        thread::spawn(move || {
+            tx.send(format!("done by worker {worker}")).unwrap();
+        });
+    }
+    drop(tx); // drop the original so the channel can close once workers finish
+
+    for result in rx {                 // ends when all senders are dropped
+        println!("{result}");
+    }
+}</code></pre>
+<p>The <code>drop(tx)</code> is the subtle bit a beginner misses and you should not: the <code>for result in rx</code> loop terminates only when <em>every</em> <code>Sender</code> is dropped. The original <code>tx</code> is still alive in <code>main</code>’s scope, so without the explicit <code>drop</code> the loop would block forever waiting on a producer that will never send. This is a <em>liveness</em> bug, not a safety bug — exactly the kind Rust does <strong>not</strong> catch for you.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is CSP made concrete. A <code>Sender</code>/<code>Receiver</code> pair is a typed channel <code>c : chan T</code>; <code>send</code> is <code>c!v</code> and <code>recv</code> is <code>c?x</code>. The <code>mpsc</code> restriction — many writers, one reader — mirrors a process algebra where output capability is shared but input is owned by a single process. The actor model is the natural specialisation: give each actor an <code>rx</code>, hand out clones of its <code>tx</code>, and its <code>recv</code> loop is the actor’s behaviour. Because the message is <em>moved</em>, there is no aliasing between sender and receiver after the handover — the no-shared-state property actors rely on for race-freedom is, again, just ownership.</p>
+</blockquote>
+<h2 id="shared-state-mutext-owns-its-data"><a class="header" href="#shared-state-mutext-owns-its-data">Shared state: <code>Mutex&lt;T&gt;</code> owns its data</a></h2>
+<p>Message passing models single ownership flowing through pipes. Sometimes you genuinely want <strong>multiple threads touching one piece of state</strong> — a shared counter, a cache. That is multiple ownership plus mutation, and it is where the lock-versus-data separation in C and Java does its damage.</p>
+<p>Rust’s answer is <code>Mutex&lt;T&gt;</code>, and the design decision that makes it different is in the type itself: <strong>the mutex <em>contains</em> the data.</strong> You do not have a <code>Mutex</code> over here and an <code>i32</code> over there bound by a comment. You have a <code>Mutex&lt;i32&gt;</code>, and the only way to reach the <code>i32</code> is through the lock.</p>
+<pre class="playground"><code class="language-rust">use std::sync::Mutex;
+
+fn main() {
+    let cell = Mutex::new(0);
+    {
+        let mut guard = cell.lock().unwrap(); // acquire; blocks until held
+        *guard += 10;                         // guard derefs to &amp;mut i32
+    } // guard dropped here -&gt; lock released automatically
+    println!("{cell:?}"); // Mutex { data: 10, .. }
+}</code></pre>
+<p>Three things to read carefully:</p>
+<ol>
+<li>
+<p><strong>You cannot reach the data without locking.</strong> The type is <code>Mutex&lt;i32&gt;</code>, not <code>i32</code>. There is no method to grab the inner value except <code>lock</code>. The “always lock before you touch the data” rule is not a convention you can forget — it is the only API that exists. This is the single most important sentence in the chapter: in C and Java, lock and data are separate and the link is <em>discipline</em>; in Rust the link is <em>the type</em>.</p>
+</li>
+<li>
+<p><strong><code>lock()</code> returns a <code>MutexGuard&lt;T&gt;</code>, an RAII handle.</strong> <code>guard</code> derefs (via <code>Deref</code>/<code>DerefMut</code>) to <code>&amp;mut i32</code>, so you mutate through it. When <code>guard</code> goes out of scope its <code>Drop</code> impl releases the lock. You cannot forget to unlock for the same reason you cannot forget to free a <code>Box</code> — release is destruction, and destruction is automatic. This is precisely the RAII / scope-bound resource management from Programming in C and C++, applied to a lock instead of a heap allocation.</p>
+</li>
+<li>
+<p><strong><code>lock()</code> returns a <code>Result</code>.</strong> If a thread panics while holding the guard, the mutex becomes <em>poisoned</em> — subsequent <code>lock()</code> calls return <code>Err(PoisonError)</code>. The rationale: a panic mid-critical-section may have left the protected invariant broken, so the lock refuses to silently hand out possibly-corrupt state. <code>.unwrap()</code> propagates that as a panic; in production you might inspect the error and call <code>.into_inner()</code> to recover the data deliberately.</p>
+</li>
+</ol>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>MutexGuard</code> is <code>std::lock_guard</code>/<code>std::unique_lock</code> from C++ RAII — lock on construction, unlock on destruction. But C++’s <code>std::mutex</code> guards <em>nothing</em>; it is a bare lock and you pair it with separate data by convention, exactly the error-prone separation Rust removes. Java’s <code>synchronized(obj)</code> and <code>ReentrantLock</code> are worse on this axis: the lock and the fields it “protects” are related only by programmer intent, with zero compiler enforcement, and Java mutexes are reentrant whereas <code>std::sync::Mutex</code> is <em>not</em> — locking it twice on one thread deadlocks. The win Rust adds over both is that <em>the type forbids unsynchronised access at all</em>, not merely automates the unlock.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> A <code>MutexGuard</code> holds the lock for its <em>entire lifetime</em>, which is until end of scope, not until last use. So <code>let total = *m.lock().unwrap() + other.lock().unwrap()...</code> or holding a guard across an <code>.await</code> or a long computation keeps everyone else blocked. Worse, locking the <em>same</em> mutex twice in one expression deadlocks instantly: <code>*m.lock().unwrap() += *m.lock().unwrap();</code> acquires, then tries to re-acquire a non-reentrant lock the same thread already holds. Fix: bind the guard to a name, scope it tightly with an explicit <code>{ }</code> block, and copy the value out (<code>let n = *m.lock().unwrap();</code>) so the guard drops before you do further work.</p>
+</blockquote>
+<h3 id="sharing-the-mutex-itself-arct"><a class="header" href="#sharing-the-mutex-itself-arct">Sharing the mutex itself: <code>Arc&lt;T&gt;</code></a></h3>
+<p><code>Mutex&lt;T&gt;</code> lets many threads <em>mutate</em> the data — but how do many threads each <em>own</em> a reference to the same mutex, given the <code>'static</code> move bound on <code>spawn</code>? You cannot move one <code>Mutex</code> into ten closures; it has a single owner. From <a href="15-smart-pointers.html">chapter 15</a> you might reach for <code>Rc&lt;T&gt;</code>, the shared-ownership reference-counted pointer. Try it and the compiler stops you with a different, deeper error:</p>
+<pre class="playground"><code class="language-rust">use std::rc::Rc;
+use std::sync::Mutex;
+use std::thread;
+
+fn main() {
+    let counter = Rc::new(Mutex::new(0));
+    let mut handles = vec![];
+    for _ in 0..10 {
+        let counter = Rc::clone(&amp;counter);
+        handles.push(thread::spawn(move || {       // ERROR
+            *counter.lock().unwrap() += 1;
+        }));
+    }
+    for h in handles { h.join().unwrap(); }
+    println!("{}", *counter.lock().unwrap());
+}</code></pre>
+<pre><code class="language-text">error[E0277]: `Rc&lt;Mutex&lt;i32&gt;&gt;` cannot be sent between threads safely
+   |
+   | handles.push(thread::spawn(move || {
+   |              ------------- ^ `Rc&lt;Mutex&lt;i32&gt;&gt;` cannot be sent between threads safely
+   |
+   = help: the trait `Send` is not implemented for `Rc&lt;Mutex&lt;i32&gt;&gt;`
+note: required by a bound in `spawn`
+</code></pre>
+<p><code>Rc&lt;T&gt;</code> updates its reference count with <strong>plain, non-atomic</strong> increments and decrements — fast, because single-threaded code needs no synchronisation. But two threads doing <code>clone</code>/<code>drop</code> concurrently would race on that count: a lost update could free the value while a clone still points at it (use-after-free) or leak it forever. So <code>Rc&lt;T&gt;</code> is deliberately <code>!Send</code>, and <code>spawn</code>’s <code>Send</code> bound rejects it at compile time. <strong>The data race on the refcount is caught before the program runs</strong>, even though you never wrote the racing code yourself — you only tried to share a type that <em>could</em> race.</p>
+<p>The fix is <code>Arc&lt;T&gt;</code> — <em>atomically</em> reference-counted. Identical API to <code>Rc</code>, but the count is maintained with atomic fetch-add/fetch-sub, so concurrent clone/drop is safe. You pay for the atomics (memory fences, contended cache lines) only when you opt in:</p>
+<pre class="playground"><code class="language-rust">use std::sync::{Arc, Mutex};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+    for _ in 0..10 {
+        let counter = Arc::clone(&amp;counter);     // bump the atomic refcount
+        handles.push(thread::spawn(move || {
+            let mut n = counter.lock().unwrap();
+            *n += 1;
+        }));
+    }
+    for h in handles { h.join().unwrap(); }
+    println!("Result: {}", *counter.lock().unwrap()); // Result: 10
+}</code></pre>
+<p>The idiom to memorise is <strong><code>Arc&lt;Mutex&lt;T&gt;&gt;</code></strong>: <code>Arc</code> provides shared <em>ownership</em> across threads, <code>Mutex</code> provides synchronised <em>mutation</em> of the shared data. They compose because they solve orthogonal problems. (Compare the single-threaded analogue from <a href="15-smart-pointers.html">chapter 15</a>: <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> — shared ownership plus interior mutability, but with runtime borrow-checking instead of locking, and no thread safety.)</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>Arc&lt;T&gt;</code>’s heap allocation holds two counts (strong and weak) as <code>AtomicUsize</code> plus the <code>T</code>. <code>clone</code> is a <code>fetch_add(1, Relaxed)</code>; <code>drop</code> is a <code>fetch_sub(1, Release)</code> and, when it hits zero, an <code>Acquire</code> fence before running <code>T</code>’s destructor — the release/acquire pair establishes the happens-before edge so the last dropper sees all prior writes. <code>Mutex&lt;T&gt;</code> on this platform wraps an OS futex (a <code>pthread_mutex_t</code>-equivalent) alongside the <code>T</code> and a poison flag. <code>Mutex::new</code> is not <code>const</code>-allocated separately; the lock and data sit in one contiguous allocation, which is <em>why</em> the lock can guard the data without indirection.</p>
+</blockquote>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>Arc&lt;T&gt;</code> is C++’s <code>std::shared_ptr&lt;T&gt;</code> with atomic refcounting — but <code>shared_ptr</code> only makes the <em>control block</em> thread-safe, never the pointee. Two threads writing through one <code>shared_ptr&lt;vector&lt;int&gt;&gt;</code> is a data race C++ permits silently. Rust splits the two guarantees cleanly: <code>Arc</code> makes <em>ownership</em> shareable, and you must additionally wrap the data in <code>Mutex</code>/<code>RwLock</code>/an atomic to make <em>access</em> shareable — and the type system refuses to let you skip that step.</p>
+</blockquote>
+<h3 id="rwlockt-and-atomics-briefly"><a class="header" href="#rwlockt-and-atomics-briefly"><code>RwLock&lt;T&gt;</code> and atomics, briefly</a></h3>
+<p>When reads vastly outnumber writes, <code>RwLock&lt;T&gt;</code> lets <em>many</em> readers (<code>.read()</code>) share access simultaneously while writers (<code>.write()</code>) get exclusivity — the classic readers-writer lock from CDS, with the same aliasing-XOR-mutability shape: many <code>&amp;T</code> or one <code>&amp;mut T</code>, now enforced at runtime by the lock. For a single integer or flag, skip the mutex entirely and use <code>std::sync::atomic</code> types like <code>AtomicUsize</code> or <code>AtomicBool</code>, which expose lock-free <code>fetch_add</code>, <code>compare_exchange</code>, etc., parameterised by the memory <code>Ordering</code> (<code>Relaxed</code>/<code>Acquire</code>/<code>Release</code>/<code>SeqCst</code>) you studied in the memory-consistency part of CDS.</p>
+<h2 id="send-and-sync-the-proof-encoded-as-types"><a class="header" href="#send-and-sync-the-proof-encoded-as-types"><code>Send</code> and <code>Sync</code>: the proof, encoded as types</a></h2>
+<p>Everything above is enforced by two marker traits in <code>std::marker</code>. They have <strong>no methods</strong> — they are pure type-level predicates, like a refinement the type carries, and they are <em>auto-derived</em>: a type is <code>Send</code>/<code>Sync</code> iff all its fields are.</p>
+<ul>
+<li><strong><code>Send</code></strong> — “ownership of a <code>T</code> may be transferred to another thread.” <code>spawn</code> requires its closure (hence everything captured) to be <code>Send</code>.</li>
+<li><strong><code>Sync</code></strong> — “a <code>&amp;T</code> may be shared across threads,” defined precisely as: <code>T: Sync</code> ⟺ <code>&amp;T: Send</code>. If you can safely send a shared reference, the type is safe to share.</li>
+</ul>
+<p>Almost everything is <code>Send + Sync</code> because almost everything is built from <code>Send + Sync</code> parts. The interesting cases are the <em>negative</em> ones, and each negative encodes exactly one would-be data race:</p>
+<ul>
+<li><code>Rc&lt;T&gt;</code> is <code>!Send</code> and <code>!Sync</code> — its non-atomic refcount races, as we saw.</li>
+<li><code>RefCell&lt;T&gt;</code> (and <code>Cell&lt;T&gt;</code>) is <code>!Sync</code> — its borrow flag is a non-atomic runtime check that two threads could corrupt. It <em>is</em> <code>Send</code> (you may move it to one other thread), just not <code>Sync</code> (you may not let two threads share <code>&amp;RefCell</code>).</li>
+<li>Raw pointers <code>*const T</code>/<code>*mut T</code> are neither, because the compiler knows nothing about what they alias.</li>
+<li><code>Arc&lt;T&gt;</code> is <code>Send + Sync</code> <em>provided</em> <code>T: Send + Sync</code>; <code>Mutex&lt;T&gt;</code> is <code>Sync</code> whenever <code>T: Send</code>, because the lock turns any <code>Send</code> payload into something safely shareable.</li>
+</ul>
+<p>This is the whole proof, and it is genuinely a proof in the Logic and Proof / Curry-Howard sense. Read the trait bounds as propositions: <code>spawn</code>’s <code>F: Send</code> is the hypothesis “the captured state may cross a thread.” The compiler discharges it by structural induction — <code>F</code> is <code>Send</code> because each field is, down to primitives which are axiomatically <code>Send</code>. When you wrote <code>Rc&lt;Mutex&lt;i32&gt;&gt;</code>, the induction <em>failed</em> at the <code>Rc</code> node: there is no derivation of <code>Rc: Send</code>, so there is no derivation of <code>closure: Send</code>, so the program does not type-check. The data-race-freedom theorem is <em>constructive</em> — its absence is a concrete missing implication the compiler points at.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <code>Send</code>/<code>Sync</code> are the soundness machinery from Semantics of Programming Languages, specialised to concurrency. The metatheorem is roughly: <em>a well-typed program using only safe Rust has no data races.</em> <code>Send</code>/<code>Sync</code> are the typing-judgement side conditions that make the proof go through; they are auto-derived so the programmer rarely writes them, exactly as type inference (Foundations of CS) spares you from writing types. Implementing them by hand requires <code>unsafe</code> (see <a href="16-unsafe-and-ffi.html">chapter 16</a>) — that is you stepping <em>outside</em> the checked fragment and assuming a proof obligation the compiler can no longer discharge for you.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>Send</code>/<code>Sync</code> are zero-cost: marker traits compile to nothing, carry no data, and have no vtable. They exist only during type-checking. After monomorphisation (Compiler Construction) they vanish entirely — there is no runtime representation of “this <code>Vec</code> is <code>Send</code>.” The guarantee is paid for once, at compile time, and the generated machine code is identical to what an equivalent correct C program would emit.</p>
+</blockquote>
+<h2 id="beyond-the-standard-library-scoped-threads-and-rayon"><a class="header" href="#beyond-the-standard-library-scoped-threads-and-rayon">Beyond the standard library: scoped threads and rayon</a></h2>
+<p>Two practical escapes from boilerplate, both stable. <strong>Scoped threads</strong> (<code>std::thread::scope</code>) relax the <code>'static</code> bound: threads spawned inside a <code>scope</code> closure are guaranteed to be joined before <code>scope</code> returns, so the compiler <em>can</em> prove they do not outlive borrowed locals — meaning you may pass <code>&amp;data</code> (not just <code>move</code>d owned data) into them without <code>Arc</code>:</p>
+<pre class="playground"><code class="language-rust">use std::thread;
+
+fn main() {
+    let data = vec![1, 2, 3, 4];
+    thread::scope(|s| {
+        s.spawn(|| println!("borrowed read: {:?}", &amp;data[..2]));
+        s.spawn(|| println!("borrowed read: {:?}", &amp;data[2..]));
+    }); // all scoped threads joined here; only now may `data` be moved/dropped
+    println!("back in main, still own: {data:?}");
+}</code></pre>
+<p>The scope’s join-before-return guarantee <em>is</em> the lifetime argument that makes the borrows sound — it turns “may outlive” into “provably does not.”</p>
+<p>For data parallelism, the <strong><code>rayon</code></strong> crate is the community default: it turns <code>iter()</code> into <code>par_iter()</code> and parallelises the work across a thread pool with work-stealing, while the same <code>Send</code>/<code>Sync</code> bounds keep it data-race-free. A sequential <code>.map().sum()</code> becomes a parallel one by changing one method call — fearless concurrency at the iterator level from <a href="12-closures-and-iterators.html">chapter 12</a>.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li>A data race needs aliasing + a writer + no synchronisation. Aliasing-XOR-mutability — the <em>same</em> borrow rule that gives single-threaded memory safety — kills the first two simultaneously, so data-race freedom is not a new feature, it is a corollary of ownership.</li>
+<li><code>thread::spawn</code> demands <code>Send + 'static</code> on its closure: <code>'static</code> because the thread may outlive its spawner (so no borrows of locals), <code>Send</code> because the captured state must be safe to move across threads. <code>move</code> transfers ownership in; <code>JoinHandle::join</code> waits and retrieves the result. Forgetting to join detaches, and <code>main</code> exiting kills detached threads.</li>
+<li>Channels (<code>mpsc</code>) make CSP/actor message passing into ownership transfer: <code>send</code> moves the value, so “don’t touch it after sending” is just move-after-use. <code>Mutex&lt;T&gt;</code> makes lock-before-access into a <em>type</em> — the lock owns the data, the <code>MutexGuard</code> is RAII, release is automatic, and the lock can be poisoned by a panicking holder.</li>
+<li><code>Arc&lt;Mutex&lt;T&gt;&gt;</code> is the canonical shared-mutable-state idiom: <code>Arc</code> = thread-safe shared ownership (atomic refcount, vs <code>Rc</code>’s racy non-atomic one), <code>Mutex</code> = synchronised mutation. They compose because they solve orthogonal problems.</li>
+<li><code>Send</code>/<code>Sync</code> are auto-derived, method-less marker traits that <em>are</em> the data-race-freedom proof, discharged by structural induction over fields. <code>Rc</code>/<code>RefCell</code>/raw pointers are the instructive <code>!Send</code>/<code>!Sync</code> cases. Rust prevents races, <strong>not</strong> deadlocks or liveness bugs — your synchronisation logic is still your responsibility.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Write a program that spawns a thread capturing a <code>String</code> by reference (no <code>move</code>) and <code>drop</code>s the string in <code>main</code> before joining. Read the E0373/E0382 error. Now add <code>move</code>. Then <em>also</em> try to use the string in <code>main</code> after the <code>move</code> and explain, citing the lifetime argument, why exactly one of “borrow it” and “use it after moving” can ever succeed but never both.</p>
+</li>
+<li>
+<p>Build a worker pool: spawn 4 threads, each cloning a shared <code>Sender</code>, sending its thread index down the channel. In <code>main</code>, collect all 4 via <code>for x in rx</code>. Run it — it hangs. Diagnose why (which <code>Sender</code> is still alive?) and fix it with a single <code>drop</code>. Explain whether the bug was a <em>safety</em> bug or a <em>liveness</em> bug, and why the compiler did not catch it.</p>
+</li>
+<li>
+<p>(★) Take the <code>Arc&lt;Mutex&lt;i32&gt;&gt;</code> counter example and deliberately introduce a deadlock using <em>two</em> mutexes <code>a</code> and <code>b</code>, where one thread locks <code>a</code> then <code>b</code> and another locks <code>b</code> then <code>a</code>. Confirm it hangs. Then prove to yourself the borrow checker never complained — and write one sentence explaining precisely which guarantee Rust gives here and which it does not.</p>
+</li>
+<li>
+<p>Try to send a <code>Rc&lt;i32&gt;</code> down an <code>mpsc</code> channel into a spawned thread. Predict the error trait (<code>Send</code>? <code>Sync</code>?) before compiling, then verify. Now wrap it in <code>Arc</code> instead and explain at the field level <em>why</em> the auto-derivation flips from failing to succeeding.</p>
+</li>
+<li>
+<p>Hold a <code>MutexGuard</code> across a <code>thread::sleep</code> inside the critical section, with several threads contending. Measure (informally, via timestamps) how serialised they become. Then refactor to copy the protected value out and drop the guard before sleeping. Articulate the rule: a guard is held for its <em>scope</em>, not until its last use.</p>
+</li>
+<li>
+<p>(★) Define <code>struct Counter(*mut i32);</code> and try to move it into a spawned thread. Observe that raw pointers are <code>!Send</code> so it fails. Then (reading ahead to <a href="16-unsafe-and-ffi.html">chapter 16</a>) write <code>unsafe impl Send for Counter {}</code> and make it compile. Argue what proof obligation you have just taken on from the compiler, and construct an input where your <code>unsafe impl</code> causes a genuine data race — demonstrating that <code>unsafe</code> is you promising a theorem the checker can no longer verify.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="12-closures-and-iterators.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="14-async.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="12-closures-and-iterators.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="14-async.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

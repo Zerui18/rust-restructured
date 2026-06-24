@@ -1,0 +1,591 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Generics &amp; Traits - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="8-generics--traits"><a class="header" href="#8-generics--traits">8. Generics &amp; Traits</a></h1>
+<p>Two abstraction mechanisms collapse into one design here. <strong>Generics</strong> give you parametric polymorphism over types; <strong>traits</strong> give you <em>bounded</em> polymorphism — a way to say “for all types <code>T</code> <em>that support this interface</em>”. You have met both ideas before under three different names: ML/OCaml’s <code>'a</code> type variables, Haskell’s type classes, and Java’s interfaces with generics. Rust’s contribution is to make the whole thing <em>statically resolved and zero-cost by default</em>, with a coherence discipline that ML and Java both lack. That last point is the one worth fixing in your head: every abstraction in this chapter is compiled away. There is no boxing, no vtable, no reflection, no erasure — unless you explicitly ask for it (which is <a href="09-trait-objects-and-oop.html">chapter 9</a>).</p>
+<h2 id="generics-are-monomorphised-not-erased"><a class="header" href="#generics-are-monomorphised-not-erased">Generics are monomorphised, not erased</a></h2>
+<p>A generic function is a <em>template</em> over types. The syntax echoes C++ and Java: type parameters live in angle brackets, declared between the name and the value parameters.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn largest&lt;T: PartialOrd&gt;(xs: &amp;[T]) -&gt; &amp;T {
+    let mut best = &amp;xs[0];
+    for x in xs {
+        if x &gt; best {
+            best = x;
+        }
+    }
+    best
+}
+<span class="boring">}</span></code></pre>
+<p>Read <code>fn largest&lt;T&gt;</code> as “largest is generic over some type <code>T</code>”. The <code>T: PartialOrd</code> is a <em>bound</em> — ignore it for one paragraph and we will return to why it is mandatory.</p>
+<p>The decisive question is what the compiler <em>does</em> with this. Rust <strong>monomorphises</strong>: at every call site, rustc reads off the concrete type argument and stamps out a specialised copy of the function with <code>T</code> substituted. <code>largest(&amp;[1i32, 2, 3])</code> and <code>largest(&amp;['a', 'z'])</code> compile to two entirely separate machine-code functions, <code>largest::&lt;i32&gt;</code> and <code>largest::&lt;char&gt;</code>, each with the comparison inlined to the right instruction. After monomorphisation there is no <code>T</code> left anywhere in the binary.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is <em>exactly</em> C++ template instantiation, and the tradeoff is identical: zero abstraction penalty at runtime, paid for in compile time and code size (the “code bloat” you know from heavily templated C++). It is the <strong>opposite</strong> of Java generics, which use <strong>type erasure</strong> — <code>List&lt;String&gt;</code> and <code>List&lt;Integer&gt;</code> are one class <code>List</code> at runtime, with casts inserted and <code>T</code> reduced to <code>Object</code>. Java pays a uniform boxing/dispatch cost and loses the type at runtime (hence no <code>new T[]</code>); Rust keeps full type information and pays nothing at runtime. The analogy to C++ templates breaks down in one crucial place, covered below: C++ checks a template’s body <em>only when instantiated</em> (duck typing, late errors, infamous error messages), whereas Rust type-checks the generic body <em>once, against its bounds</em>, before any instantiation exists.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Monomorphisation happens after type-checking, during MIR-to-LLVM lowering. rustc collects the set of “mono items” reachable from <code>main</code> (or from <code>pub</code> API for libraries) and emits one LLVM function per distinct <code>(fn, type-args)</code> pair. Identical instantiations across crates are deduplicated at link time. This is also why generic functions usually must live in a crate’s source (or be marked <code>#[inline]</code>) to be usable downstream — there is nothing to call until a concrete type pins the template down.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Compiler Construction.</em> You studied two implementation strategies for polymorphism: the <strong>boxed/uniform representation</strong> (everything is a pointer, one code copy, runtime dispatch — ML and Java) versus <strong>specialisation/monomorphisation</strong> (one code copy per type, static dispatch). Rust commits to specialisation for generics, which is why a generic <code>Vec&lt;T&gt;</code> can store <code>T</code> <em>unboxed and inline</em> in a flat buffer, exactly as a C++ <code>std::vector&lt;T&gt;</code> does — impossible under erasure.</p>
+</blockquote>
+<p>Generics are not limited to functions. Structs, enums, and <code>impl</code> blocks all take type parameters:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Pair&lt;T&gt; {
+    a: T,
+    b: T,
+}
+
+enum Tree&lt;T&gt; {
+    Leaf(T),
+    Node(Box&lt;Tree&lt;T&gt;&gt;, Box&lt;Tree&lt;T&gt;&gt;),
+}
+
+impl&lt;T&gt; Pair&lt;T&gt; {
+    fn new(a: T, b: T) -&gt; Self {
+        Self { a, b }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>Note the <code>impl&lt;T&gt; Pair&lt;T&gt;</code> repetition. You declare the parameter <em>twice</em>: <code>impl&lt;T&gt;</code> introduces <code>T</code> into scope, and <code>Pair&lt;T&gt;</code> says which type the block is for. This is not redundant — it lets you write <code>impl Pair&lt;i32&gt;</code> to add methods <em>only</em> to the <code>i32</code> specialisation, or constrain it as <code>impl&lt;T: Display&gt; Pair&lt;T&gt;</code> to add methods only when <code>T</code> is printable. The <code>Option&lt;T&gt;</code> and <code>Result&lt;T, E&gt;</code> you have been using since <a href="07-enums-and-pattern-matching.html">enums</a> are nothing but generic enums from the standard library; their definitions are three lines each.</p>
+<h2 id="why-the-bound-is-mandatory-the-c-contrast"><a class="header" href="#why-the-bound-is-mandatory-the-c-contrast">Why the bound is mandatory: the C++ contrast</a></h2>
+<p>Drop the <code>PartialOrd</code> bound and the generic <code>largest</code> does <em>not</em> compile:</p>
+<pre><code class="language-text">error[E0369]: binary operation `&gt;` cannot be applied to type `&amp;T`
+ |
+ |     for x in xs { if x &gt; best { ... } }
+ |                      - ^ - &amp;T
+help: consider restricting type parameter `T` with trait `PartialOrd`
+ | fn largest&lt;T: std::cmp::PartialOrd&gt;(xs: &amp;[T]) -&gt; &amp;T {
+ |             ++++++++++++++++++++++
+</code></pre>
+<p>This error is the philosophical centre of the chapter. In a C++ template, <code>x &gt; best</code> would be accepted at <em>definition</em> time and only rejected later, per-instantiation, if some <code>T</code> happened to lack <code>operator&gt;</code> — producing a wall of errors pointing into library internals. Rust refuses to type-check a generic body against capabilities the type parameter has not been <em>proven</em> to have. Inside <code>largest</code>, the compiler knows <em>nothing</em> about <code>T</code> except what its bounds promise. <code>T: PartialOrd</code> is a promise that <code>&gt;</code> works; without it, <code>&gt;</code> is simply not in scope for <code>T</code>.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Logic and Proof.</em> A bounded generic is <strong>bounded quantification</strong>: <code>largest</code> has the logical type <code>∀T. (T: PartialOrd) ⇒ &amp;[T] → &amp;T</code>. The bound is a <em>constraint on the universally quantified variable</em>. The compiler discharges the proof obligation at each call site (it checks <code>i32: PartialOrd</code>), and inside the body it may <em>assume</em> the constraint holds. This is precisely the difference between unrestricted <code>∀T. P(T)</code> and guarded <code>∀T. C(T) ⇒ P(T)</code> — the body gets <code>C(T)</code> as a hypothesis. C++ templates correspond to the unguarded, untyped version that is only checked after substitution.</p>
+</blockquote>
+<h2 id="traits-type-classes-interfaces-and-shared-behaviour"><a class="header" href="#traits-type-classes-interfaces-and-shared-behaviour">Traits: type classes, interfaces, and shared behaviour</a></h2>
+<p>A <strong>trait</strong> is a named set of method signatures — a contract. Types <em>implement</em> a trait to declare they satisfy that contract.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Summary {
+    fn summarize(&amp;self) -&gt; String;
+}
+
+pub struct Tweet {
+    pub user: String,
+    pub body: String,
+}
+
+impl Summary for Tweet {
+    fn summarize(&amp;self) -&gt; String {
+        format!("@{}: {}", self.user, self.body)
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>The shape <code>impl Trait for Type { ... }</code> is the whole game. It is deliberately <em>separate</em> from the type’s own definition — unlike a Java <code>class Tweet implements Summary</code>, where the interface list is welded to the class declaration. In Rust the type and the trait implementation are independent items, and that separation is what makes traits more powerful than interfaces.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Three simultaneous analogies, all partly true:</p>
+<ul>
+<li><strong>Java/Swift interfaces/protocols.</strong> A trait is a list of required methods a type must provide. But Java bolts the implements-list onto the class; Rust lets you implement a trait for a type you didn’t define (subject to the orphan rule below). This is “interfaces done right”: you can make <code>i32</code> implement <em>your</em> trait.</li>
+<li><strong>Haskell type classes.</strong> This is the closest fit. <code>trait</code> ≈ <code>class</code>, <code>impl Trait for T</code> ≈ <code>instance Class T</code>, trait bound <code>T: Trait</code> ≈ context <code>Class t =&gt;</code>. Default methods ≈ default class methods. Associated types ≈ associated type families. If you know type classes, you already know traits; the syntax is the only delta.</li>
+<li><strong>OCaml.</strong> No direct equivalent — OCaml uses functors and explicit module passing for the same job. A trait bound is like an implicit, compiler-inferred functor argument.
+Where every analogy breaks: a trait can be used for <strong>static</strong> dispatch (monomorphised, zero-cost) <em>or</em> <strong>dynamic</strong> dispatch (<code>dyn Trait</code>, a vtable). Java interfaces are always dynamic; this chapter is all static, and <a href="09-trait-objects-and-oop.html">chapter 9</a> is the dynamic half.</li>
+</ul>
+</blockquote>
+<h3 id="default-methods"><a class="header" href="#default-methods">Default methods</a></h3>
+<p>A trait may supply method bodies, not just signatures. Implementors inherit the default and may override it.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Summary {
+    fn summarize_author(&amp;self) -&gt; String;
+
+    // Default, expressed in terms of the required method.
+    fn summarize(&amp;self) -&gt; String {
+        format!("(read more from {}…)", self.summarize_author())
+    }
+}
+
+impl Summary for Tweet {
+    fn summarize_author(&amp;self) -&gt; String {
+        format!("@{}", self.user)
+    }
+    // summarize is inherited for free.
+}
+<span class="boring">}</span></code></pre>
+<p>This is the classic “template method” pattern, but enforced by the type system: the trait author writes the <em>policy</em> (<code>summarize</code>) in terms of a small required <em>primitive</em> (<code>summarize_author</code>). An implementor writes one method and gets the other. Note that a default body can call required methods that have <em>no</em> default — exactly like Haskell’s <code>class</code> defaults, or an abstract base class’s concrete method calling an abstract one. You cannot, however, call the overridden default from within an override; there is no <code>super</code>.</p>
+<h2 id="trait-bounds-spelling-and-the-impl-trait-pair"><a class="header" href="#trait-bounds-spelling-and-the-impl-trait-pair">Trait bounds: spelling and the impl Trait pair</a></h2>
+<p>Once a trait exists, you constrain generics with it. There are several equivalent spellings; choosing among them is a style decision with one semantic gotcha.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 1. Bound directly on the type parameter.
+fn notify&lt;T: Summary&gt;(item: &amp;T) { /* ... */ }
+
+// 2. `impl Trait` in argument position — sugar for (1) with an anonymous T.
+fn notify(item: &amp;impl Summary) { /* ... */ }
+
+// 3. Multiple bounds with `+`.
+fn notify&lt;T: Summary + Display&gt;(item: &amp;T) { /* ... */ }
+
+// 4. `where` clause — identical meaning, readable when bounds pile up.
+fn process&lt;T, U&gt;(t: &amp;T, u: &amp;U) -&gt; i32
+where
+    T: Summary + Clone,
+    U: Display + Debug,
+{
+    todo!()
+}
+<span class="boring">}</span></code></pre>
+<p>Forms 1 and 2 are <em>almost</em> interchangeable, and the difference is worth internalising. <code>impl Summary</code> in argument position introduces a <em>fresh anonymous</em> type parameter. So:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn pair(a: &amp;impl Summary, b: &amp;impl Summary);   // a and b may be DIFFERENT types
+fn pair&lt;T: Summary&gt;(a: &amp;T, b: &amp;T);             // a and b must be the SAME type
+<span class="boring">}</span></code></pre>
+<p>If you need two arguments to share one type (to compare them, swap them, store them in one <code>Vec</code>), you <em>must</em> name the parameter <code>&lt;T&gt;</code>; <code>impl Trait</code> cannot express that constraint because each <code>impl Summary</code> is its own type. Reach for <code>where</code> once you have more than one or two bounds — it pulls the noise out from between the function name and its parameters.</p>
+<h3 id="impl-trait-in-return-position-is-a-different-beast"><a class="header" href="#impl-trait-in-return-position-is-a-different-beast">impl Trait in return position is a different beast</a></h3>
+<p>The same <code>impl Trait</code> syntax in <em>return</em> position means something subtly but importantly distinct from its argument-position use.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn make_summarizer() -&gt; impl Summary {
+    Tweet { user: "ferris".into(), body: "🦀".into() }
+}
+<span class="boring">}</span></code></pre>
+<p>In argument position, the <em>caller</em> chooses the concrete type and the function is generic. In return position, the <em>callee</em> (this function) picks <strong>one</strong> fixed concrete type, and merely <em>hides</em> its name from the caller. The caller knows only “it implements <code>Summary</code>”. This is an <em>opaque</em> return type — the compiler still monomorphises to the real type <code>Tweet</code>, but the name does not leak into the signature.</p>
+<p>The single-type restriction bites immediately:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn pick(b: bool) -&gt; impl Summary {
+    if b { Tweet { .. } } else { Article { .. } }   // does NOT compile
+}
+<span class="boring">}</span></code></pre>
+<pre><code class="language-text">error[E0308]: `if` and `else` have incompatible types
+ |     if b { Tweet { .. } } else { Article { .. } }
+ |            -------------          ^^^^^^^^^^^^^^^ expected `Tweet`, found `Article`
+help: you could change the return type to be a boxed trait object
+ |   fn pick(b: bool) -&gt; Box&lt;dyn Summary&gt; {
+</code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> “But both implement <code>Summary</code>!” — yes, but <code>impl Trait</code> return is a <em>single hidden type</em>, not a union. <code>Tweet</code> and <code>Article</code> are different types and the two branches disagree. The compiler’s own fix is the right one: erase to <code>Box&lt;dyn Summary&gt;</code> (a trait object, dynamic dispatch — <a href="09-trait-objects-and-oop.html">chapter 9</a>). The rule of thumb: <code>impl Trait</code> return when there is exactly one concrete type but you’d rather not (or can’t) write its name; <code>Box&lt;dyn Trait&gt;</code> when the type genuinely varies at runtime.</p>
+</blockquote>
+<p>The reason <code>impl Trait</code> exists at all is that some types are <em>unnameable</em> — every closure has a unique anonymous compiler-generated type, and iterator adaptor chains produce types like <code>Map&lt;Filter&lt;Zip&lt;...&gt;&gt;&gt;</code> that are absurd to write by hand. <code>impl Iterator&lt;Item = u32&gt;</code> lets you return them concisely while preserving static dispatch. You will lean on this constantly in <a href="12-closures-and-iterators.html">closures and iterators</a>.</p>
+<h2 id="associated-types-vs-generic-type-parameters"><a class="header" href="#associated-types-vs-generic-type-parameters">Associated types vs generic type parameters</a></h2>
+<p>A trait can carry <em>associated types</em> — type members chosen by the implementor:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>trait Container {
+    type Item;                                  // associated type
+    fn get(&amp;self, i: usize) -&gt; Option&lt;&amp;Self::Item&gt;;
+}
+
+impl&lt;T&gt; Container for Vec&lt;T&gt; {
+    type Item = T;                              // fixed by this impl
+    fn get(&amp;self, i: usize) -&gt; Option&lt;&amp;T&gt; { self.as_slice().get(i) }
+}
+<span class="boring">}</span></code></pre>
+<p>The canonical example is <code>Iterator</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Iterator {
+    type Item;
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt;;
+}
+<span class="boring">}</span></code></pre>
+<p>You could <em>imagine</em> writing this with a generic parameter instead: <code>trait Iterator&lt;Item&gt;</code>. Why does the standard library use an associated type? Because of <em>functional dependency</em>: a given iterator type yields exactly <strong>one</strong> element type. With <code>trait Iterator&lt;Item&gt;</code>, a single type could legally implement <code>Iterator&lt;u8&gt;</code> <em>and</em> <code>Iterator&lt;String&gt;</code>, forcing you to annotate <code>Item</code> at every call (<code>it.next::&lt;u8&gt;()</code>-style) and breaking inference. With an associated type, <code>Item</code> is <strong>an output determined by the implementing type, not an input chosen by the caller</strong> — so <code>it.next()</code> infers cleanly.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Decide by counting implementations. <strong>Generic parameter</strong> = the trait can be implemented <em>many times</em> for one type with different parameters (e.g. <code>Add&lt;i32&gt;</code> <em>and</em> <code>Add&lt;Duration&gt;</code> for one type — see below). <strong>Associated type</strong> = at most <em>one</em> implementation makes sense per type, and the type is a <em>consequence</em> of the impl, not a choice (the element type of an iterator, the output of indexing). This is Haskell’s distinction between a multi-parameter type class and an associated <code>type</code> family, verbatim.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Foundations of CS / type inference.</em> An associated type acts as a <strong>type-level function</strong>: <code>&lt;Vec&lt;T&gt; as Iterator&gt;::Item</code> <em>computes</em> to <code>T</code>. Because it is a function (one output per input), the inference engine can run it forwards and the Hindley–Milner-style unifier stays decidable. A generic parameter is an <em>input</em> the unifier must <em>solve for</em>, which is why multiple impls would make <code>Item</code> ambiguous.</p>
+</blockquote>
+<h2 id="operator-overloading-is-just-trait-implementation"><a class="header" href="#operator-overloading-is-just-trait-implementation">Operator overloading is just trait implementation</a></h2>
+<p>Rust has no special operator-overloading syntax. <code>+</code> <em>is</em> a call to <code>std::ops::Add::add</code>; <code>[]</code> is <code>Index::index</code>; <code>*</code> (deref) is <code>Deref::deref</code>. Overload an operator by implementing the corresponding trait — and notice it uses an associated type for its <code>Output</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::ops::Add;
+
+#[derive(Debug, Clone, Copy)]
+struct V2 { x: f64, y: f64 }
+
+impl Add for V2 {
+    type Output = V2;
+    fn add(self, rhs: V2) -&gt; V2 {
+        V2 { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+// V2 { x: 4.0, y: 6.0 } from V2{1,2} + V2{3,4}
+<span class="boring">}</span></code></pre>
+<p><code>Add</code> is <em>generic over the right-hand side</em> with a defaulted parameter — its real signature is <code>trait Add&lt;Rhs = Self&gt;</code>. That default is why <code>impl Add for V2</code> means <code>impl Add&lt;V2&gt; for V2</code>. Because <code>Rhs</code> is a <em>generic parameter</em> (not associated), you may implement <code>Add</code> several times for one type with different operands — <code>Meters + Meters</code> and <code>Meters + Millimeters</code> are two separate impls. This is the textbook case where a generic parameter is correct and an associated type would be wrong: there are genuinely many implementations.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>a + b</code> desugars to <code>Add::add(a, b)</code>, monomorphised and inlined to the same instructions you’d write by hand — no indirection. For primitives, the <code>impl Add for i32</code> exists in core and the optimiser folds the call to a single machine <code>add</code>. Rust deliberately does <em>not</em> let you invent <em>new</em> operator glyphs (no C++-style <code>operator""</code> zoo beyond the fixed trait set), keeping parsing and reasoning local.</p>
+</blockquote>
+<h2 id="coherence-and-the-orphan-rule"><a class="header" href="#coherence-and-the-orphan-rule">Coherence and the orphan rule</a></h2>
+<p>Here is the discipline that ML and Java lack. Rust guarantees <strong>global uniqueness</strong>: for any (trait, type) pair, there is <em>at most one</em> implementation in the entire program. This property is called <strong>coherence</strong>, and it is what lets <code>a + b</code> or <code>set.insert(x)</code> resolve deterministically without you ever specifying <em>which</em> <code>Add</code> or <code>Hash</code> impl to use. There is only ever one.</p>
+<p>To preserve coherence across separately-compiled crates, Rust enforces the <strong>orphan rule</strong>: in <code>impl Trait for Type</code>, <em>at least one</em> of <code>Trait</code> or <code>Type</code> must be defined in your crate. You may implement <em>your</em> trait for <code>Vec&lt;T&gt;</code>, and you may implement <code>Display</code> (foreign) for <em>your</em> <code>Tweet</code> — but you cannot implement a foreign trait for a foreign type:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl std::fmt::Display for Vec&lt;i32&gt; { /* ... */ }   // forbidden
+<span class="boring">}</span></code></pre>
+<pre><code class="language-text">error[E0117]: only traits defined in the current crate can be
+              implemented for types defined outside of the crate
+ | impl std::fmt::Display for Vec&lt;i32&gt; {
+ | ^^^^^^^^^^^^^^^^^^^^^^^^^^^-------- `Vec` is not defined in the current crate
+ = note: define and implement a trait or new type instead
+</code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> This bites everyone eventually: “I want to add a method to <code>Vec</code>” or “I want <code>serde::Serialize</code> for <code>chrono::DateTime</code>” and both are foreign. The idiomatic fix is the <strong>newtype pattern</strong>: wrap the foreign type in a local one-field tuple struct, <code>struct Wrapper(Vec&lt;i32&gt;)</code>, and implement the trait on <code>Wrapper</code>. The wrapper is local, so the orphan rule is satisfied, and it compiles to nothing (single-field structs are layout-transparent). The <code>#[derive(...)]</code> or a <code>Deref</code> impl restores ergonomic access to the inner value.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Further Java / type systems.</em> Haskell hit this exact problem — “orphan instances” can silently change program behaviour depending on import order, breaking modular reasoning. Rust elevates the informal Haskell convention into a <em>hard compiler rule</em>. The payoff is a soundness guarantee you can state crisply: trait resolution is a <em>function</em> from (trait, type) to impl, total and deterministic, decided entirely at compile time. Java sidesteps the issue by tying implementation to class definition (you simply <em>can’t</em> retro-fit), which is strictly less expressive.</p>
+</blockquote>
+<h2 id="conditional-and-blanket-impls"><a class="header" href="#conditional-and-blanket-impls">Conditional and blanket impls</a></h2>
+<p>Trait bounds on <code>impl</code> blocks let you add methods <em>conditionally</em>, depending on what the inner type can do:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::fmt::Display;
+
+struct Pair&lt;T&gt; { x: T, y: T }
+
+impl&lt;T&gt; Pair&lt;T&gt; {
+    fn new(x: T, y: T) -&gt; Self { Self { x, y } }   // always available
+}
+
+impl&lt;T: Display + PartialOrd&gt; Pair&lt;T&gt; {
+    fn show_larger(&amp;self) {                         // only when T: Display + PartialOrd
+        if self.x &gt;= self.y { println!("larger: {}", self.x) }
+        else { println!("larger: {}", self.y) }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p><code>Pair&lt;File&gt;</code> gets <code>new</code> but not <code>show_larger</code>, because <code>File</code> is neither <code>Display</code> nor <code>PartialOrd</code>. The method <em>exists only for the type arguments that earn it</em> — a precision Java generics cannot express.</p>
+<p>The most powerful form is a <strong>blanket impl</strong>: implementing a trait for <em>every</em> type satisfying some bound. The standard library does this pervasively. <code>ToString</code> is implemented once, for all <code>Display</code> types:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;T: Display&gt; ToString for T {
+    // ...uses T's Display to build a String
+}
+<span class="boring">}</span></code></pre>
+<p>That single impl is why <code>3.to_string()</code> and <code>vec2.to_string()</code> and any <code>Display</code> type’s <code>.to_string()</code> all work — none of them implements <code>ToString</code> directly. Blanket impls compose abstraction: state a capability once in terms of a more primitive one.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Blanket impls are why the rustdoc page for a trait has an “Implementors” section that includes types you never wrote an <code>impl</code> for. They are also a coherence minefield — two overlapping blanket impls would violate uniqueness, so Rust (currently) forbids <em>overlapping</em> impls outright. The unstable <code>specialization</code> feature would relax this; on stable, if two blanket impls could both apply to some type, you get a conflict error.</p>
+</blockquote>
+<h2 id="supertraits"><a class="header" href="#supertraits">Supertraits</a></h2>
+<p>A trait may <em>require</em> another trait of its implementors, declared with the same <code>: Bound</code> syntax as a generic bound:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::fmt::Display;
+
+trait OutlinePrint: Display {          // Display is a supertrait
+    fn outline(&amp;self) {
+        let s = self.to_string();      // allowed: Self: Display is guaranteed
+        println!("** {s} **");
+    }
+}
+<span class="boring">}</span></code></pre>
+<p><code>trait OutlinePrint: Display</code> means “you cannot implement <code>OutlinePrint</code> for a type unless it also implements <code>Display</code>”. Inside <code>OutlinePrint</code>’s default methods, <code>Self: Display</code> is therefore a usable hypothesis — hence the <code>self.to_string()</code> call type-checks. This is <em>not</em> inheritance in the OOP sense (no shared fields, no subtyping of values); it is a <em>requirement edge between contracts</em>. Java’s <code>interface B extends A</code> is the closest cousin, and the semantics match: implementing <code>B</code> obliges you to satisfy <code>A</code>.</p>
+<h2 id="derivable-traits-codegen-you-get-for-free"><a class="header" href="#derivable-traits-codegen-you-get-for-free">Derivable traits: codegen you get for free</a></h2>
+<p><code>#[derive(...)]</code> is a procedural macro (<a href="18-macros.html">chapter 18</a>) that <em>writes a trait impl for you</em> based on your type’s structure. The common ones, and what they generate:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
+struct Point { x: i32, y: i32 }
+<span class="boring">}</span></code></pre>
+<ul>
+<li><strong><code>Debug</code></strong> — <code>{:?}</code> formatting; generates a field-by-field dump. Required for <code>assert_eq!</code> failure messages.</li>
+<li><strong><code>Clone</code></strong> — an explicit deep-ish <code>.clone()</code>; recursively clones each field.</li>
+<li><strong><code>Copy</code></strong> — a <em>marker</em> (no methods): opts the type into implicit bitwise-copy move semantics from <a href="02-ownership-and-moves.html">ownership</a>. Only derivable if every field is <code>Copy</code>; requires <code>Clone</code> as a supertrait.</li>
+<li><strong><code>PartialEq</code> / <code>Eq</code></strong> — <code>==</code>; field-wise comparison. <code>Eq</code> is a marker promising reflexivity (so <code>f64</code>, which has <code>NaN != NaN</code>, is <code>PartialEq</code> but <strong>not</strong> <code>Eq</code>).</li>
+<li><strong><code>PartialOrd</code> / <code>Ord</code></strong> — <code>&lt;</code>, <code>&gt;</code>, sorting; lexicographic over fields in declaration order.</li>
+<li><strong><code>Hash</code></strong> — feeds each field to a hasher; needed for <code>HashMap</code>/<code>HashSet</code> keys (<a href="10-collections.html">collections</a>).</li>
+<li><strong><code>Default</code></strong> — <code>Point::default()</code>; each field’s own default.</li>
+</ul>
+<p>Derive is generated source code: it monomorphises, costs nothing extra, and fails to compile if a field doesn’t support the trait (you can’t <code>derive(Hash)</code> if a field isn’t <code>Hash</code>). For custom logic, hand-write the <code>impl</code> instead.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Foundations of CS.</em> In OCaml you got structural equality (<code>=</code>) and polymorphic comparison built into the language for free. Rust refuses implicit structural operations — but <code>derive</code> recovers the convenience <em>opt-in and explicitly</em>, per trait, so you always know (and the compiler always knows) precisely which capabilities a type has. No surprise <code>compare</code> on a closure-containing record.</p>
+</blockquote>
+<h2 id="marker-traits-capabilities-with-no-methods"><a class="header" href="#marker-traits-capabilities-with-no-methods">Marker traits: capabilities with no methods</a></h2>
+<p>Some traits have <em>zero</em> methods; they exist purely to tag a type with a compile-time property the compiler reasons about. You have already met <code>Copy</code>. The two that matter most arrive in <a href="13-fearless-concurrency.html">fearless concurrency</a>:</p>
+<ul>
+<li><strong><code>Send</code></strong> — values of this type may be <em>moved</em> to another thread.</li>
+<li><strong><code>Sync</code></strong> — <code>&amp;T</code> may be <em>shared</em> across threads (equivalently, <code>&amp;T: Send</code>).</li>
+</ul>
+<p>These are <strong>auto traits</strong>: the compiler <em>derives them automatically and structurally</em> — a struct is <code>Send</code> iff all its fields are <code>Send</code>. You rarely write them by hand. Their entire purpose is to let the type system prove data-race freedom statically: a bound like <code>T: Send</code> on <code>thread::spawn</code> is what <em>makes</em> concurrency fearless, by rejecting at compile time any attempt to ship a non-thread-safe value (like <code>Rc&lt;T&gt;</code>) across a thread boundary.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems.</em> You proved properties about data races informally with happens-before reasoning. <code>Send</code>/<code>Sync</code> encode a slice of that reasoning <em>in the type system</em> as bounded quantification: <code>spawn&lt;F: Send&gt;</code>. Data-race freedom for safe Rust becomes a <em>type-soundness theorem</em> discharged by the borrow checker plus these markers — the absence of races is checked, not hoped for.</p>
+</blockquote>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li><strong>Generics monomorphise.</strong> rustc stamps a specialised copy per concrete type — C++ templates, not Java erasure. Zero runtime cost, paid in code size; types survive to runtime so <code>Vec&lt;T&gt;</code> stores <code>T</code> unboxed.</li>
+<li><strong>A generic body is type-checked once against its bounds</strong>, before any instantiation. <code>T</code> can do <em>nothing</em> the bounds don’t promise — bounded quantification, <code>∀T. C(T) ⇒ …</code>. This is why the body errors before any call site exists.</li>
+<li><strong>A trait is a type class / interface done right.</strong> Implementations are separate items, so you can implement your trait for foreign types and foreign traits for your types — subject to the <strong>orphan rule</strong>, which guarantees <strong>coherence</strong>: one impl per (trait, type), globally. Newtype-wrap to escape it.</li>
+<li><strong>Associated type vs generic param = output vs input.</strong> One impl per type (iterator’s <code>Item</code>, index’s <code>Output</code>) → associated type, inference-friendly. Many impls per type (<code>Add&lt;Rhs&gt;</code>) → generic param.</li>
+<li><strong><code>impl Trait</code> argument-position = caller picks (generic); return-position = callee hides one fixed type.</strong> Different types per branch ⇒ you need <code>Box&lt;dyn Trait&gt;</code>, not <code>impl Trait</code>. Operators, derives, and markers (<code>Copy</code>/<code>Send</code>/<code>Sync</code>) are <em>all</em> just traits.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Write <code>fn largest&lt;T&gt;(xs: &amp;[T]) -&gt; &amp;T</code> and deliberately omit the bound. Read the <code>E0369</code> error. Now add <code>T: PartialOrd</code> — it compiles. Then change the return type to <code>T</code> (by value, returning <code>*best</code>) and explain the new error in terms of <code>T: Copy</code> versus <code>T: Clone</code>. Which bound is the right fix, and why does returning a <em>reference</em> avoid the question entirely?</p>
+</li>
+<li>
+<p>Define <code>trait Area { fn area(&amp;self) -&gt; f64; }</code> and implement it for <code>Circle</code> and <code>Rectangle</code>. Write <code>fn total_area(shapes: &amp;[???]) -&gt; f64</code>. Try <code>&amp;[impl Area]</code> — it fails. Explain why (hint: <code>impl Trait</code> is one anonymous type; a slice is homogeneous). What two <em>different</em> tools fix this depending on whether the slice is monomorphic or genuinely mixed?</p>
+</li>
+<li>
+<p><strong>(★)</strong> You want <code>MyVec(Vec&lt;i32&gt;)</code> to be printable with <code>{}</code>. First try <code>impl Display for Vec&lt;i32&gt;</code> directly and read the <code>E0117</code> orphan-rule error. Then fix it with the newtype pattern. Explain precisely which clause of the orphan rule the newtype satisfies, and why a single-field tuple struct adds no runtime cost.</p>
+</li>
+<li>
+<p>The standard library declares <code>trait Iterator { type Item; … }</code>, not <code>trait Iterator&lt;Item&gt;</code>. Construct a concrete scenario — a single struct you’d <em>want</em> to implement the trait for two ways — that the associated-type version forbids but a generic-parameter version would allow. Then argue why forbidding it makes <code>for x in it</code> infer <code>x</code>’s type without annotations.</p>
+</li>
+<li>
+<p><strong>(★)</strong> Implement <code>Add</code> for a <code>Counter(u32)</code> newtype <em>twice</em>: once for <code>Counter + Counter</code>, once for <code>Counter + u32</code>, using the <code>Rhs</code> parameter. Now try to make <code>Iterator::Item</code> “two-valued” the same way and observe it is impossible. Use this to state the rule for choosing associated type vs generic parameter in your own words, then explain why <code>Add&lt;Rhs = Self&gt;</code> having a <em>default</em> is unrelated to the coherence question.</p>
+</li>
+<li>
+<p>Write a blanket impl: <code>trait Loud { fn shout(&amp;self) -&gt; String; }</code> implemented for <code>impl&lt;T: Display&gt; Loud for T</code> as <code>self.to_string().to_uppercase()</code>. Confirm <code>42.shout()</code> and <code>"hi".shout()</code> both work with no per-type impls. Then add a <em>second</em> blanket impl <code>impl&lt;T: Debug&gt; Loud for T</code> and read the coherence-conflict error. Explain why overlapping blanket impls would violate global uniqueness, and what <code>specialization</code> would have to do to make it sound.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="07-enums-and-pattern-matching.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="09-trait-objects-and-oop.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="07-enums-and-pattern-matching.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="09-trait-objects-and-oop.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

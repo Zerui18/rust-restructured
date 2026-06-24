@@ -1,0 +1,602 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Error Handling - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="11-error-handling"><a class="header" href="#11-error-handling">11. Error Handling</a></h1>
+<p>Most languages you know have a single error-handling channel that is <em>invisible in the type signature</em>. In Java, <code>String readConfig()</code> can throw <code>IOException</code> and you only learn that from the <code>throws</code> clause (checked) or, worse, from the documentation or a stack trace at 3am (unchecked <code>RuntimeException</code>). In C++, <code>std::string read_config()</code> can throw anything, and the signature says nothing — <code>noexcept</code> is opt-in and rarely used. C has no channel at all: you smuggle failure through return codes, <code>errno</code>, sentinel values, and out-parameters, and the compiler never checks that you looked.</p>
+<p>Rust makes a hard, deliberate split that maps onto a distinction every other language blurs:</p>
+<ul>
+<li><strong>Bugs</strong> — violated invariants, “this can’t happen” situations, programmer errors. These use <code>panic!</code>, are <em>unrecoverable</em> by default, and are deliberately <strong>not</strong> in the type signature, because no caller should be writing recovery logic for your bug.</li>
+<li><strong>Expected failure</strong> — a file that might not exist, input that might be malformed, a network that might be down. These are values of type <code>Result&lt;T, E&gt;</code>, <strong>in the signature</strong>, and the compiler forces every caller to confront them.</li>
+</ul>
+<p>There are no exceptions in Rust. There is no <code>throw</code>, no stack-unwinding control flow you can <code>catch</code> (panic unwinding exists but is not a general control-flow tool — see below). The closest thing you already know is OCaml’s <code>result</code> type and the <code>Stdlib.result</code> combinators, or Haskell’s <code>Either e a</code> in the <code>Either</code>/<code>ExceptT</code> monad. Rust takes that model and bakes it into the standard library, the prelude, and a piece of syntax (<code>?</code>) that makes it ergonomic enough to use everywhere.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>Result&lt;T, E&gt;</code> is OCaml’s <code>('a, 'b) result</code> = <code>Ok of 'a | Error of 'b</code>, and the <code>?</code> operator is the <code>let*</code> of a <code>result</code> monad. Where the analogy breaks: OCaml lets you freely mix <code>result</code> with <code>raise</code>/exceptions, and most of the stdlib raises (<code>List.hd</code>, <code>Hashtbl.find</code>). Rust has no second escape hatch you can catch routinely — <code>panic!</code> is for bugs, and unwinding is not idiomatic control flow. Compared to Java/C++ exceptions: a Rust function that can fail <em>must</em> say so in its return type. There is no hidden <code>throws</code>.</p>
+</blockquote>
+<h2 id="track-one-panic-for-unrecoverable-bugs"><a class="header" href="#track-one-panic-for-unrecoverable-bugs">Track one: <code>panic!</code> for unrecoverable bugs</a></h2>
+<p><code>panic!</code> aborts the current thread’s normal execution. You trigger it explicitly or — far more commonly — the standard library triggers it on your behalf when you violate a contract:</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    let xs = vec![10, 20, 30];
+    let _ = xs[99]; // panics: index out of bounds: the len is 3 but the index is 99
+}</code></pre>
+<p>In C, <code>xs[99]</code> on a heap array is undefined behaviour: a buffer overread that hands you whatever bytes live past the allocation, a textbook security hole. Rust’s <code>Index</code> impl for slices bounds-checks and panics instead. That is the whole philosophy in one line: <strong>a contract violation is a bug, and continuing with corrupt assumptions is worse than stopping.</strong></p>
+<p>A panic prints the message and source location, then by default <em>unwinds</em>:</p>
+<pre><code class="language-text">thread 'main' panicked at src/main.rs:3:13:
+index out of bounds: the len is 3 but the index is 99
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+</code></pre>
+<p>Set <code>RUST_BACKTRACE=1</code> to get the call stack. Read it top-down and stop at the first frame in a file you wrote — that is where your bug lives; frames above are stdlib machinery (<code>core::panicking::panic_bounds_check</code> and friends).</p>
+<h3 id="unwinding-vs-aborting"><a class="header" href="#unwinding-vs-aborting">Unwinding vs. aborting</a></h3>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> A panic does one of two things, chosen at compile time. The default is <strong>unwind</strong>: rustc walks back up the stack frame by frame, running every <code>Drop</code> impl it passes — exactly like a C++ exception running destructors during stack unwinding (it uses the same platform mechanism, the Itanium/SEH unwinder, and a landing pad per frame). This frees resources but bloats the binary with unwind tables. The alternative is <strong>abort</strong>: call <code>std::process::abort()</code> immediately, run no destructors, let the OS reclaim memory. You opt in per profile:</p>
+<pre><code class="language-toml">[profile.release]
+panic = "abort"
+</code></pre>
+<p><code>abort</code> produces smaller binaries and is mandatory in some contexts (e.g. a panic crossing an <code>extern "C"</code> boundary is UB unless aborting — see <a href="16-unsafe-and-ffi.html">unsafe and FFI</a>). With unwinding, a panic in a spawned thread kills only that thread; the parent observes it via the <code>JoinHandle</code> (<a href="13-fearless-concurrency.html">fearless concurrency</a>).</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Unwinding-and-running-destructors is exactly the RAII cleanup you saw in <em>Programming in C and C++</em>: the same landing-pad codegen a C++ compiler emits for exception safety. The difference is intent. C++ exceptions are a control-flow mechanism you <code>catch</code> and recover from; Rust unwinding is a best-effort cleanup on the way to thread death. <code>std::panic::catch_unwind</code> exists, but it is for FFI boundaries and thread-pool isolation, not for <code>try</code>/<code>catch</code>-style logic.</p>
+</blockquote>
+<p><code>unwrap</code> and <code>expect</code> (below) are the most common ways <code>panic!</code> shows up in real code. The rule for when a panic is <em>correct</em> is the subject of the final section.</p>
+<h2 id="track-two-resultt-e-for-recoverable-failure"><a class="header" href="#track-two-resultt-e-for-recoverable-failure">Track two: <code>Result&lt;T, E&gt;</code> for recoverable failure</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>enum Result&lt;T, E&gt; {
+    Ok(T),
+    Err(E),
+}
+<span class="boring">}</span></code></pre>
+<p>This is just a sum type — an OCaml variant with two constructors, generic in both the success payload <code>T</code> and the error payload <code>E</code> (<a href="08-generics-and-traits.html">generics and traits</a>). It is in the prelude, so <code>Ok</code>/<code>Err</code> are in scope unqualified, exactly like <code>Some</code>/<code>None</code>. A fallible function returns it, and the <em>only</em> way to get at the <code>T</code> is to deal with the possibility of the <code>E</code>:</p>
+<pre class="playground"><code class="language-rust">use std::fs::File;
+
+fn main() {
+    let handle = match File::open("config.toml") {
+        Ok(f) =&gt; f,
+        Err(e) =&gt; panic!("could not open config: {e:?}"),
+    };
+    // use `handle`...
+}</code></pre>
+<p><code>File::open</code> returns <code>Result&lt;File, std::io::Error&gt;</code>. There is no way to forget the error: the value you have is a <code>Result</code>, not a <code>File</code>, and the type system will not let you call <code>File</code> methods on it. You must pattern-match (or use one of the combinators) to extract the <code>File</code>. This is the entire safety argument — <strong>failure is encoded in the type, so the compiler can prove you handled it.</strong></p>
+<p><code>Result</code> is annotated <code>#[must_use]</code>. Ignore one and you get a warning, not silence:</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    std::fs::remove_file("scratch.tmp"); // warning: unused `Result` that must be used
+}</code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> That warning catches the C bug class directly: in C you write <code>fclose(f);</code> and never check the return, silently dropping write errors. Here, <code>let _ = std::fs::remove_file("scratch.tmp");</code> is the explicit “yes, I am deliberately discarding this” — but if you are discarding an I/O error you almost always have a bug. The idiomatic fix is to propagate it with <code>?</code>.</p>
+</blockquote>
+<h3 id="matching-on-the-kind-of-error"><a class="header" href="#matching-on-the-kind-of-error">Matching on the <em>kind</em> of error</a></h3>
+<p><code>std::io::Error</code> carries a <code>kind()</code> you can branch on, so you can recover from “file not found” while still treating “permission denied” as fatal:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::fs::File;
+use std::io::ErrorKind;
+
+fn open_or_create(path: &amp;str) -&gt; std::io::Result&lt;File&gt; {
+    match File::open(path) {
+        Ok(f) =&gt; Ok(f),
+        Err(e) if e.kind() == ErrorKind::NotFound =&gt; File::create(path),
+        Err(e) =&gt; Err(e),
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>(<code>std::io::Result&lt;T&gt;</code> is a type alias for <code>Result&lt;T, std::io::Error&gt;</code> — a common pattern for crates with one dominant error type.) Nested <code>match</code> gets verbose fast; the combinator methods (<code>map</code>, <code>and_then</code>, <code>unwrap_or_else</code>, <code>ok</code>) plus closures (<a href="12-closures-and-iterators.html">closures and iterators</a>) usually read better. But the real ergonomic win is <code>?</code>.</p>
+<h2 id="the--operator-propagation-as-syntax"><a class="header" href="#the--operator-propagation-as-syntax">The <code>?</code> operator: propagation as syntax</a></h2>
+<p>Manually threading errors up the call stack is tedious. This:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn read_to_string(path: &amp;str) -&gt; Result&lt;String, std::io::Error&gt; {
+    let mut f = match File::open(path) {
+        Ok(f) =&gt; f,
+        Err(e) =&gt; return Err(e),
+    };
+    let mut s = String::new();
+    match f.read_to_string(&amp;mut s) {
+        Ok(_) =&gt; Ok(s),
+        Err(e) =&gt; return Err(e),
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>collapses to this:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::io::Read;
+
+fn read_to_string(path: &amp;str) -&gt; Result&lt;String, std::io::Error&gt; {
+    let mut f = std::fs::File::open(path)?;
+    let mut s = String::new();
+    f.read_to_string(&amp;mut s)?;
+    Ok(s)
+}
+<span class="boring">}</span></code></pre>
+<p>The <code>?</code> after a <code>Result</code> means: if <code>Ok(v)</code>, evaluate to <code>v</code> and continue; if <code>Err(e)</code>, <strong>return early</strong> from the enclosing function with <code>Err(e)</code>. It is the <code>let*</code> bind of OCaml’s <code>result</code> monad — <code>e1?; e2</code> is <code>match e1 { Ok(x) =&gt; e2, Err(e) =&gt; return Err(e) }</code>. Method chaining works because <code>?</code> is an expression that produces the unwrapped value: <code>File::open(path)?.read_to_string(&amp;mut s)?</code>.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is the monadic error pattern from <em>Foundations of Computer Science</em> made syntactic. <code>?</code> is the bind (<code>&gt;&gt;=</code>) of the <code>Result</code> monad specialised to short-circuit on <code>Err</code>, and <code>Ok</code> is <code>return</code>/<code>pure</code>. Haskell wraps the same idea in <code>do</code>-notation over <code>Either</code>; OCaml 4.08+ has <code>let*</code> via a <code>Result</code>-monad <code>let</code> operator. Rust commits to one monad — <code>Result</code>/<code>Option</code> — and gives it dedicated syntax rather than a general <code>do</code>. The desugaring is the operational-semantics rewrite you’d write on paper: a small-step rule that reduces <code>v?</code> to either <code>v</code>’s payload or an early <code>return</code>.</p>
+</blockquote>
+<h3 id="-is-not-just-early-return--it-calls-fromfrom"><a class="header" href="#-is-not-just-early-return--it-calls-fromfrom"><code>?</code> is not <em>just</em> early-return — it calls <code>From::from</code></a></h3>
+<p>The one detail that makes <code>?</code> compose across error types: on the <code>Err</code> path, the error is passed through <code>From::from</code> before being returned. So <code>e1?</code> actually desugars (roughly) to:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match e1 {
+    Ok(v) =&gt; v,
+    Err(e) =&gt; return Err(From::from(e)),
+}
+<span class="boring">}</span></code></pre>
+<p>If function <code>f</code> returns <code>Result&lt;T, MyError&gt;</code> and calls something returning <code>Result&lt;_, io::Error&gt;</code>, then <code>something()?</code> works <strong>iff</strong> <code>MyError: From&lt;io::Error&gt;</code>. The <code>?</code> converts the inner error into your function’s declared error type automatically. This is the mechanism that lets one function aggregate failures from many sources behind a single error type — and it is why “implement <code>From</code> for your error type” is the central move in custom-error design below.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>?</code> is sugar over the <code>Try</code> trait (<code>std::ops::Try</code>) and <code>FromResidual</code>. For <code>Result&lt;T, E&gt;</code> the “residual” is <code>Result&lt;Infallible, E&gt;</code>, and <code>FromResidual</code> is where <code>From::from</code> on the error gets invoked. You will not implement <code>Try</code> yourself on stable, but knowing it is a trait explains why <code>?</code> works uniformly on <code>Result</code>, <code>Option</code>, and <code>ControlFlow</code>, and why the compiler error mentions <code>FromResidual</code>.</p>
+</blockquote>
+<h3 id="where--is-allowed"><a class="header" href="#where--is-allowed">Where <code>?</code> is allowed</a></h3>
+<p><code>?</code> performs an early return, so the enclosing function’s return type must be able to hold the residual. Use <code>?</code> on a <code>Result</code> in a function returning <code>()</code> and:</p>
+<pre><code class="language-text">error[E0277]: the `?` operator can only be used in a function that
+returns `Result` or `Option` (or another type that implements `FromResidual`)
+ --&gt; src/main.rs:4:48
+  |
+3 | fn main() {
+  | --------- this function should return `Result` or `Option` to accept `?`
+4 |     let f = File::open("hello.txt")?;
+  |                                    ^ cannot use the `?` operator in a
+  |                                      function that returns `()`
+</code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> This is the most common <code>?</code> error. The fix the compiler suggests — change the return type — is usually right: make the function return <code>Result&lt;_, _&gt;</code>. If you genuinely cannot (e.g. a trait method with a fixed signature), handle the <code>Result</code> with <code>match</code>, <code>if let</code>, or a combinator instead. You <strong>cannot</strong> <code>?</code> a <code>Result</code> in an <code>Option</code>-returning function or vice versa: <code>?</code> will not silently convert between the two enums. Bridge them explicitly with <code>.ok()</code> (<code>Result</code> → <code>Option</code>, discarding the error) or <code>.ok_or(err)</code> / <code>.ok_or_else(|| err)</code> (<code>Option</code> → <code>Result</code>).</p>
+</blockquote>
+<h3 id="-in-main-and-in-option-returning-functions"><a class="header" href="#-in-main-and-in-option-returning-functions"><code>?</code> in <code>main</code> and in <code>Option</code>-returning functions</a></h3>
+<p><code>main</code> may return <code>Result&lt;(), E&gt;</code> for any <code>E: Debug</code>. The runtime prints the <code>Err</code> via <code>Debug</code> and exits with a non-zero code — mirroring the C convention where <code>main</code> returns <code>0</code> on success and non-zero on failure (Rust implements the <code>std::process::Termination</code> trait to do this):</p>
+<pre class="playground"><code class="language-rust">use std::error::Error;
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+    let _config = std::fs::read_to_string("config.toml")?;
+    Ok(())
+}</code></pre>
+<p><code>Box&lt;dyn Error&gt;</code> is a trait object (<a href="09-trait-objects-and-oop.html">trait objects and OOP</a>) meaning “any type implementing the <code>Error</code> trait, heap-allocated behind a pointer.” It is the universal sink for <code>?</code>: because <code>Box&lt;dyn Error&gt;: From&lt;E&gt;</code> for every <code>E: Error</code>, any error converts into it. That is why it is the idiomatic error type for <code>main</code> and for quick application code.</p>
+<p><code>?</code> works on <code>Option</code> too, with <code>None</code> as the short-circuit value:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn first_word_initial(text: &amp;str) -&gt; Option&lt;char&gt; {
+    text.split_whitespace().next()?.chars().next()
+}
+<span class="boring">}</span></code></pre>
+<p>If <code>next()</code> yields <code>None</code>, the function returns <code>None</code> immediately; otherwise <code>?</code> unwraps the <code>&amp;str</code> and we keep going. Same mechanism, different monad.</p>
+<h2 id="unwrap-and-expect-deliberate-panics"><a class="header" href="#unwrap-and-expect-deliberate-panics"><code>unwrap</code> and <code>expect</code>: deliberate panics</a></h2>
+<p><code>unwrap</code> and <code>expect</code> collapse a <code>Result</code>/<code>Option</code> to its inner value, panicking on the failure variant. They are the bridge from track two back to track one — “I assert this cannot fail; if I’m wrong, that’s a bug, so crash.”</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let port: u16 = "8080".parse().unwrap();          // panics on the Err with a generic message
+let cfg = std::fs::read_to_string("config.toml")
+    .expect("config.toml must exist; it ships with the binary");
+<span class="boring">}</span></code></pre>
+<p><code>expect</code> takes a message and panics <em>with</em> it; <code>unwrap</code> uses a generic one. <strong>Prefer <code>expect</code> always.</strong> The string is not a user-facing error message — it documents the <em>invariant you are asserting</em>, so that if the panic fires, the backtrace tells the next maintainer what assumption was wrong. “config.toml must exist” is a far better failure than “called <code>Result::unwrap()</code> on an <code>Err</code> value”.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>.unwrap()</code> on <code>Option</code> is OCaml’s <code>Option.get</code>, which raises <code>Invalid_argument</code> on <code>None</code>; <code>.expect(msg)</code> is C++’s <code>value.value()</code> on a disengaged <code>std::optional</code> (throws <code>bad_optional_access</code>) but with a custom message. The key cultural difference: in OCaml/C++ these are often used freely; in idiomatic Rust an <code>unwrap</code>/<code>expect</code> in library code is a claim that <em>demands justification in the message or a comment</em>, because it converts a recoverable error into a crash on behalf of every caller.</p>
+</blockquote>
+<p>When is <code>unwrap</code>/<code>expect</code> acceptable?</p>
+<ul>
+<li><strong>Examples, prototypes, tests.</strong> A failed <code>unwrap</code> in a <code>#[test]</code> panics, which is exactly how a test reports failure. Robust error handling would only obscure the example. (More in <a href="20-testing-and-tooling.html">testing and tooling</a>.)</li>
+<li><strong>When you can prove the <code>Err</code> is impossible</strong> but the compiler cannot:
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::net::IpAddr;
+let loopback: IpAddr = "127.0.0.1".parse()
+    .expect("hardcoded loopback address is always valid");
+<span class="boring">}</span></code></pre>
+<code>parse</code> returns a <code>Result</code> because <em>in general</em> a string may be malformed; here the literal is fixed and valid, so asserting it is fine — and the message records <em>why</em> it is safe, prompting a future reader to revisit if the input ever becomes dynamic.</li>
+</ul>
+<h2 id="custom-error-types-and-the-error-trait"><a class="header" href="#custom-error-types-and-the-error-trait">Custom error types and the <code>Error</code> trait</a></h2>
+<p>Returning <code>io::Error</code> everywhere works only while every failure really is an I/O error. A realistic function fails in several distinct ways (parse error, validation error, I/O error), and you want one type that names them all. Enums are the natural fit — a sum type, one variant per failure mode:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::fmt;
+
+#[derive(Debug)]
+enum ConfigError {
+    Io(std::io::Error),
+    Parse { line: usize, msg: String },
+    MissingKey(String),
+}
+
+impl fmt::Display for ConfigError {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter&lt;'_&gt;) -&gt; fmt::Result {
+        match self {
+            ConfigError::Io(e) =&gt; write!(f, "I/O error: {e}"),
+            ConfigError::Parse { line, msg } =&gt; write!(f, "parse error at line {line}: {msg}"),
+            ConfigError::MissingKey(k) =&gt; write!(f, "missing required key `{k}`"),
+        }
+    }
+}
+
+impl std::error::Error for ConfigError {
+    // Override `source` to expose the underlying cause for error-chain printing:
+    fn source(&amp;self) -&gt; Option&lt;&amp;(dyn std::error::Error + 'static)&gt; {
+        match self {
+            ConfigError::Io(e) =&gt; Some(e),
+            _ =&gt; None,
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>The <code>std::error::Error</code> trait is the standard interface for “this is an error.” Its contract: you must also implement <code>Debug</code> (for programmers) and <code>Display</code> (for users), and you may override <code>source()</code> to return the underlying cause, which lets tools print a chain (“parse error … caused by … I/O error … caused by …”). Everything that takes <code>Box&lt;dyn Error&gt;</code> relies on this trait.</p>
+<p>To make <code>?</code> compose, implement <code>From</code> for each wrapped error type:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl From&lt;std::io::Error&gt; for ConfigError {
+    fn from(e: std::io::Error) -&gt; Self {
+        ConfigError::Io(e)
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>Now <code>?</code> on any <code>io::Error</code>-returning call inside a <code>Result&lt;_, ConfigError&gt;</code> function auto-converts via <code>From::from</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn load(path: &amp;str) -&gt; Result&lt;String, ConfigError&gt; {
+    let text = std::fs::read_to_string(path)?; // io::Error --From--&gt; ConfigError, automatically
+    if text.is_empty() {
+        return Err(ConfigError::MissingKey("root".into()));
+    }
+    Ok(text)
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is precisely the ADT-based error modelling from <em>Foundations of Computer Science</em>: an error is a value of a sum type, and handling it is exhaustive pattern matching. The compiler’s exhaustiveness check on <code>match self</code> in your <code>Display</code> impl is the same coverage guarantee that catches a forgotten variant. <code>From</code> conversions are the structure-preserving maps between your error algebras; <code>?</code>’s automatic <code>From::from</code> is functorial lifting of an inner failure into the outer error type.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>Box&lt;dyn Error&gt;</code> is a fat pointer — data pointer plus vtable pointer — exactly the trait-object layout from <a href="09-trait-objects-and-oop.html">trait objects and OOP</a>. It heap-allocates and dynamically dispatches <code>Display</code>/<code>Debug</code>/<code>source</code>. A concrete enum like <code>ConfigError</code> is stack-sized (the largest variant plus a tag), monomorphised, statically dispatched, and exhaustively matchable by callers. The trade-off: <code>Box&lt;dyn Error&gt;</code> is maximally flexible and ergonomic but erases the type, so callers cannot match on <em>which</em> error; a concrete enum is recoverable-by-variant but couples callers to your error taxonomy. Libraries lean concrete; applications lean boxed.</p>
+</blockquote>
+<h2 id="the-ecosystem-reality-thiserror-and-anyhow"><a class="header" href="#the-ecosystem-reality-thiserror-and-anyhow">The ecosystem reality: <code>thiserror</code> and <code>anyhow</code></a></h2>
+<p>Writing <code>Display</code> + <code>Error</code> + a dozen <code>From</code> impls by hand is exactly the boilerplate the two dominant error crates eliminate. The community split is sharp and worth internalising:</p>
+<ul>
+<li>
+<p><strong><code>thiserror</code></strong> — for <em>library</em> errors, where callers need to match on variants. It is a <code>derive</code> macro (<a href="18-macros.html">macros</a>) that generates the <code>Display</code>, <code>Error</code>, and <code>From</code> impls from attributes. You still get a concrete, matchable enum — just without the hand-written boilerplate:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum ConfigError {
+    #[error("I/O error")]
+    Io(#[from] std::io::Error),          // generates From&lt;io::Error&gt; + source()
+    #[error("parse error at line {line}: {msg}")]
+    Parse { line: usize, msg: String },
+    #[error("missing required key `{0}`")]
+    MissingKey(String),
+}
+<span class="boring">}</span></code></pre>
+<p><code>#[error("...")]</code> writes <code>Display</code>; <code>#[from]</code> writes both the <code>From</code> conversion and <code>source()</code>. The result is byte-for-byte the type you’d write by hand. Crate consumers can still <code>match</code> on <code>ConfigError::Parse { .. }</code>.</p>
+</li>
+<li>
+<p><strong><code>anyhow</code></strong> — for <em>application</em> code (binaries, top-level glue), where you just want errors to propagate and print with context, and no caller will ever match on the variant. <code>anyhow::Error</code> is a smarter <code>Box&lt;dyn Error&gt;</code>: it captures a backtrace, lets you attach context, and converts from any <code>Error</code> type, so <code>?</code> “just works” everywhere:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use anyhow::{Context, Result}; // anyhow::Result&lt;T&gt; = Result&lt;T, anyhow::Error&gt;
+
+fn run() -&gt; Result&lt;()&gt; {
+    let text = std::fs::read_to_string("config.toml")
+        .context("reading config.toml")?; // adds a human-readable layer
+    let parsed: u32 = text.trim().parse()
+        .context("config.toml must contain a single integer")?;
+    println!("loaded: {parsed}");
+    Ok(())
+}
+<span class="boring">}</span></code></pre>
+<p><code>.context(...)</code> wraps the underlying error with a message, building the cause chain that <code>anyhow</code> prints automatically. Different error types (<code>io::Error</code>, <code>ParseIntError</code>) flow through the same <code>?</code> with zero <code>From</code> impls because <code>anyhow::Error: From&lt;E&gt;</code> for all <code>E: Error + Send + Sync + 'static</code>.</p>
+</li>
+</ul>
+<p>The decision rule: <strong><code>thiserror</code> when your callers are code that needs to react to specific failures (a library); <code>anyhow</code> when the caller is a human reading a log (an application).</strong> A library should not force <code>anyhow</code> on its consumers — that erases the variants they might want to handle. A binary using <code>thiserror</code> everywhere is needless ceremony. Many real crates use both: <code>thiserror</code> for the public API surface, <code>anyhow</code> in internal binaries and tests.</p>
+<p>(These are external crates; per your project rules, fetch current API details via Context7 before relying on specific attributes, as their macros evolve.)</p>
+<h2 id="option--result-conversions"><a class="header" href="#option--result-conversions"><code>Option</code> ↔ <code>Result</code> conversions</a></h2>
+<p>The two short-circuiting types convert into each other through a small, memorisable set of methods:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>From</th><th>To</th><th>Method</th><th>Semantics</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Result&lt;T, E&gt;</code></td><td><code>Option&lt;T&gt;</code></td><td><code>.ok()</code></td><td><code>Ok(v)→Some(v)</code>, <code>Err(_)→None</code> (<strong>discards</strong> the error)</td></tr>
+<tr><td><code>Result&lt;T, E&gt;</code></td><td><code>Option&lt;E&gt;</code></td><td><code>.err()</code></td><td><code>Ok(_)→None</code>, <code>Err(e)→Some(e)</code></td></tr>
+<tr><td><code>Option&lt;T&gt;</code></td><td><code>Result&lt;T, E&gt;</code></td><td><code>.ok_or(e)</code></td><td><code>Some(v)→Ok(v)</code>, <code>None→Err(e)</code></td></tr>
+<tr><td><code>Option&lt;T&gt;</code></td><td><code>Result&lt;T, E&gt;</code></td><td><code>.ok_or_else(|| e)</code></td><td>same, but <code>e</code> computed lazily only on <code>None</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Use <code>.ok_or_else</code> over <code>.ok_or</code> whenever constructing the error is non-trivial (allocates, formats) — <code>ok_or</code> evaluates its argument eagerly even on the <code>Some</code> path, the same eager-vs-lazy distinction as <code>unwrap_or</code> vs <code>unwrap_or_else</code>. These conversions are how you bridge an <code>Option</code>-producing call (a map lookup, <code>.first()</code>) into a <code>Result</code>-returning function so <code>?</code> applies.</p>
+<h2 id="to-panic-or-not-to-panic"><a class="header" href="#to-panic-or-not-to-panic">To panic or not to panic</a></h2>
+<p>The guiding principle: <strong>returning <code>Result</code> is the default for any function that can fail, because it hands the decision to the caller.</strong> Panicking decides <em>for</em> the caller that the situation is unrecoverable, which is presumptuous unless you are certain.</p>
+<p>Panic when the program reaches a <strong>bad state</strong> — a broken invariant, contract, or guarantee — <em>and</em>:</p>
+<ul>
+<li>the bad state is unexpected (not routine, like malformed user input), and</li>
+<li>your subsequent code relies on not being in that state rather than re-checking, and</li>
+<li>there is no good way to encode the constraint in the types.</li>
+</ul>
+<p>Return <code>Result</code> when failure is an <strong>expected, routine possibility</strong>: a parser meeting malformed input, an HTTP call hitting a rate limit, a file that may be absent. These are not bugs; they are the normal operating envelope, and the caller must choose how to respond.</p>
+<p>A function’s <strong>contract</strong> is the special case that justifies panic in library code. If your function’s behaviour is only defined for certain inputs (a precondition), violating it is always a caller-side bug, and panicking is the right response — there is nothing for the caller to “handle,” they must fix their code. This is exactly why slice indexing panics on out-of-bounds: operating on memory outside the structure is a security hole, so the stdlib refuses. Document any such panic in the function’s API docs.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> The strongest move from <em>Semantics of Programming Languages</em> is to make the bad state <em>unrepresentable</em> rather than checking for it. Encode the invariant in a type and let the type system discharge the check statically — “make illegal states unrepresentable.” A newtype with a private field and a validating constructor turns a runtime contract into a compile-time guarantee:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Percent(u8); // invariant: 0..=100, enforced at construction
+
+impl Percent {
+    pub fn new(v: u8) -&gt; Result&lt;Percent, String&gt; {
+        if v &lt;= 100 { Ok(Percent(v)) } else { Err(format!("{v} &gt; 100")) }
+    }
+    pub fn get(self) -&gt; u8 { self.0 }
+}
+<span class="boring">}</span></code></pre>
+<p>Every function taking <code>Percent</code> (not <code>u8</code>) is now <em>proved</em> to receive a valid percentage — no defensive check, no panic, no <code>Result</code> at the use site. The private field means the only way to make a <code>Percent</code> is through <code>new</code>, so the invariant holds by construction. This is the type-system-as-proof-system idea from <em>Logic and Proof</em> applied to data: you have moved a proof obligation from runtime to the type checker. Choosing <code>u32</code> over <code>i32</code> to forbid negatives, or a concrete type over <code>Option</code> to forbid absence, are the same move at smaller scale.</p>
+</blockquote>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li><strong>Two channels, by design:</strong> <code>panic!</code> for bugs/violated invariants (unrecoverable, <em>not</em> in the signature), <code>Result&lt;T, E&gt;</code> for expected failure (recoverable, <em>in</em> the signature). Rust has no catchable exceptions; failure that callers should handle is always a value in the type.</li>
+<li><strong><code>?</code> is monadic bind for <code>Result</code>/<code>Option</code>:</strong> it early-returns on <code>Err</code>/<code>None</code> and, crucially, runs <code>From::from</code> on the error — so implementing <code>From&lt;InnerError&gt; for YourError</code> is what lets <code>?</code> aggregate many failure sources behind one type.</li>
+<li><strong><code>unwrap</code>/<code>expect</code> convert a <code>Result</code> back into a panic</strong> — only justified in tests/prototypes or where you can prove the <code>Err</code> is impossible. Always <code>expect</code> with a message stating the invariant, never bare <code>unwrap</code> in real code.</li>
+<li><strong>Concrete enum (or <code>thiserror</code>) for library errors</strong> so callers can match on variants; <strong><code>Box&lt;dyn Error&gt;</code> or <code>anyhow</code> for application errors</strong> where the consumer is a human reading a log. <code>thiserror</code> derives the boilerplate; <code>anyhow</code> erases the type for maximum <code>?</code> ergonomics.</li>
+<li><strong>Prefer making bad states unrepresentable</strong> (newtypes, validating constructors, non-<code>Option</code> types) over runtime checks. A constraint discharged by the type checker is one you never check, never panic on, and never return a <code>Result</code> for at the use site.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Write <code>fn parse_pair(s: &amp;str) -&gt; Result&lt;(i32, i32), std::num::ParseIntError&gt;</code> that splits <code>s</code> on a comma and parses both halves with <code>?</code>. Then try to make it also handle the “no comma” case — observe that <code>s.split_once(',')</code> returns an <code>Option</code>, so <code>?</code> will not compile against a <code>ParseIntError</code> return type. Fix it two ways: (a) <code>.ok_or_else(...)</code> into a custom error, and (b) returning <code>Box&lt;dyn Error&gt;</code>. Compare the call sites.</p>
+</li>
+<li>
+<p>Define a <code>ConfigError</code> enum by hand with three variants, then write <code>Display</code>, <code>Error</code> (with a correct <code>source()</code>), and the <code>From</code> impls. Now rewrite it with <code>thiserror</code>. Diff the generated behaviour: does your hand-written <code>source()</code> match what <code>#[from]</code> produces? Verify by printing an error and its <code>.source()</code> chain.</p>
+</li>
+<li>
+<p>(★) The compiler error <code>the ? operator can only be used in a function that returns Result or Option</code> appears for a function returning <code>()</code>. Construct a case where the function <em>does</em> return <code>Result</code>, but <code>?</code> still fails to compile — because the inner error type does not implement <code>Into</code> the outer error type. Read the resulting <code>E0277</code> (<code>From&lt;...&gt; is not satisfied</code>) and fix it by adding the missing <code>From</code> impl. Explain in one sentence why <code>?</code> needs <code>From</code> and not just <code>Into</code>.</p>
+</li>
+<li>
+<p>(★) Write a function that, given a <code>Vec&lt;&amp;str&gt;</code>, parses each element to <code>u32</code> and collects into <code>Result&lt;Vec&lt;u32&gt;, ParseIntError&gt;</code>. Use <code>.collect()</code> directly on an iterator of <code>Result</code>s and explain <em>why</em> <code>collect</code> can turn <code>Iterator&lt;Item = Result&lt;T, E&gt;&gt;</code> into <code>Result&lt;Vec&lt;T&gt;, E&gt;</code> (short-circuiting on the first <code>Err</code>). Then change it to collect into <code>Vec&lt;Result&lt;u32, ParseIntError&gt;&gt;</code> instead and explain when each shape is the one you want.</p>
+</li>
+<li>
+<p>Take the <code>Percent</code> newtype from the Tripos-link box. Make the field <code>pub</code> instead of private and write a downstream function that constructs an invalid <code>Percent(200)</code> directly, bypassing <code>new</code>. Then revert to a private field and observe the compile error at the construction site. Articulate precisely which guarantee privacy buys you that a runtime check in <code>new</code> alone does not.</p>
+</li>
+<li>
+<p>Set <code>RUST_BACKTRACE=1</code> and run a program that panics three call-frames deep inside your own code. Identify the frame where <em>your</em> bug originates versus the stdlib frames above it. Then flip <code>panic = "abort"</code> in a release profile and confirm a <code>Drop</code> impl that prints on drop does <strong>not</strong> run on panic — explaining why aborting skips unwinding.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="10-collections.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="12-closures-and-iterators.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="10-collections.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="12-closures-and-iterators.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

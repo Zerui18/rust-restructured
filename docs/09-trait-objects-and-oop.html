@@ -1,0 +1,546 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Trait Objects, Dynamic Dispatch &amp; &quot;OOP&quot; - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="9-trait-objects-dynamic-dispatch--oop"><a class="header" href="#9-trait-objects-dynamic-dispatch--oop">9. Trait Objects, Dynamic Dispatch &amp; “OOP”</a></h1>
+<p><a href="08-generics-and-traits.html">Generics and traits</a> gave you <em>static</em> polymorphism: <code>fn render&lt;T: Draw&gt;(x: &amp;T)</code> is, after monomorphisation, a family of distinct functions — one per concrete <code>T</code>, each with the call to <code>draw</code> resolved at compile time and eligible for inlining. That is the Java-with-erasure story turned inside out (Compiler Construction): where Java keeps one bytecode body and erases the type, Rust keeps the type and clones the body.</p>
+<p>Monomorphisation has a hard precondition: <strong>the set of concrete types must be known when the generic is instantiated.</strong> A <code>Vec&lt;T&gt;</code> is homogeneous — every element is the same <code>T</code>. The moment you want a <em>heterogeneous</em> collection — a list of GUI widgets where the library author cannot enumerate the widget types because downstream crates will invent new ones — static dispatch cannot help. You need a single type that erases the concrete identity of its contents but retains the ability to call a known set of methods. That type is <code>dyn Trait</code>, and reaching it costs a pointer indirection per call. This chapter covers that machinery, the rules that make it sound, and the question underneath: is Rust OOP, and if not, what replaces inheritance?</p>
+<h2 id="dyn-trait-is-an-unsized-type-behind-a-fat-pointer"><a class="header" href="#dyn-trait-is-an-unsized-type-behind-a-fat-pointer"><code>dyn Trait</code> is an unsized type behind a fat pointer</a></h2>
+<p><code>dyn Draw</code> is a real type, but a peculiar one: it has no statically known size. A <code>Button</code> is 12 bytes, a <code>SelectBox</code> is 32, and <code>dyn Draw</code> could be either — so <code>dyn Draw</code> is <code>!Sized</code> (does not implement the <code>Sized</code> marker trait). You can never hold one by value on the stack, since the compiler cannot reserve space for an object of unknown size; you touch it through a pointer: <code>&amp;dyn Draw</code>, <code>&amp;mut dyn Draw</code>, <code>Box&lt;dyn Draw&gt;</code>, <code>Rc&lt;dyn Draw&gt;</code>.</p>
+<p>That pointer is <strong>fat</strong>. A <code>&amp;Button</code> is one machine word; a <code>&amp;dyn Draw</code> is <em>two</em>:</p>
+<pre><code class="language-text">&amp;dyn Draw
+┌────────────┬────────────┐
+│  data ptr  │ vtable ptr │
+└────────────┴────────────┘
+      │              │
+      │              └──────────►  vtable for `Button as Draw`  (static, in .rodata)
+      │                           ┌──────────────────────────┐
+      │                           │ drop_in_place(*mut Button)│
+      │                           │ size  = 12                │
+      │                           │ align = 4                 │
+      │                           │ &amp;&lt;Button as Draw&gt;::draw   │
+      │                           └──────────────────────────┘
+      └──────────────────────────►  the Button bytes themselves
+</code></pre>
+<p>The data pointer points at the value; the vtable pointer points at a per-(type, trait) table of function pointers plus the destructor, size, and alignment. On a 64-bit target, <code>size_of::&lt;&amp;Button&gt;() == 8</code> but <code>size_of::&lt;&amp;dyn Draw&gt;() == 16</code>; likewise <code>Box&lt;Button&gt;</code> is 8 bytes and <code>Box&lt;dyn Draw&gt;</code> is 16. A call <code>d.draw()</code> compiles to: load the vtable pointer, load the <code>draw</code> slot, call it with the data pointer as <code>&amp;self</code>.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> The vtable is <em>not</em> embedded in the value — this is the crucial divergence from C++. A <code>Button</code> instance contains zero overhead: no vptr field, no per-object cost, identical layout whether or not <code>Draw</code> is implemented. The vtable lives wherever the <code>&amp;dyn</code> is constructed. A single concrete type can have <em>many</em> vtables (one per trait it’s viewed through: <code>&amp;dyn Draw</code>, <code>&amp;dyn Debug</code>, …), and they are coined at the <code>&amp;value as &amp;dyn Trait</code> coercion site, deduplicated into read-only static memory by the linker.</p>
+</blockquote>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> In C++ a class with a virtual method carries a hidden <code>vptr</code> <em>inside every object</em>; <code>sizeof(Button)</code> grows and the vtable is reachable from the object alone. In Rust the object stays thin and the vtable rides alongside the pointer: a C++ <code>Button*</code> is one word and self-describing; a Rust <code>&amp;dyn Draw</code> is two words but a <code>&amp;Button</code> carries no type info at all. Java is closer to C++ — every object header has a class pointer used for dispatch and <code>instanceof</code>. Rust has no object header and no built-in <code>instanceof</code>; <code>dyn Any</code> (<a href="17-advanced-traits-and-types.html">Chapter 17</a>) bolts on downcasting explicitly. The analogy breaks hardest here: <strong>Rust separates “the value” from “the trait view of the value,”</strong> which is why the same <code>Button</code> can sit behind a <code>&amp;dyn Draw</code> and a <code>&amp;dyn Debug</code> at once with no extra storage in the <code>Button</code>.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is the dispatch-table mechanism from Compiler Construction with one choice flipped: there the vtable pointer is a field of the object emitted by the class-layout pass. Rust’s “witness table” model — pass the table alongside the value rather than embedding it — is the same scheme Swift uses for protocol witness tables and Haskell for dictionary-passing of type-class methods. It is the operational reading of bounded parametric polymorphism: a <code>dyn Trait</code> is an existential <code>∃T. (T, vtable_Trait&lt;T&gt;)</code>, the type packaging the witness that <code>T: Trait</code>.</p>
+</blockquote>
+<h2 id="static-vs-dynamic-dispatch-the-explicit-tradeoff"><a class="header" href="#static-vs-dynamic-dispatch-the-explicit-tradeoff">Static vs dynamic dispatch: the explicit tradeoff</a></h2>
+<p>You now have two ways to write “operate on anything that implements <code>Draw</code>”:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn render_static&lt;T: Draw&gt;(item: &amp;T) { item.draw(); }   // monomorphised per T
+fn render_dynamic(item: &amp;dyn Draw)  { item.draw(); }    // one body, indirect call
+<span class="boring">}</span></code></pre>
+<p><code>render_static</code> is compiled once per concrete <code>T</code>, each copy resolving the call to a direct, inlinable call to that <code>T</code>’s <code>draw</code>: code bloat (N copies) for zero runtime indirection and full optimisation across the call boundary. <code>render_dynamic</code> is compiled exactly once; every call does a vtable load and an indirect jump the optimiser cannot see through — no inlining, no constant-propagation into <code>draw</code>, a possible branch mispredict: code thinness for an indirection.</p>
+<p>The decision rule for <em>this</em> reader:</p>
+<ul>
+<li><strong>Homogeneous &amp; hot, or you want maximal optimisation:</strong> generics. <code>Vec&lt;Button&gt;</code> where everything is a <code>Button</code>.</li>
+<li><strong>Heterogeneous (must store mixed types together), or you’re crossing a plugin/extensibility boundary you don’t control:</strong> <code>dyn</code>. <code>Vec&lt;Box&lt;dyn Draw&gt;&gt;</code> where elements are <code>Button</code>, <code>SelectBox</code>, downstream <code>Image</code>, …</li>
+<li><strong>Compile-time blowup matters</strong> (huge generic function, embedded binary size): <code>dyn</code> collapses N monomorphisations into one.</li>
+</ul>
+<p>The cost of <code>dyn</code> is real but usually small — one cache-resident indirect call. Reach for it when you genuinely need runtime heterogeneity, not reflexively.</p>
+<h2 id="a-worked-example-the-extensibility-boundary"><a class="header" href="#a-worked-example-the-extensibility-boundary">A worked example: the extensibility boundary</a></h2>
+<p>The canonical motivation is a library whose author cannot know all the types its users will plug in. A widget framework defines the contract:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Render {
+    fn paint(&amp;self) -&gt; String;
+}
+
+pub struct Canvas {
+    pub widgets: Vec&lt;Box&lt;dyn Render&gt;&gt;,
+}
+
+impl Canvas {
+    pub fn repaint(&amp;self) {
+        for w in &amp;self.widgets {
+            println!("{}", w.paint());
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p><code>Canvas::repaint</code> does not know whether each <code>w</code> is a slider, a label, or a widget invented in a crate that did not exist when <code>Canvas</code> was compiled; it only knows the value answers <code>paint</code>. The generic alternative <code>struct Canvas&lt;T: Render&gt; { widgets: Vec&lt;T&gt; }</code> pins one <code>Canvas</code> to a <em>single</em> widget type — all sliders or all labels — because monomorphisation must choose one <code>T</code>. The <code>dyn</code> version is strictly more flexible at the cost of the indirection. A downstream crate adds a type the framework never anticipated:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Gauge { value: f64 }
+
+impl Render for Gauge {
+    fn paint(&amp;self) -&gt; String { format!("[gauge {:.0}%]", self.value * 100.0) }
+}
+
+let c = Canvas {
+    widgets: vec![
+        Box::new(Gauge { value: 0.7 }),
+        Box::new(Gauge { value: 0.2 }),
+    ],
+};
+c.repaint();
+<span class="boring">}</span></code></pre>
+<p>This is structurally duck typing — “if it answers <code>paint</code>, it goes in the list” — but Rust checks the duck statically: no runtime <code>respondsTo:</code>, no <code>NoSuchMethodError</code>. The coercion <code>Box::new(Gauge{..}) as Box&lt;dyn Render&gt;</code> only typechecks because <code>Gauge: Render</code>, and that is the <em>only</em> place the check happens.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Put a <code>String</code> in that <code>Vec</code> and you get <code>error[E0277]: the trait bound </code>String: Draw<code>is not satisfied … required for the cast from</code>Box<string><code>to</code>Box<dyn draw="">``. The error names the coercion site, not the eventual <code>.paint()</code> call — because the unsizing coercion from <code>Box&lt;String&gt;</code> to <code>Box&lt;dyn Render&gt;</code> is exactly where the witness <code>String: Render</code> must be produced, and it cannot be. The fix is either to pass a type that implements the trait or to <code>impl Render for String</code>.</dyn></string></p>
+</blockquote>
+<h2 id="object-safety-now-called-dyn-compatibility"><a class="header" href="#object-safety-now-called-dyn-compatibility">Object safety, now called <em>dyn compatibility</em></a></h2>
+<p>Not every trait can become a <code>dyn Trait</code>. To build the vtable above, each method must be callable knowing only <code>&amp;self</code> (a thin reference to unknown-but-<code>Sized</code> data) plus the vtable. Methods that violate this are excluded, and a trait is <strong>dyn-compatible</strong> (the modern name for “object-safe”) only if <em>every</em> method is dispatchable. The two rules you will hit:</p>
+<p><strong>1. No generic methods.</strong> A generic method would need a vtable slot <em>per monomorphisation</em>, but the set of instantiations is open-ended — you cannot lay out a finite table. The compiler is explicit:</p>
+<pre><code class="language-text">error[E0038]: the trait `Container` is not dyn compatible
+  ...because method `store` has generic type parameters
+  = help: consider moving `store` to another trait
+</code></pre>
+<p><strong>2. No <code>Self</code> by value or in return position</strong> (<code>fn duplicate(&amp;self) -&gt; Self</code>). The caller holding a <code>&amp;dyn Trait</code> has erased the concrete type, so it cannot name <code>Self</code> to receive a returned <code>Self</code> by value, nor allocate space for it:</p>
+<pre><code class="language-text">error[E0038]: the trait `Cloneable` is not dyn compatible
+  ...because method `duplicate` references the `Self` type in its return type
+</code></pre>
+<p>(Other disqualifiers exist — associated constants, statics — but generic params and bare <code>Self</code> are the two you trip over weekly.) The escape hatch is to gate the offending method so it <em>vanishes from the vtable</em>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>trait Widget {
+    fn paint(&amp;self) -&gt; String;                  // in the vtable: dispatchable
+    fn clone_box(&amp;self) -&gt; Box&lt;dyn Widget&gt;;      // OK: return type is not `Self`
+    fn debug_dump(&amp;self) where Self: Sized { }   // excluded from vtable, callable only statically
+}
+<span class="boring">}</span></code></pre>
+<p><code>where Self: Sized</code> tells the compiler “this method does not exist for the unsized <code>dyn Widget</code>,” so it does not block vtable construction; you can still call it on a concrete <code>Button</code>. Note <code>clone_box</code> returns a <em>boxed trait object</em>, not <code>Self</code> — the idiomatic way to “clone a trait object” precisely because returning <code>Self</code> is forbidden.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is type soundness from Semantics, stated as a representability constraint. A vtable is a finite record of function pointers; a method’s signature must be expressible as a single such pointer over a thin <code>self</code>. Generic methods (infinitely many instantiations) and by-value <code>Self</code> (size unknown to the caller) have no uniform representation, so admitting them would let you construct a call the runtime cannot perform — the type system forbids it up front rather than failing at dispatch. A <code>&amp;dyn Trait</code> <em>always</em> has a valid vtable for every method it exposes.</p>
+</blockquote>
+<h2 id="is-rust-object-oriented"><a class="header" href="#is-rust-object-oriented">Is Rust object-oriented?</a></h2>
+<p>Score it against the usual triad:</p>
+<ul>
+<li><strong>Objects (data + behaviour):</strong> yes. <code>struct</code>/<code>enum</code> hold data; <code>impl</code> blocks attach methods. The Gang-of-Four definition is satisfied even though the community avoids the word “object” — deliberately, because Rust keeps data (<code>struct</code>) and behaviour (<code>impl</code>, <code>trait</code>) <em>syntactically separate</em>.</li>
+<li><strong>Encapsulation:</strong> yes, via <code>pub</code>. Fields default to private; you expose an API and refactor internals behind it (swap a <code>Vec</code> field for a <code>HashSet</code>) without breaking callers. See <a href="19-project-structure.html">project structure</a> for module-level visibility.</li>
+<li><strong>Inheritance:</strong> <strong>no.</strong> There is no way to make one <code>struct</code> inherit another’s fields and method bodies — a deliberate omission.</li>
+</ul>
+<p>So Rust gives you two of three, and the third was rejected on purpose.</p>
+<h3 id="why-inheritance-was-rejected-composition--traits-instead"><a class="header" href="#why-inheritance-was-rejected-composition--traits-instead">Why inheritance was rejected: composition + traits instead</a></h3>
+<p>Inheritance bundles two separable things: (a) <em>implementation reuse</em> — sharing method bodies — and (b) <em>subtype polymorphism</em> — using a child where a parent is expected. Rust unbundles them.</p>
+<ul>
+<li>For <strong>implementation reuse</strong>: <strong>default trait methods</strong> (a method with a body that implementors inherit unless they override) and <strong>composition</strong> (embed a field, delegate to it). This sidesteps the <em>fragile base class problem</em>: in a deep hierarchy a change to a base method silently alters every descendant, possibly violating an invariant a subclass relied on. Traits have no implicit <code>super</code> call chain and no protected mutable state shared down a hierarchy, so the failure mode does not exist.</li>
+<li>For <strong>subtype polymorphism</strong>: <strong>trait bounds</strong> (<code>T: Draw</code>, static) or <strong>trait objects</strong> (<code>dyn Draw</code>, dynamic). You get substitutability without forcing the substituted types into a shared ancestry.</li>
+</ul>
+<p>The deeper objection is that inheritance over-shares: a subclass inherits <em>all</em> of the parent, including methods that may not make sense for it (the classic <code>Square extends Rectangle</code> with independent <code>setWidth</code>/<code>setHeight</code>). Traits let a type opt into exactly the capabilities it has, with no “single inheritance” restriction.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> From Further Java: a Java <code>interface</code> is the honest analogue of a Rust <code>trait</code>, and <code>class C implements I1, I2</code> maps to <code>impl I1 for C</code> / <code>impl I2 for C</code>. The break: Java still has <code>extends</code> for classes (concrete inheritance) and Rust has nothing like it — no <code>super</code>, no protected fields, no abstract base class with state. Where Java would use an abstract base class to share both state and behaviour, Rust forces you to split it: shared <em>behaviour</em> goes in a trait’s default methods; shared <em>state</em> goes in a struct you embed by composition and delegate to. From C++: there is no <code>: public Base</code>, no virtual inheritance, no diamond problem — because there is no implementation inheritance to form a diamond.</p>
+</blockquote>
+<h2 id="one-pattern-two-ways-the-state-machine"><a class="header" href="#one-pattern-two-ways-the-state-machine">One pattern, two ways: the state machine</a></h2>
+<p>The sharpest way to feel the difference is to implement the same FSM twice: a blog post with states <em>Draft → PendingReview → Published</em>, where only a published post yields its content and illegal transitions are no-ops.</p>
+<h3 id="the-trait-object-way-the-oop-transcription"><a class="header" href="#the-trait-object-way-the-oop-transcription">The trait-object way (the OOP transcription)</a></h3>
+<p>States become structs implementing a private <code>State</code> trait; the post holds one as a boxed trait object. Each state owns its own transition rules:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Post {
+    state: Option&lt;Box&lt;dyn State&gt;&gt;,
+    body: String,
+}
+
+impl Post {
+    pub fn new() -&gt; Post {
+        Post { state: Some(Box::new(Draft {})), body: String::new() }
+    }
+    pub fn add_text(&amp;mut self, t: &amp;str) { self.body.push_str(t); }
+
+    pub fn content(&amp;self) -&gt; &amp;str {
+        self.state.as_ref().unwrap().content(self)
+    }
+    pub fn request_review(&amp;mut self) {
+        if let Some(s) = self.state.take() {
+            self.state = Some(s.request_review());
+        }
+    }
+    pub fn approve(&amp;mut self) {
+        if let Some(s) = self.state.take() {
+            self.state = Some(s.approve());
+        }
+    }
+}
+
+trait State {
+    fn request_review(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt;;
+    fn approve(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt;;
+    fn content&lt;'a&gt;(&amp;self, _post: &amp;'a Post) -&gt; &amp;'a str { "" } // default
+}
+
+struct Draft {}
+impl State for Draft {
+    fn request_review(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt; { Box::new(PendingReview {}) }
+    fn approve(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt; { self } // no-op
+}
+
+struct PendingReview {}
+impl State for PendingReview {
+    fn request_review(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt; { self }
+    fn approve(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt; { Box::new(Published {}) }
+}
+
+struct Published {}
+impl State for Published {
+    fn request_review(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt; { self }
+    fn approve(self: Box&lt;Self&gt;) -&gt; Box&lt;dyn State&gt; { self }
+    fn content&lt;'a&gt;(&amp;self, post: &amp;'a Post) -&gt; &amp;'a str { &amp;post.body }
+}
+<span class="boring">}</span></code></pre>
+<p>Three things here are not optional:</p>
+<ol>
+<li>
+<p><strong>The <code>Option&lt;Box&lt;dyn State&gt;&gt;</code> and <code>.take()</code>.</strong> The transition methods take <code>self: Box&lt;Self&gt;</code> — they <em>consume</em> the old state to produce the new (you cannot transition by <code>&amp;mut</code>, since turning a <code>Draft</code> into a <code>PendingReview</code> is a move that invalidates the old value). But <code>request_review(&amp;mut self)</code> only borrows the post; you cannot move <code>self.state</code> out of a borrowed field and leave a hole. <code>Option::take</code> swaps in <code>None</code>, hands you the owned <code>Box</code>, and you write the result back — the ownership system forcing the “temporarily no state” window to be explicit, a window other languages leave implicit and bug-prone.</p>
+</li>
+<li>
+<p><strong><code>self: Box&lt;Self&gt;</code></strong> is the <em>arbitrary self type</em> that makes the consuming transition dyn-compatible: the receiver is the boxed trait object itself, so <code>take</code>-then-call moves the box into the method.</p>
+</li>
+<li>
+<p><strong><code>content</code> is a default method, and the duplication can’t be removed.</strong> You cannot give <code>request_review</code>/<code>approve</code> a default body returning <code>self</code>: through a <code>dyn State</code> the concrete <code>Self</code> is unknown, so a returned <code>self</code> has no statically known size — <em>a dyn-compatibility violation</em>, the previous section’s rule biting in practice.</p>
+</li>
+</ol>
+<p>The payoff is the OOP one: <code>Post</code>’s methods contain no <code>match</code> on the state; behaviour lives in the state structs, and adding a <code>Scheduled</code> state means adding a struct and its <code>impl</code>, touching <code>Post</code> not at all. The cost: illegal use is caught at <em>runtime</em> (<code>content</code> on a draft returns <code>""</code> — a silent wrong answer, not a compile error), and the states are coupled (each knows its successor).</p>
+<h3 id="the-typestate-way-the-punchline"><a class="header" href="#the-typestate-way-the-punchline">The typestate way (the punchline)</a></h3>
+<p>Now encode each state as a <em>distinct type</em>, and make transitions consume one type and return the next. Methods that are illegal in a state simply <em>do not exist</em> on that type, so misuse fails to compile:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct DraftPost { body: String }
+pub struct PendingReviewPost { body: String }
+pub struct Post { body: String }   // the *published* post
+
+impl DraftPost {
+    pub fn new() -&gt; DraftPost { DraftPost { body: String::new() } }
+    pub fn add_text(&amp;mut self, t: &amp;str) { self.body.push_str(t); }
+    pub fn request_review(self) -&gt; PendingReviewPost {
+        PendingReviewPost { body: self.body }
+    }
+    // no `content` method — a draft has no readable content, by construction
+}
+
+impl PendingReviewPost {
+    pub fn approve(self) -&gt; Post { Post { body: self.body } }
+    // no `content`, no `add_text` — both meaningless while under review
+}
+
+impl Post {
+    pub fn content(&amp;self) -&gt; &amp;str { &amp;self.body }   // only the published type has this
+}
+<span class="boring">}</span></code></pre>
+<p>Usage threads the value through the type-changing transitions; <code>let</code> shadowing rebinds because each transition returns a <em>new type</em>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut post = DraftPost::new();
+post.add_text("shipped the borrow checker");
+let post = post.request_review();   // DraftPost  -&gt; PendingReviewPost
+let post = post.approve();          // PendingReviewPost -&gt; Post
+assert_eq!("shipped the borrow checker", post.content());
+<span class="boring">}</span></code></pre>
+<p>Try <code>DraftPost::new().content()</code> and the compiler refuses with the exact diagnostic <code>error[E0599]: no method named </code>content<code>found for struct</code>DraftPost<code> … `the method was found for `Post</code>. The illegal transition is not a runtime no-op; <strong>it is not expressible.</strong> Because the transition methods take <code>self</code> by value, the old state is <em>moved out and consumed</em> — no lingering <code>DraftPost</code> survives <code>request_review</code> to be misused. The state machine has been lifted into the type system; the borrow checker is now your model checker.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Typestate is zero-cost. The three structs have identical layout; <code>request_review</code> is a move of the <code>String</code> (often a no-op reinterpretation, since the layouts match) and produces no vtable, no heap box, no <code>Option</code> dance. The trait-object version, by contrast, heap-allocates a fresh <code>Box&lt;dyn State&gt;</code> on every transition and pays an indirection on every <code>content</code> call. Typestate trades runtime checks and allocations for <em>compile-time</em> state tracking — you pay nothing at runtime for a guarantee the OOP version enforces only dynamically, and partially.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Curry-Howard at work (Logic and Proof): the type <code>PendingReviewPost</code> is a <em>proof token</em> that a review was requested, and <code>approve: PendingReviewPost → Post</code> can only be called if you hold that proof. You cannot fabricate a <code>Post</code> without constructing the chain <code>DraftPost → PendingReviewPost → Post</code>, because the constructors are private and the only routes between types are the transition methods. The reachable states and transitions of the FSM become exactly the inhabited types and the typed functions between them; an illegal transition is a term that does not typecheck. The same idea generalises to a <code>PhantomData&lt;State&gt;</code> marker when you want one struct parameterised by a state type rather than three distinct structs.</p>
+</blockquote>
+<p>The lesson is not “never use trait objects.” It is: <strong>when the legal transitions are known at compile time and you want misuse to be a compile error, prefer typestate; reach for <code>dyn</code> when the set of types is open or genuinely runtime-chosen.</strong> The trait-object state pattern earns its keep when downstream code must add new states the library cannot foresee — the same extensibility argument as <code>Canvas</code>.</p>
+<h2 id="the-decision-guide-impl-trait-vs-dyn-trait-vs-generic-bound"><a class="header" href="#the-decision-guide-impl-trait-vs-dyn-trait-vs-generic-bound">The decision guide: <code>impl Trait</code> vs <code>dyn Trait</code> vs generic bound</a></h2>
+<p>Three syntaxes return-or-accept “something that implements <code>Draw</code>,” and beginners conflate them. They are distinct:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn make_one() -&gt; impl Render { Gauge { value: 0.5 } }     // one hidden concrete type
+fn make_boxed() -&gt; Box&lt;dyn Render&gt; { Box::new(Gauge { value: 0.5 }) } // any, erased
+fn take_generic&lt;T: Render&gt;(x: T) { /* monomorphised per T */ }
+fn take_dyn(x: &amp;dyn Render) { /* one body, indirect */ }
+<span class="boring">}</span></code></pre>
+<ul>
+<li><strong><code>-&gt; impl Trait</code> (return position):</strong> “I return <em>exactly one</em> concrete type, but I’m not naming it.” Static dispatch, no allocation, no indirection, fully inlinable; the caller gets an opaque type usable only via the trait. Use it to return closures and iterators (whose types are unnameable) or to hide an implementation type. You <strong>cannot</strong> return two different types from two branches — <code>impl Trait</code> is one concrete type.</li>
+<li><strong><code>Box&lt;dyn Trait&gt;</code> (return or storage):</strong> “I return one of <em>several</em> types chosen at runtime,” or “I store a heterogeneous collection.” Dynamic dispatch, one heap allocation, the indirection. The only one of the three that lets a function return different concrete types from different <code>match</code> arms.</li>
+<li><strong><code>fn f&lt;T: Trait&gt;(x: T)</code> / <code>impl Trait</code> in argument position:</strong> static dispatch at the call site, monomorphised. The best default for accepting parameters — maximal performance, caller’s concrete type preserved.</li>
+<li><strong><code>fn f(x: &amp;dyn Trait)</code>:</strong> dynamic dispatch, one compiled body. Use when you need argument heterogeneity or want to curb monomorphisation bloat in a large function.</li>
+</ul>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>-&gt; impl Trait</code> is morally OCaml’s existential-but-monomorphic return: the caller sees an abstract type. <code>Box&lt;dyn Trait&gt;</code> is the genuine boxed existential <code>∃T. T</code> — closest to a C++ <code>std::unique_ptr&lt;Base&gt;</code> or a Java interface-typed reference, indirection and all. <code>fn f&lt;T: Trait&gt;</code> is C++ templates / OCaml <code>'a</code> with a constraint, monomorphised like a template instantiation. The break from C++ templates: Rust typechecks the <em>generic body</em> against the bound <code>T: Trait</code> once, before any instantiation (<a href="08-generics-and-traits.html">generics and traits</a>), so you get a clean error at the definition rather than a wall of instantiation errors at the use site.</p>
+</blockquote>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li><code>dyn Trait</code> is an unsized type; you only ever hold it behind a pointer, and that pointer is <strong>fat</strong> — <code>(data ptr, vtable ptr)</code>, two words. The vtable is per-(type, trait), lives in static memory, and is <em>not</em> embedded in the value (unlike C++/Java vptrs), so concrete values stay thin and one value can be viewed through many independent vtables.</li>
+<li><strong>Static dispatch</strong> (generics, <code>impl Trait</code>) is monomorphised: N copies, direct inlinable calls, no runtime cost. <strong>Dynamic dispatch</strong> (<code>dyn</code>) is one body plus a vtable indirection: thin binary, runtime heterogeneity, no inlining. Choose <code>dyn</code> only when you need runtime mixing or an open extensibility boundary.</li>
+<li><strong>Dyn-compatibility</strong> (object safety) excludes generic methods and by-value/return <code>Self</code>, because a vtable slot must be a single function pointer over a thin <code>self</code>. Gate convenience methods with <code>where Self: Sized</code> to keep a trait usable as <code>dyn</code>.</li>
+<li>Rust has encapsulation and polymorphism but <strong>no inheritance</strong>: implementation reuse comes from default trait methods + composition; subtype polymorphism from trait bounds or trait objects. This dodges the fragile-base-class problem by design.</li>
+<li>The <strong>typestate</strong> pattern encodes each FSM state as a type, with transitions consuming <code>self</code> and returning the next state’s type; illegal transitions become non-existent methods, so misuse fails to compile (Curry-Howard: the type is a proof of reachability). It is zero-cost. Prefer it over the trait-object state pattern when the states are closed and you want compile-time enforcement.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Construct a <code>Box&lt;dyn Iterator&lt;Item = u32&gt;&gt;</code> from <code>(0..5).map(|x| x * x)</code> and print <code>size_of_val</code> of the box’s pointee versus <code>size_of::&lt;Box&lt;dyn Iterator&lt;Item=u32&gt;&gt;&gt;()</code>. Explain why the latter is 16 bytes regardless of the underlying iterator’s size.</p>
+</li>
+<li>
+<p>Write a trait <code>Shape { fn area(&amp;self) -&gt; f64; fn unit() -&gt; Self; }</code>. Try to use it as <code>&amp;dyn Shape</code>. Read the resulting <code>E0038</code> carefully, then refactor so <code>area</code> remains dispatchable through <code>dyn Shape</code> while <code>unit</code> is still callable on concrete types. (Two correct fixes exist — find both.)</p>
+</li>
+<li>
+<p>(★) Take the trait-object blog <code>Post</code>. Add a <code>reject(&amp;mut self)</code> transition sending <code>PendingReview</code> back to <code>Draft</code>. Now attempt to give <code>State</code> a <em>default</em> <code>reject</code> body returning <code>self</code>. Explain the exact compiler error, tie it to a named dyn-compatibility rule, and show the minimal change that makes the default body legal while keeping <code>State</code> dyn-compatible.</p>
+</li>
+<li>
+<p>In the typestate blog, add a <code>Scheduled</code> state between <code>PendingReview</code> and <code>Published</code>, reachable by <code>schedule(self) -&gt; ScheduledPost</code>, with <code>publish(self) -&gt; Post</code>. Then write a <code>main</code> that <em>tries</em> to call <code>.approve()</code> on a <code>ScheduledPost</code>. Show the error and argue why this guarantee is strictly stronger than the trait-object version’s runtime no-op.</p>
+</li>
+<li>
+<p>Explain why this fails to compile and give two different fixes (one using <code>dyn</code>, one using an enum):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn pick(flag: bool) -&gt; impl Render {
+    if flag { Gauge { value: 1.0 } } else { Label { text: "x".into() } }
+}
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p>(★) A <code>Vec&lt;Box&lt;dyn Render&gt;&gt;</code> cannot be <code>.clone()</code>d even if every concrete widget is <code>Clone</code>, because <code>Clone</code> is not dyn-compatible (it has <code>fn clone(&amp;self) -&gt; Self</code>). Design a <code>RenderClone</code> super-trait with a <code>clone_box(&amp;self) -&gt; Box&lt;dyn Render&gt;</code> method, blanket-implement it for all <code>T: Render + Clone</code>, and wire up <code>impl Clone for Box&lt;dyn Render&gt;</code> so the vector clones. Explain precisely which dyn-compatibility rule <code>clone_box</code> sidesteps that <code>clone</code> violates.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="08-generics-and-traits.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="10-collections.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="08-generics-and-traits.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="10-collections.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,571 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Crates, Modules &amp; Workspaces - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="19-crates-modules--workspaces"><a class="header" href="#19-crates-modules--workspaces">19. Crates, Modules &amp; Workspaces</a></h1>
+<p>You already know several answers to “how do I split a program into pieces and control what’s visible.” C++ gives you headers, translation units, the One-Definition Rule, <code>#include</code>, and namespaces — orthogonal mechanisms you juggle simultaneously. Java fuses the compilation unit, the namespace, and the directory layout into one concept (the package), with <code>public</code>/<code>protected</code>/<code>private</code>/package-private as a separate access lattice. OCaml is cleaner: a module is a structure, and the <code>.ml</code>/<code>.mli</code> split separates implementation from interface.</p>
+<p>Rust’s answer is its own, and the headline facts trip up everyone arriving from C++: <strong>there is no preprocessor, no textual inclusion, and no linking object files by name.</strong> A crate compiles as one unit from a single root file. Modules are a purely <em>logical</em> namespace tree inside that crate — the mapping to files is a compiler convention, not a fundamental. And visibility is <strong>module-scoped, not type-scoped</strong>: privacy is the boundary of a <code>mod</code>, the single biggest delta from Java’s per-class <code>private</code>.</p>
+<p>This chapter builds the vocabulary — package, crate, module, path, visibility, <code>use</code> — then scales up to multi-crate workspaces.</p>
+<h2 id="three-nested-concepts-package-crate-module"><a class="header" href="#three-nested-concepts-package-crate-module">Three nested concepts: package, crate, module</a></h2>
+<p>These three words are used loosely in conversation and precisely by the compiler. Get them straight:</p>
+<ul>
+<li>A <strong>crate</strong> is the unit of compilation. It is <em>one tree of modules</em> that <code>rustc</code> compiles in a single invocation, producing either one executable (a <strong>binary crate</strong>, must have <code>fn main</code>) or one library artifact (a <strong>library crate</strong>, no <code>main</code>). When people say “the <code>serde</code> crate” or “a crate on crates.io,” they almost always mean a library crate.</li>
+<li>A <strong>package</strong> is the unit Cargo manages: a directory with a <code>Cargo.toml</code>. A package bundles <strong>one or more crates</strong>: at most one library crate, plus any number of binary crates. It is the thing you <code>cargo new</code>, version, and publish.</li>
+<li>A <strong>module</strong> is a namespace <em>inside</em> a crate. Modules nest, forming the <strong>module tree</strong>, and they are the unit of <em>privacy</em>.</li>
+</ul>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> A C++ <em>translation unit</em> is the nearest analogue to a crate, but the analogy breaks on scale and linkage. A TU is typically one <code>.cpp</code>; a crate is potentially hundreds of <code>.rs</code> files compiled together. There is no ODR across crates because there is no textual <code>#include</code> duplicating definitions into many TUs — each crate is compiled once and depended upon by name. A Rust <strong>module</strong> is closest to a C++ <code>namespace</code> or an OCaml <code>module</code>, a logical naming scope — but unlike a C++ namespace (open, reopenable anywhere) a Rust module’s contents are fixed at its definition site.</p>
+</blockquote>
+<p>The file conventions Cargo uses:</p>
+<pre><code class="language-text">my_package/
+├── Cargo.toml          # makes this a package
+└── src/
+    ├── main.rs         # crate root of a binary crate named `my_package`
+    ├── lib.rs          # crate root of a library crate named `my_package`
+    └── bin/
+        └── tool.rs     # crate root of an extra binary crate named `tool`
+</code></pre>
+<p>Nothing in <code>Cargo.toml</code> names <code>src/main.rs</code> or <code>src/lib.rs</code>. Cargo <em>assumes</em> them by convention: <code>src/main.rs</code> is a binary crate root, <code>src/lib.rs</code> is a library crate root, and each file under <code>src/bin/</code> is its own additional binary crate. A package with both <code>main.rs</code> and <code>lib.rs</code> has two crates that share the package’s name.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is the opposite of C/C++’s explicit build description, where every TU is listed in a <code>Makefile</code>/<code>CMakeLists.txt</code>. Rust trades configurability for convention: you almost never enumerate source files, because <code>mod</code> declarations (below) thread them into the tree automatically. It is closer to how <code>dune</code> discovers OCaml modules, or how Java maps <code>com.example.Foo</code> to <code>com/example/Foo.java</code> — but Rust’s mapping is far more flexible than Java’s rigid package-equals-directory rule.</p>
+</blockquote>
+<h2 id="the-module-tree"><a class="header" href="#the-module-tree">The module tree</a></h2>
+<p>The crate root file (<code>lib.rs</code> or <code>main.rs</code>) is itself an implicit module called <code>crate</code>. Every other module hangs off it. You introduce a module with <code>mod</code>, and you may nest inline with braces:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// src/lib.rs — crate root, implicitly module `crate`
+mod billing {
+    pub mod invoices {
+        pub struct Invoice { pub total_cents: u64 }
+        pub fn issue() -&gt; Invoice { Invoice { total_cents: 0 } }
+    }
+    mod ledger {              // private to `billing`
+        fn post() {}
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>This produces the tree:</p>
+<pre><code class="language-text">crate
+└── billing
+    ├── invoices
+    │   ├── Invoice
+    │   └── issue
+    └── ledger
+        └── post
+</code></pre>
+<p>The vocabulary mirrors a filesystem and is worth fixing: <code>invoices</code> and <code>ledger</code> are <strong>siblings</strong> (defined in the same parent); <code>invoices</code> is a <strong>child</strong> of <code>billing</code>; <code>billing</code> is the <strong>parent</strong> of <code>invoices</code>. The whole tree is rooted at <code>crate</code>.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> In <em>Foundations of Computer Science</em> you used OCaml modules to bundle a type with the operations over it (the classic <code>Stack</code> / <code>Queue</code> ADT presentation). A Rust module serves the identical <em>organisational</em> role, but the encapsulation mechanism differs: OCaml hides representation by <em>omitting</em> it from an <code>.mli</code> signature, whereas Rust hides items by <em>default privacy</em> and selectively <em>exposes</em> with <code>pub</code>. Same goal — abstraction boundaries the compiler enforces — opposite default (OCaml: list it to export with a signature; Rust: everything private until annotated).</p>
+</blockquote>
+<h2 id="modules-are-not-files"><a class="header" href="#modules-are-not-files">Modules are not files</a></h2>
+<p>This is where C++ intuition misleads you. In C++, <code>#include "foo.h"</code> is <em>textual substitution</em> — the preprocessor pastes the file’s bytes into the current TU; the file <em>is</em> the unit. In Rust, <strong>the module tree is logical and exists independently of how it is spread across files.</strong> The line</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>mod billing;   // note: semicolon, not a brace block
+<span class="boring">}</span></code></pre>
+<p>is not an include. It declares: <em>“a module named <code>billing</code> exists here in the tree; go find its body.”</em> The compiler then looks, in order, in:</p>
+<ul>
+<li><code>src/billing.rs</code> (modern, idiomatic), or</li>
+<li><code>src/billing/mod.rs</code> (older style, still supported).</li>
+</ul>
+<p>For a <em>submodule</em> declared inside <code>billing</code> — say <code>mod invoices;</code> written in <code>src/billing.rs</code> — the compiler looks in <code>src/billing/invoices.rs</code> or <code>src/billing/invoices/mod.rs</code>. The directory nesting tracks the module nesting.</p>
+<p>Two rules that follow, and that catch newcomers:</p>
+<ol>
+<li><strong>You declare a file into the tree exactly once,</strong> with one <code>mod</code> statement, at the position in the tree where you want it. Other code then refers to its contents <em>by path</em>, never by re-declaring <code>mod</code> again. Writing <code>mod billing;</code> in two places does not “include it twice” — it tries to create two modules and is usually an error.</li>
+<li><strong><code>use</code> does not pull files into the build.</strong> Only <code>mod</code> does. <code>use</code> merely creates a local shorthand for an already-existing path (more below). A file with no <code>mod</code> declaration pointing at it is simply not part of the crate.</li>
+</ol>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Coming from C, you write <code>use crate::billing;</code> expecting it to “import the module” the way <code>#include</code> makes a file’s contents available — but you never wrote <code>mod billing;</code>. The error is <code>error[E0432]: unresolved import</code> or <code>failed to resolve: use of unresolved module</code>. The fix is to add <code>mod billing;</code> in the crate root (or appropriate parent) to <em>attach the file to the tree</em>; <code>use</code> only shortens a path that already resolves.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Because there is no textual inclusion, a generic definition in module <code>a</code> and its use site in module <code>b</code> are seen by <code>rustc</code> in one pass over one crate. Monomorphisation (the machinery from <em>Compiler Construction</em>) runs with full visibility of every instantiation — none of the “template lives in the header, use lives in another TU” fragility. Cross-crate generics work because the library crate ships its generic bodies in metadata, not by re-parsing headers.</p>
+</blockquote>
+<p>Whether to use inline <code>mod foo { ... }</code> or file-based <code>mod foo;</code> is purely stylistic — the resulting tree is identical. Inline is convenient for small or test modules; files for anything that grows.</p>
+<h2 id="paths-naming-an-item"><a class="header" href="#paths-naming-an-item">Paths: naming an item</a></h2>
+<p>To refer to an item across the tree you write a <strong>path</strong>, segments separated by <code>::</code>. There are two flavours:</p>
+<ul>
+<li><strong>Absolute</strong>, starting from a crate root: <code>crate::billing::invoices::issue</code> for the current crate, or <code>some_dep::module::item</code> beginning with an <em>external crate’s name</em>.</li>
+<li><strong>Relative</strong>, starting from the current module: a bare identifier, or <code>self::</code> (this module) or <code>super::</code> (parent module — exactly like <code>..</code> in a shell path).</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>mod billing {
+    pub mod invoices {
+        pub fn issue() {}
+    }
+    pub fn run_books() {
+        // relative, via a child
+        invoices::issue();
+        // relative, explicit self
+        self::invoices::issue();
+        // absolute, from the root
+        crate::billing::invoices::issue();
+    }
+}
+
+mod reporting {
+    pub fn summarise() {
+        // `super` = parent of `reporting` = crate root
+        super::billing::run_books();
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>Which to prefer? <strong>Default to absolute (<code>crate::…</code>).</strong> When you later move the <em>calling</em> code, an absolute path keeps resolving (the target didn’t move); when you move the <em>definition</em>, you fix it either way. Since refactors move callers more often than definitions, absolute paths break less. Reach for <code>super::</code> only when a child is tightly coupled to its parent and you expect them to move together.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>crate::</code> is Rust’s analogue of a leading <code>/</code> (filesystem root) or a fully-qualified Java name <code>com.example.billing.Invoices</code>. <code>super::</code> is <code>..</code>. The break from Java: there is no implicit “same package, no qualification needed” — siblings still need a path segment, and crucially the path is checked against <em>privacy</em> at every segment, which Java’s package-private does not do hierarchically.</p>
+</blockquote>
+<h2 id="visibility-private-by-default-and-module-scoped"><a class="header" href="#visibility-private-by-default-and-module-scoped">Visibility: private by default, and module-scoped</a></h2>
+<p>Every item — function, struct, enum, module, constant, method — is <strong>private by default</strong>, meaning <em>visible only within its defining module and that module’s descendants</em>. The exact rule, and it is the one to memorise:</p>
+<ul>
+<li>A <strong>child module can see everything in its ancestors,</strong> including private items. (A child sees the context it was defined in.)</li>
+<li>A <strong>parent cannot see the private contents of its children.</strong> (Children hide their internals.)</li>
+</ul>
+<p><code>pub</code> flips an item to public. But here is the subtlety that produces a two-stage compiler error in practice: making a <em>module</em> <code>pub</code> only lets ancestors <em>name</em> it; it does <strong>not</strong> make the items inside it public. You must mark each exposed item <code>pub</code> as well.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>mod billing {
+    pub mod invoices {       // module is reachable...
+        pub fn issue() {}    // ...and this item is reachable
+        fn audit() {}        // ...but this stays private to `invoices`
+    }
+}
+
+pub fn run() {
+    billing::invoices::issue();   // OK
+    // billing::invoices::audit(); // E0603: function `audit` is private
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> You add <code>pub</code> to <code>mod invoices</code> and re-run, expecting success, and instead get <code>error[E0603]: function </code>issue<code> is private</code> pointing at the <em>function</em>. The mental bug is treating a module like a Java class where one access modifier on the container governs members. In Rust, <code>pub mod</code> and <code>pub fn</code> are independent gates — the path must be public <em>at every segment</em>. Fix: annotate each item you intend to export, not just the module.</p>
+</blockquote>
+<p>For structs, <code>pub struct</code> exposes the type but <strong>each field stays private unless individually <code>pub</code></strong> — so you can publish a type whose representation is sealed, exactly the OCaml abstract-type pattern. Enums are the exception: <code>pub enum</code> makes <strong>all variants public</strong>, because an enum with hidden variants is almost useless to a caller (you cannot pattern-match on what you cannot name).</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Account {
+    pub name: String,   // callers may read/write
+    balance_cents: i64,  // sealed: only this module touches it
+}
+
+impl Account {
+    pub fn open(name: String) -&gt; Account {
+        Account { name, balance_cents: 0 }   // must be built in-module
+    }
+    pub fn balance(&amp;self) -&gt; i64 { self.balance_cents }
+}
+<span class="boring">}</span></code></pre>
+<p>Because <code>balance_cents</code> is private, external code cannot construct an <code>Account</code> with a struct literal nor mutate the balance directly — it must go through <code>open</code> and methods. Encapsulation is enforced <em>by the module boundary</em>, which is why the constructor lives where the private field lives.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is the same encapsulation guarantee you reasoned about informally in <em>Further Java</em>, but with a sharper formal property. In <em>Semantics of Programming Languages</em> terms, module privacy is a <em>static</em> representation-hiding discipline: a well-typed external client provably cannot observe or depend on private state, so you may change <code>balance_cents</code> (its type, its representation, even split it into two fields) without breaking any compiling client. That is a soundness-style invariant the compiler maintains, not a runtime convention.</p>
+</blockquote>
+<h3 id="finer-grained-visibility"><a class="header" href="#finer-grained-visibility">Finer-grained visibility</a></h3>
+<p><code>pub</code> means “public to anyone who can reach the path,” including other crates. Often you want narrower scopes. Rust offers a small lattice:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub(crate) fn internal_helper() {}     // visible anywhere in THIS crate, never exported
+pub(super) fn for_my_parent() {}       // visible to the parent module
+pub(in crate::billing) fn scoped() {}  // visible within a named ancestor module path
+<span class="boring">}</span></code></pre>
+<p><code>pub(crate)</code> is the workhorse: it is how you share an item freely across your own crate’s modules while keeping it out of your <em>public API</em>. Reach for it constantly when building a library — most of your “internal but cross-module” functions want <code>pub(crate)</code>, not bare <code>pub</code>.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Java’s four levels (<code>public</code>, <code>protected</code>, package-private, <code>private</code>) map roughly but not cleanly: <code>private</code> ≈ Rust default <em>at the module level</em> (not the type level!), package-private ≈ <code>pub(crate)</code> in spirit, <code>public</code> ≈ <code>pub</code>. There is no <code>protected</code> because Rust has no inheritance (see <a href="09-trait-objects-and-oop.html">trait objects &amp; OOP</a>). The decisive difference: in Java <code>private</code> is per-<em>class</em>, so two classes in the same file cannot see each other’s privates; in Rust privacy is per-<em>module</em>, so two <code>struct</code>s in the same module freely access each other’s private fields. This makes the “module = friend group” pattern idiomatic where C++ would reach for <code>friend</code>.</p>
+</blockquote>
+<h2 id="use-shortcuts-into-scope"><a class="header" href="#use-shortcuts-into-scope"><code>use</code>: shortcuts into scope</a></h2>
+<p>Writing <code>crate::billing::invoices::issue()</code> everywhere is noise. <code>use</code> binds a path to a short name <em>in the current scope</em>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::billing::invoices;
+
+pub fn run() {
+    invoices::issue();   // `invoices` now names that module here
+}
+<span class="boring">}</span></code></pre>
+<p>A <code>use</code> is like a symbolic link, and it is <strong>scoped to the block it appears in</strong> — it does not leak into child modules. It is also subject to privacy: <code>use</code> cannot reach a private item any more than a full path can.</p>
+<p><strong>Idiomatic granularity.</strong> The community convention — and it is a real convention worth following for readability, not a rule the compiler cares about:</p>
+<ul>
+<li>For <strong>functions</strong>, <code>use</code> the <em>parent module</em> and call <code>parent::func()</code>. Seeing <code>invoices::issue()</code> tells the reader at the call site that <code>issue</code> is not local. <code>use …::issue;</code> and a bare <code>issue()</code> hides that.</li>
+<li>For <strong>structs, enums, traits, and other types</strong>, <code>use</code> the full path: <code>use std::collections::HashMap;</code> then <code>HashMap</code>. Types are typically named often and unambiguously, so the extra segment is just noise.</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::collections::HashMap;   // type: full path
+use crate::billing::invoices;    // function's parent module
+<span class="boring">}</span></code></pre>
+<p><strong>Name clashes.</strong> Two items with the same final name cannot both be <code>use</code>d bare into one scope. Two idiomatic fixes:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// (a) keep the parent modules and disambiguate at the call site
+use std::fmt;
+use std::io;
+fn f() -&gt; fmt::Result { Ok(()) }
+fn g() -&gt; io::Result&lt;()&gt; { Ok(()) }
+
+// (b) rename one with `as`
+use std::fmt::Result;
+use std::io::Result as IoResult;
+fn h() -&gt; Result { Ok(()) }
+fn k() -&gt; IoResult&lt;()&gt; { Ok(()) }
+<span class="boring">}</span></code></pre>
+<p><strong>Nested paths</strong> collapse repetitive <code>use</code> lists, and <code>self</code> lets a module and one of its children share a line:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::{cmp::Ordering, io};        // std::cmp::Ordering AND std::io
+use std::io::{self, Write};          // std::io AND std::io::Write
+<span class="boring">}</span></code></pre>
+<p><strong>The glob <code>*</code></strong> pulls in <em>all</em> public items of a path:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::collections::*;
+<span class="boring">}</span></code></pre>
+<p>Use it sparingly. It obscures where names came from, and it makes you fragile to upstream additions: if a dependency later adds a public name that collides with one of yours, your build breaks on upgrade. The two sanctioned uses are (1) <code>use super::*;</code> inside a <code>#[cfg(test)]</code> test module to grab everything under test, and (2) deliberate <em>prelude</em> modules designed to be glob-imported (below).</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>use</code> is <em>not</em> <code>#include</code> and <em>not</em> Java’s <code>import</code> in effect on the build. Java’s <code>import</code> is also just a naming shorthand (the class is found via the classpath regardless), so that analogy holds — but in C++, omitting an <code>#include</code> means the symbol genuinely does not exist in the TU. In Rust, the item exists in the crate as soon as <code>mod</code> attaches it; <code>use</code> only abbreviates. Forgetting a <code>use</code> is a <em>spelling</em> fix (write the full path), never a <em>linkage</em> error.</p>
+</blockquote>
+<h2 id="re-exports-pub-use-shapes-your-public-api"><a class="header" href="#re-exports-pub-use-shapes-your-public-api">Re-exports: <code>pub use</code> shapes your public API</a></h2>
+<p>By default a <code>use</code> binding is private — it is your local convenience. Prefix it with <code>pub</code> and you <strong>re-export</strong>: the name becomes part of <em>your</em> module’s public surface, as if defined there. This decouples your <em>internal</em> module layout from the API your callers see.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// src/lib.rs
+mod billing {
+    pub mod invoices {
+        pub fn issue() {}
+    }
+}
+
+// Internally organised under billing::invoices,
+// but presented to the world at the crate root:
+pub use crate::billing::invoices;
+<span class="boring">}</span></code></pre>
+<p>A caller now writes <code>my_crate::invoices::issue()</code> instead of <code>my_crate::billing::invoices::issue()</code> and never learns <code>billing</code> exists. This is the standard technique for a library that wants a flat, curated front door over a deep internal hierarchy — your contributors navigate <code>billing::invoices</code>, your users see a tidy top-level API. It is also how a crate provides a single import point: re-export the handful of types and traits most users need from the root.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>pub use</code> re-exports also flow into generated documentation: <code>cargo doc</code> lists a re-exported item at the re-export site, so your published docs reflect the curated structure, not the raw module tree. This is why mature crates (<code>tokio</code>, <code>serde</code>) feel coherent despite large internal module trees — the public path geometry is hand-shaped with <code>pub use</code>, independent of where things actually live.</p>
+</blockquote>
+<h2 id="external-crates-and-the-prelude"><a class="header" href="#external-crates-and-the-prelude">External crates and the prelude</a></h2>
+<p>Adding a dependency is two steps. First, declare it in <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dependencies]
+rand = "0.8.5"
+</code></pre>
+<p>Cargo resolves it from crates.io (or a registry/git/path source), downloads it, and pins the exact resolved version in <code>Cargo.lock</code>. Second, refer to it by crate name in paths — an external crate’s name is the first segment of an absolute path to its items:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use rand::Rng;                 // bring the trait into scope
+let n = rand::thread_rng().gen_range(1..=100);
+<span class="boring">}</span></code></pre>
+<p>The standard library <code>std</code> is special only in that it ships with the toolchain, so it needs no <code>Cargo.toml</code> entry — but it is otherwise an ordinary external crate: you still write <code>use std::collections::HashMap;</code>, an absolute path rooted at the crate <code>std</code>.</p>
+<p><strong>The prelude</strong> is why you never <code>use std::option::Option;</code>. The standard library defines a small set of ubiquitous items — <code>Option</code>, <code>Result</code>, <code>Vec</code>, <code>String</code>, <code>Box</code>, <code>Clone</code>, <code>Iterator</code>, <code>drop</code>, and so on — in <code>std::prelude</code>, and the compiler glob-imports it into <em>every</em> module automatically: the prelude pattern applied by the language itself. Crates can ship their own opt-in prelude (<code>use some_crate::prelude::*;</code>) for the same purpose — one glob bringing the crate’s most-used traits into scope, which matters because trait methods are only callable when the trait is in scope (see <a href="08-generics-and-traits.html">generics &amp; traits</a>).</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> The automatic prelude is the language pre-populating the typing context Γ that you formalised in <em>Semantics of Programming Languages</em>. Every module begins not with an empty environment but with the prelude’s bindings already in Γ, which is why bare <code>Option</code> type-checks. A crate prelude is the same move at library granularity — extending the ambient context so the common case needs no explicit <code>use</code>.</p>
+</blockquote>
+<h2 id="workspaces-many-crates-one-build"><a class="header" href="#workspaces-many-crates-one-build">Workspaces: many crates, one build</a></h2>
+<p>A single library crate is the right granularity for a long time. You split into multiple crates when you have a concrete reason:</p>
+<ul>
+<li><strong>API boundaries.</strong> A separate crate has a hard public/private wall (only <code>pub</code> items cross it), which enforces layering far more firmly than module privacy within one crate.</li>
+<li><strong>Compile times.</strong> A crate is the unit of <em>incremental recompilation</em> and the unit of <em>parallelism</em> in Cargo’s build graph. Editing one crate need not rebuild the others (only re-link/re-check dependents). Splitting a monolith into crates lets <code>rustc</code> rebuild and the build parallelise across the unchanged ones.</li>
+<li><strong>Independent reuse or publishing.</strong> Each crate publishes to crates.io separately.</li>
+</ul>
+<p>A <strong>workspace</strong> is Cargo’s mechanism for developing several related packages together. They share <strong>one <code>Cargo.lock</code></strong> and <strong>one <code>target/</code> output directory</strong>. The workspace root has a <code>Cargo.toml</code> with a <code>[workspace]</code> table and <em>no</em> <code>[package]</code>:</p>
+<pre><code class="language-toml"># Cargo.toml at the workspace root
+[workspace]
+resolver = "3"
+members = ["app", "domain", "storage"]
+</code></pre>
+<p>A plausible layout: a binary <code>app</code> depending on two libraries, <code>domain</code> and <code>storage</code>. Crucially, <strong>a workspace does not assume its members depend on each other</strong> — you must state intra-workspace dependencies explicitly with a path:</p>
+<pre><code class="language-toml"># app/Cargo.toml
+[dependencies]
+domain  = { path = "../domain" }
+storage = { path = "../storage" }
+</code></pre>
+<pre class="playground"><code class="language-rust">// app/src/main.rs
+fn main() {
+    let order = domain::Order::new();
+    storage::persist(&amp;order);
+}</code></pre>
+<p>Build the whole graph with <code>cargo build</code> from the root; target a single member with <code>-p</code>:</p>
+<pre><code class="language-bash">cargo build              # build every member
+cargo run -p app         # run the binary in package `app`
+cargo test               # test every member (unit, integration, doc tests)
+cargo test -p domain     # test only `domain`
+</code></pre>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> The single shared <code>target/</code> is the load-bearing design choice. If each member had its own <code>target/</code>, then <code>app</code> depending on <code>domain</code> would force a <em>separate</em> compilation of <code>domain</code> into <code>app</code>’s target — every dependent re-compiling every dependency. One shared output directory means <code>domain</code> is built <strong>once</strong> and its artifact reused by all dependents, which is exactly the build-graph deduplication that makes large workspaces tractable.</p>
+</blockquote>
+<p>The shared <strong><code>Cargo.lock</code></strong> is the other half: every member resolves against <em>one</em> unified dependency graph, so if both <code>domain</code> and <code>storage</code> depend on <code>rand</code>, they get the <em>same</em> resolved version, recorded once, downloaded once. The members are therefore mutually compatible — you cannot accidentally link two copies of a shared dependency at incompatible versions (Cargo resolves to as few versions as semver allows). A frequent surprise on the flip side: a dependency declared in <code>domain/Cargo.toml</code> is <strong>not</strong> usable from <code>storage</code> — each member lists its own <code>[dependencies]</code>. The lockfile unifies <em>versions</em>, not <em>visibility</em>.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> A workspace’s build is a DAG of crates, each a node compiled once after its dependencies — precisely the dependency-ordered compilation you analysed in <em>Compiler Construction</em>, and the topological scheduling Cargo performs is the same problem as instruction/phase scheduling over a DAG. The single <code>target/</code> is content-addressed caching over that DAG: a node is recompiled only when its inputs (source or upstream artifacts) change.</p>
+</blockquote>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li><strong>Crate = compilation unit</strong> (one module tree → one binary or one library). <strong>Package = Cargo unit</strong> (a <code>Cargo.toml</code> bundling ≤1 library + N binaries). <strong>Module = in-crate namespace and the privacy boundary.</strong> Keep the three distinct.</li>
+<li><strong><code>mod</code> builds the tree; <code>use</code> abbreviates a path; neither is <code>#include</code>.</strong> A file joins the crate only via a single <code>mod</code> declaration; <code>use</code> merely shortens an already-resolving path. Forgetting <code>use</code> is a spelling fix, forgetting <code>mod</code> is a structural one.</li>
+<li><strong>Privacy is module-scoped and private-by-default.</strong> Children see ancestors; parents cannot see children’s privates. <code>pub mod</code> exposes the <em>name</em> only — each item still needs its own <code>pub</code>. Reach for <code>pub(crate)</code> for cross-module-but-not-public.</li>
+<li><strong><code>pub use</code> decouples internal layout from public API</strong> — curate your front door independently of where code lives; it shapes <code>cargo doc</code> too.</li>
+<li><strong>Split into crates for API walls, compile times, and reuse; use a workspace</strong> so members share one <code>Cargo.lock</code> and one <code>target/</code>. Intra-workspace deps and per-crate <code>[dependencies]</code> are still explicit.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Create a binary package with <code>src/main.rs</code> that declares <code>mod config;</code> and calls <code>config::load()</code>. Write <code>config.rs</code> containing a <em>private</em> <code>fn load()</code>. Predict the exact error code before compiling, then fix it with the minimal change. Now move <code>config.rs</code> to <code>src/config/mod.rs</code> and confirm the build still works — explain why the module path is unchanged.</p>
+</li>
+<li>
+<p>In one file, write <code>mod a { pub(super) fn helper() {} }</code> at the crate root and try to call <code>a::helper()</code> from <code>main</code>. Does it compile? Now nest <code>a</code> inside <code>mod outer { mod a { ... } }</code> and call <code>helper</code> from <code>outer</code>. Explain what <code>pub(super)</code> resolves to in each case.</p>
+</li>
+<li>
+<p>Define <code>pub struct Meter { value: f64 }</code> in a module <code>units</code> with a private field, and a function <code>meters(x: f64) -&gt; Meter</code>. From <code>main</code>, try (a) <code>units::Meter { value: 3.0 }</code> and (b) <code>units::meters(3.0).value</code>. Both fail — give the two distinct error codes and explain why the private field forbids each independently.</p>
+</li>
+<li>
+<p>You have <code>use std::fmt::Display;</code> and <code>use crate::ui::Display;</code> (your own type) in the same module. State the error, then resolve it two different ways — once with <code>as</code>, once by keeping a parent-module path on one of them.</p>
+</li>
+<li>
+<p>(★) Build a library crate with internal modules <code>net::tcp</code> and <code>net::http</code>, where <code>http</code> has a <code>pub(crate)</code> function that <code>tcp</code> must call but no external user should reach. Then add a <code>pub use</code> at the crate root that re-exports <code>http::Client</code> as <code>my_crate::Client</code>. Write a doc comment and run <code>cargo doc --open</code>; confirm <code>Client</code> appears at the root and the <code>pub(crate)</code> function appears nowhere in the docs. Explain the two different visibility decisions you made and why bare <code>pub</code> would have been wrong for the helper.</p>
+</li>
+<li>
+<p>(★) Create a workspace with members <code>core</code> (lib) and <code>cli</code> (bin) where <code>cli</code> depends on <code>core</code> via a path dependency. Add <code>rand = "0.8"</code> to <code>core</code> only. Now write <code>use rand;</code> in <code>cli/src/main.rs</code> and predict the error. Fix it the <em>correct</em> way (not by removing the line). Then run <code>cargo build</code>, inspect the top-level <code>Cargo.lock</code>, and confirm <code>rand</code> appears exactly once even though two members now depend on it — explain what guarantee that single entry provides.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="18-macros.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="20-testing-and-tooling.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="18-macros.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="20-testing-and-tooling.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

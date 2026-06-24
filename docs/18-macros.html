@@ -1,0 +1,463 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Macros &amp; Metaprogramming - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="18-macros--metaprogramming"><a class="header" href="#18-macros--metaprogramming">18. Macros &amp; Metaprogramming</a></h1>
+<p>You have already written code that writes code. In Compiler Construction you built a code generator that walked a typed AST and emitted target instructions; in Further Java you relied on <code>javac</code> synthesising bridge methods. Rust’s macros expose that same machinery — <em>programs that transform programs</em> — but they run as a phase of <code>rustc</code>, before type checking, over a Rust-specific representation of source. This chapter covers what that representation is, how the two macro families consume it, and the one property (hygiene) that makes Rust macros categorically safer than anything <code>#define</code> ever gave you.</p>
+<p>The single most important mental shift: a macro is not a function. A function is a value-level abstraction invoked at runtime over fully-typed arguments. A macro is a <em>syntactic</em> abstraction invoked at compile time over <strong>token trees</strong>, expanded into source before the compiler knows the types of anything. That difference is exactly why macros can do three things functions cannot: take a variadic, heterogeneously-typed argument list (<code>println!("{} {}", a, b)</code>), construct items like <code>impl</code> blocks (which must exist at compile time), and build domain-specific syntax the type system cannot otherwise express.</p>
+<h2 id="what-a-macro-operates-on-token-trees"><a class="header" href="#what-a-macro-operates-on-token-trees">What a macro operates on: token trees</a></h2>
+<p>Before parsing into an AST, <code>rustc</code> lexes source into a flat token stream, then groups it into <strong>token trees</strong>: a token tree is either a single token (<code>identifier</code>, literal, punctuation) or a <em>delimited group</em> — anything balanced inside <code>()</code>, <code>[]</code>, or <code>{}</code>, recursively. So <code>vec![1, 2, 3]</code> is the macro name <code>vec</code>, the bang <code>!</code>, and one bracket-delimited group containing the trees <code>1</code> <code>,</code> <code>2</code> <code>,</code> <code>3</code>.</p>
+<p>Macros run on this layer. A declarative macro pattern-matches over token trees; a procedural macro receives a <code>proc_macro::TokenStream</code> (a sequence of token trees) and returns one. Crucially, <strong>the input need not be valid Rust</strong> — <code>sql!(SELECT * FROM posts)</code> lexes into legal token trees even though <code>SELECT * FROM posts</code> is not a Rust expression. The only hard constraint is that delimiters balance. This is the source of macros’ expressive power and their cost: the tokens carry no types yet.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is precisely the lexer/parser boundary from Compiler Construction. Lexing produces tokens; macro expansion is a <em>tree-rewriting pass</em> inserted between tokenisation and full parsing/name-resolution. Declarative macros are a small term-rewriting system over the token-tree grammar; procedural macros are arbitrary <code>TokenStream -&gt; TokenStream</code> functions — i.e. a hook for you to write an extra compiler pass in safe Rust and have <code>rustc</code> dynamically load and run it.</p>
+</blockquote>
+<h2 id="family-one-macro_rules-declarative"><a class="header" href="#family-one-macro_rules-declarative">Family one: <code>macro_rules!</code> (declarative)</a></h2>
+<p>A declarative macro is defined with <code>macro_rules!</code> and reads like a <code>match</code> whose scrutinee is <em>source structure</em> rather than a runtime value. Each arm has a <strong>matcher</strong> (the pattern over token trees) and a <strong>transcriber</strong> (the replacement tokens). Here is a small but real one — a <code>HashMap</code> literal, the kind of thing the standard library pointedly does <em>not</em> give you:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>macro_rules! hmap {
+    // matcher: zero or more `key =&gt; value` pairs, comma-separated,
+    // with an optional trailing comma.
+    ($($k:expr =&gt; $v:expr),* $(,)?) =&gt; {{
+        let mut m = ::std::collections::HashMap::new();
+        $( m.insert($k, $v); )*
+        m
+    }};
+}
+
+let scores = hmap! {
+    "alice" =&gt; 10,
+    "bob"   =&gt; 7,
+};
+<span class="boring">}</span></code></pre>
+<p>Dissect the matcher <code>($($k:expr =&gt; $v:expr),* $(,)?)</code>:</p>
+<ul>
+<li><code>$k</code> and <code>$v</code> are <strong>metavariables</strong> — bindings in the macro’s own namespace, sigil’d with <code>$</code> so they never collide with Rust identifiers.</li>
+<li><code>:expr</code> is a <strong>fragment specifier</strong>. It tells the matcher <em>which grammar production</em> to parse <code>$k</code> as. <code>expr</code> means “one full Rust expression.”</li>
+<li><code>$( ... ),*</code> is a <strong>repetition</strong>: match the inner fragment zero or more times, with a literal <code>,</code> separator. The separator is optional and sits between the <code>)</code> and the <code>*</code>; the repetition operator is one of <code>*</code> (zero+), <code>+</code> (one+), or <code>?</code> (zero or one).</li>
+<li><code>$(,)?</code> is a second, separate repetition allowing a single optional trailing comma — the standard idiom for accepting <code>a, b,</code>.</li>
+</ul>
+<p>The transcriber <code>$( m.insert($k, $v); )*</code> re-uses the <em>same</em> repetition shape: for each <code>(k, v)</code> pair the matcher captured, it emits one <code>insert</code> call, substituting the captured fragments. The number of repetitions in the transcriber is inferred from the metavariables mentioned inside it — <code>$k</code> and <code>$v</code> were each matched the same number of times, so one <code>insert</code> is generated per pair.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> The matcher/transcriber pair is OCaml <code>match</code> over an algebraic structure, and <code>$(...)* </code> is a fold over the matched list. But the analogy breaks in two ways. First, you are matching <em>syntax</em>, not a value: <code>$x:expr</code> binds an unevaluated expression tree, not a result. Second, there is no exhaustiveness check and no types — an arm either parses or it doesn’t, and a malformed call is a parse error, not a non-exhaustive-match warning.</p>
+</blockquote>
+<h3 id="fragment-specifiers-are-a-contract-and-expr-fragments-are-opaque"><a class="header" href="#fragment-specifiers-are-a-contract-and-expr-fragments-are-opaque">Fragment specifiers are a contract, and <code>expr</code> fragments are opaque</a></h3>
+<p>The fragment specifier you choose is a promise about what <code>rustc</code> will parse and — critically — what it will let you do with the result afterwards. The common ones:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Specifier</th><th>Matches</th><th>Typical use</th></tr>
+</thead>
+<tbody>
+<tr><td><code>expr</code></td><td>an expression</td><td>values, arguments</td></tr>
+<tr><td><code>ty</code></td><td>a type</td><td>generic bounds, field types</td></tr>
+<tr><td><code>ident</code></td><td>an identifier</td><td>names of generated items/vars</td></tr>
+<tr><td><code>pat</code></td><td>a pattern</td><td>match arms, <code>let</code> bindings</td></tr>
+<tr><td><code>path</code></td><td>a path like <code>a::b::C</code></td><td>trait/type references</td></tr>
+<tr><td><code>tt</code></td><td>a single token tree</td><td>“raw, parse-it-myself” escape hatch</td></tr>
+<tr><td><code>block</code>, <code>stmt</code>, <code>item</code>, <code>literal</code>, <code>lifetime</code>, <code>meta</code>, <code>vis</code></td><td>as named</td><td>structural pieces</td></tr>
+</tbody>
+</table>
+</div>
+<p>Once the matcher binds a fragment as <code>expr</code>, <code>ty</code>, etc., that capture becomes a <strong>single opaque AST node</strong> — you cannot subsequently re-inspect or pattern-match <em>inside</em> it with another matcher. Concretely:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>macro_rules! twice {
+    ($e:expr) =&gt; { { let v = $e; v + v } };
+}
+
+twice!(3 + 4) // expands to `{ let v = 3 + 4; v + v }` == 14
+<span class="boring">}</span></code></pre>
+<p><code>3 + 4</code> is captured as one expression and substituted as a unit; it is <strong>not</strong> re-tokenised and pasted twice (which would have given <code>3 + 4 + 3 + 4</code>). This opacity is a feature: it guarantees that a captured expression binds with the precedence it had at the call site, so <code>twice!(a, b)</code> won’t accidentally smear across the <code>,</code>. The escape hatch is <code>tt</code>, which captures a <em>raw</em> token tree with no parsing commitment — that is how recursive “tt-munching” macros and DSLs pull arguments apart one token at a time:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>macro_rules! count {
+    () =&gt; (0usize);
+    ($head:tt $($tail:tt)*) =&gt; (1usize + count!($($tail)*));
+}
+count!(a b "x" 9) // == 4
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Specifier ordering matters because the macro matcher commits as it parses. After certain fragments, only a restricted set of “follow” tokens is permitted; e.g. an <code>:expr</code> or <code>:stmt</code> fragment may only be followed by <code>=&gt;</code>, <code>,</code>, or <code>;</code>. Writing <code>($e:expr $rest:tt)</code> fails with <em>“<code>$e:expr</code> is followed by <code>$rest</code>, which is not allowed for <code>expr</code> fragments”</em>. The fix is to insert one of the permitted separators (<code>($e:expr ; $rest:tt)</code>) or downgrade <code>$e</code> to <code>:tt</code> and parse it yourself. This restriction exists so the matcher stays unambiguous without unbounded lookahead — the same LL-parsing concern you met in Compiler Construction.</p>
+</blockquote>
+<h3 id="hygiene--the-entire-reason-this-is-not-the-c-preprocessor"><a class="header" href="#hygiene--the-entire-reason-this-is-not-the-c-preprocessor">Hygiene — the entire reason this is not the C preprocessor</a></h3>
+<p>This is the headline feature, and it is the one place where your <code>cpp</code> instincts will actively mislead you. Consider the canonical C disaster:</p>
+<pre><code class="language-c">#define SWAP(a, b) { int tmp = a; a = b; b = tmp; }
+// SWAP(x, tmp) expands to { int tmp = x; x = tmp; tmp = tmp; } -- broken.
+</code></pre>
+<p><code>#define</code> is <strong>text substitution</strong>. The macro’s <code>tmp</code> and the caller’s <code>tmp</code> are the same lexical name, so they capture each other. C macro authors paper over this with <code>__</code> prefixes and prayer. Rust’s declarative macros are <strong>hygienic</strong>: identifiers introduced <em>by the macro body</em> are tagged with a hidden “syntax context” distinct from identifiers that arrive <em>through metavariables from the call site</em>. They live in different scopes even when spelled identically. Watch:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>macro_rules! make_temp {
+    ($e:expr) =&gt; {{
+        let tmp = $e;   // `tmp` introduced by the macro
+        tmp * 2
+    }};
+}
+
+let tmp = 10;                 // caller's `tmp`
+let r = make_temp!(tmp + 1);  // `$e` = caller's `tmp + 1`
+// prints: 10 22
+println!("{} {}", tmp, r);
+<span class="boring">}</span></code></pre>
+<p>The macro-introduced <code>tmp</code> and the caller’s <code>tmp</code> <em>do not collide</em>: <code>$e</code> resolves to the caller’s <code>tmp</code> (because it came in through a metavariable), while the <code>let tmp</code> inside the body is invisible to the outside world. The C version of this is silently wrong; the Rust version is correct by construction, and the compiler proved it.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Hygiene is implemented by attaching a <code>SyntaxContext</code> to every identifier’s span. Name resolution compares the (symbol, context) pair, not just the symbol. Tokens written literally in the macro definition carry the <em>definition site</em> context; tokens substituted from a metavariable retain their <em>call site</em> context. Two <code>tmp</code>s with different contexts are different names, full stop. Note the boundaries of hygiene: it is <em>mixed-site</em> for <code>macro_rules!</code> — local variables and labels are hygienic (definition-site), but for things like type and <code>fn</code> name lookup the resolution can reach call-site scope. When a macro needs to name a standard-library item reliably regardless of what the caller has shadowed, use the special <code>$crate</code> metavariable (e.g. <code>$crate::collections::HashMap</code>) so the path resolves relative to the <em>defining</em> crate.</p>
+</blockquote>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Closest analogue is hygienic <code>let</code> in a lambda you pass to a higher-order function — the closure’s locals can’t be clobbered by the caller’s bindings, and lexical scoping handles capture. The analogy breaks because a macro isn’t a value and creates <em>new bindings in the caller’s code</em>; hygiene is what re-imposes lexical-scoping discipline on something that would otherwise be raw text splicing.</p>
+</blockquote>
+<h3 id="scope-and-export"><a class="header" href="#scope-and-export">Scope and export</a></h3>
+<p>Unlike functions, a <code>macro_rules!</code> macro must be <em>textually defined before it is used</em> within a file (it is brought into scope by source order, an artefact of expansion happening early). To use one from another crate, annotate it with <code>#[macro_export]</code>, which hoists it to the crate root; within a crate, <code>pub use</code> and the <code>use crate::path::macro_name</code> form also work in the 2018+ module system.</p>
+<h2 id="family-two-procedural-macros"><a class="header" href="#family-two-procedural-macros">Family two: procedural macros</a></h2>
+<p>When pattern-matching over token trees is not enough — you need to actually <em>parse</em> the input, walk its structure, and compute new code — you reach for a <strong>procedural macro</strong>. A proc-macro is, mechanically, a public function <code>fn(TokenStream) -&gt; TokenStream</code> (or two-argument, for attributes) that <code>rustc</code> compiles into a plugin and <em>executes during compilation of the downstream crate</em>. There are three kinds, distinguished only by the attribute on the function:</p>
+<ol>
+<li><strong>Derive macros</strong> — <code>#[proc_macro_derive(Name)]</code> — invoked by <code>#[derive(Name)]</code> on a struct/enum; they <em>add</em> items (typically trait impls).</li>
+<li><strong>Attribute macros</strong> — <code>#[proc_macro_attribute]</code> — define a new attribute <code>#[name(...)]</code> usable on most items; they <em>replace</em> the annotated item with transformed output.</li>
+<li><strong>Function-like macros</strong> — <code>#[proc_macro]</code> — invoked as <code>name!(...)</code>; like <code>macro_rules!</code> but with arbitrary parsing logic.</li>
+</ol>
+<p>A structural constraint: proc-macros <strong>must live in their own crate</strong> with <code>proc-macro = true</code> set in <code>Cargo.toml</code>, because the crate is compiled for the <em>host</em> (the compiler) rather than the target, and loaded as a dynamic library by <code>rustc</code>. The convention is that a library crate <code>foo</code> ships its derive macros in a sibling crate <code>foo_derive</code>.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> A proc-macro is a user-supplied compiler pass, dynamically linked into <code>rustc</code>. The <code>TokenStream -&gt; TokenStream</code> signature is exactly the interface of a syntax-directed translation stage between lexing and elaboration. Because it runs <em>inside</em> the compiler with full Turing-completeness, it can do arbitrary computation (read files, hit the network — and it will run on every build), which is why the community treats proc-macros as a sharp tool and audits them.</p>
+</blockquote>
+<h3 id="the-syn--quote-toolchain"><a class="header" href="#the-syn--quote-toolchain">The <code>syn</code> / <code>quote</code> toolchain</a></h3>
+<p>The <code>proc_macro</code> crate gives you <code>TokenStream</code>, but parsing raw tokens into a usable Rust AST by hand is the full parser problem you’d rather not redo. Two ecosystem crates make proc-macros tractable:</p>
+<ul>
+<li><strong><code>syn</code></strong> parses a <code>TokenStream</code> into typed AST structs (e.g. <code>DeriveInput</code>, <code>ItemFn</code>, <code>Expr</code>).</li>
+<li><strong><code>quote</code></strong> does the inverse: the <code>quote! { ... }</code> macro is a <em>quasi-quoter</em> that lets you write output Rust with <code>#var</code> interpolation holes, producing a <code>TokenStream</code>.</li>
+</ul>
+<p>Here is the complete shape of the most common case — a derive macro. The user wants <code>#[derive(Describe)]</code> to synthesise an <code>impl</code> of a <code>Describe</code> trait whose method returns the type’s name:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// crate: describe_derive  (Cargo.toml: [lib] proc-macro = true; deps: syn, quote)
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, DeriveInput};
+
+#[proc_macro_derive(Describe)]
+pub fn derive_describe(input: TokenStream) -&gt; TokenStream {
+    // 1. Parse the annotated item into a typed AST node.
+    let ast = parse_macro_input!(input as DeriveInput);
+    let name = &amp;ast.ident;                       // the type's identifier
+    let (ig, tg, wc) = ast.generics.split_for_impl(); // generic plumbing
+
+    // 2. Build the output as a quasi-quote, splicing `name` in with `#`.
+    let expanded = quote! {
+        impl #ig Describe for #name #tg #wc {
+            fn describe() -&gt; &amp;'static str {
+                stringify!(#name)
+            }
+        }
+    };
+
+    // 3. Hand the generated tokens back to the compiler.
+    expanded.into()
+}
+<span class="boring">}</span></code></pre>
+<p>Three things to internalise. First, <code>parse_macro_input!</code> is the idiomatic front door — on a parse error it emits a proper compiler diagnostic and returns early instead of panicking opaquely. Second, <code>split_for_impl</code> threads the input type’s generics and <code>where</code>-clause through to the impl, so the derive works for <code>struct Pair&lt;T&gt;</code> as well as <code>struct Unit</code>; forgetting it is the classic “my derive doesn’t handle generics” bug. Third, <code>stringify!(#name)</code> turns the spliced identifier into a <code>&amp;'static str</code> <em>at compile time</em> with zero allocation — Rust has no runtime reflection, so the name must be baked in during expansion; that is the whole reason this is a derive macro rather than a blanket trait impl.</p>
+<p>A derive macro returns <em>additional</em> items appended to the source. An attribute macro’s signature is <code>fn(attr: TokenStream, item: TokenStream) -&gt; TokenStream</code>: <code>attr</code> is the tokens inside <code>#[name(...)]</code>, <code>item</code> is the entire annotated item, and the returned stream <em>replaces</em> it (so <code>#[route(GET, "/")] fn index() {}</code> lets the macro rewrite <code>index</code> wholesale). A function-like proc-macro is <code>fn(TokenStream) -&gt; TokenStream</code> invoked as <code>name!(...)</code> and is what powers things like a compile-time-checked <code>sql!(...)</code>.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>#[derive(Describe)]</code> does not mutate your struct — the original definition is left intact and the macro’s output <code>TokenStream</code> is <em>concatenated</em> into the module. This is why a derive can only <em>add</em> impls and items, never edit fields, whereas an attribute macro receives the item itself and can rebuild it. The generated tokens are then fed back through the normal parse → resolve → typecheck pipeline, so a buggy macro surfaces as a type error in <em>generated</em> code — see spans below for how that error gets a sane location.</p>
+</blockquote>
+<h3 id="spans-hygiene-and-error-reporting-in-proc-macros"><a class="header" href="#spans-hygiene-and-error-reporting-in-proc-macros">Spans, hygiene, and error reporting in proc-macros</a></h3>
+<p>Every token carries a <strong><code>Span</code></strong>: a record of where it came from in the source, used for diagnostics and for hygiene. When you build output with <code>quote!</code>, the synthesised tokens get <code>Span::call_site()</code> by default — meaning errors in generated code point at the macro <em>invocation</em>, which is what users want. Proc-macros are <strong>not</strong> automatically hygienic the way <code>macro_rules!</code> is: identifiers you fabricate (via <code>Span::call_site()</code>) resolve at the call site and <em>can</em> capture or collide. If you need a genuinely fresh, uncapturable identifier, mint it with <code>Span::mixed_site()</code> or <code>Span::def_site()</code> semantics (<code>quote::format_ident!</code> plus the right span), or simply generate obscure names. For surfacing your own errors, the right move is <code>syn::Error::new_spanned(&amp;offending_node, "message").to_compile_error()</code> — this produces a <code>compile_error!</code> invocation tied to the <em>exact span</em> of the offending input, so the user sees a red squiggle under their own code, not inside your macro.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> A derive function <em>must</em> return <code>TokenStream</code>, not <code>Result</code>, so it has no <code>?</code>. The lazy path is <code>syn::parse(input).unwrap()</code>, but a parse failure then panics with a useless <code>"called Result::unwrap on an Err"</code> and no location. Always prefer <code>parse_macro_input!</code> (handles the early-return for you) and <code>syn::Error::to_compile_error()</code> for semantic errors, so failures become real diagnostics with spans instead of a compiler-internal panic.</p>
+</blockquote>
+<h2 id="when-to-reach-for-a-macro-mostly-dont"><a class="header" href="#when-to-reach-for-a-macro-mostly-dont">When to reach for a macro (mostly: don’t)</a></h2>
+<p>Macros are the highest-leverage and highest-cost abstraction in the language. The decision tree:</p>
+<ul>
+<li><strong>Function</strong> — the default. If the inputs have known, fixed types and you only need value-level abstraction, write a function. It is type-checked at definition, plays perfectly with tooling, and costs nothing in readability.</li>
+<li><strong>Generics + traits</strong> — when you need to abstract over <em>types</em> with a known shape of operations (see <a href="08-generics-and-traits.html">generics and traits</a>). Monomorphisation gives you the performance of code generation with full type checking and clean errors. This handles the vast majority of “I want this to work for many types” cases.</li>
+<li><strong>Macro</strong> — only when the type system genuinely cannot express it:
+<ul>
+<li><strong>Variadics / heterogeneous arg lists</strong> — <code>println!</code>, <code>vec!</code>, your <code>hmap!</code>. Functions can’t vary arity or argument types.</li>
+<li><strong>Item generation</strong> — synthesising <code>impl</code> blocks (<code>#[derive]</code>), which must exist at compile time and which no function call can produce.</li>
+<li><strong>DSLs and compile-time validation</strong> — embedding foreign syntax (<code>sql!</code>, HTML templating, <code>quote!</code> itself) or validating input before runtime.</li>
+<li><strong>Boilerplate elimination</strong> the type system can’t fold away — e.g. generating one impl per type in a list.</li>
+</ul>
+</li>
+</ul>
+<p>The cost is real and not just stylistic. A macro’s contract is its grammar, which IDEs and <code>rust-analyzer</code> understand only partially; “go to definition” through a macro is lossy, error messages can point into expanded code, and a proc-macro runs arbitrary code on every build and slows compilation. The community idiom is unambiguous: <strong>prefer functions, then generics, and treat macros as a last resort justified by one of the bullet points above.</strong></p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Closest cousins: C++ templates and Java annotation processors. <code>#[derive]</code> is conceptually a Java annotation processor (<code>javax.annotation.processing</code>) — both generate code from annotations at compile time. The difference is that Rust derives produce real, type-checked Rust integrated into the same compilation, with no reflection and no runtime cost; Java processors generate <code>.java</code>/bytecode and frequently lean on reflection at runtime. C++ variadic templates overlap with variadic macros but are type-driven and far more constrained than <code>TokenStream</code> rewriting.</p>
+</blockquote>
+<h2 id="aside-build-scripts-buildrs"><a class="header" href="#aside-build-scripts-buildrs">Aside: build scripts (<code>build.rs</code>)</a></h2>
+<p>There is a third compile-time code-generation mechanism that is <em>not</em> a macro but solves adjacent problems. A file named <code>build.rs</code> at a crate root is compiled and run by Cargo <em>before</em> the crate itself. It can generate <code>.rs</code> files (which the crate then <code>include!</code>s), compile and link C code, probe the environment, and emit instructions to Cargo via specially-formatted stdout lines like <code>cargo:rustc-link-lib=foo</code>. Use it for codegen driven by <em>external</em> inputs — protobuf/<code>bindgen</code> output, generated tables, FFI link configuration (relevant to <a href="16-unsafe-and-ffi.html">unsafe and FFI</a>). It runs once per build on the host, has full filesystem/network access, and — unlike a macro — operates on whole files rather than token streams.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li>A macro transforms <strong>token trees</strong> at compile time, <em>before</em> type checking; a function transforms typed <strong>values</strong> at run time. That timing difference is why macros alone can be variadic, build <code>impl</code>s, and host DSLs.</li>
+<li><code>macro_rules!</code> is a term-rewriting system: matchers pattern-match token trees via <strong>fragment specifiers</strong> (<code>expr</code>/<code>ty</code>/<code>ident</code>/<code>tt</code>/…) and <strong>repetitions</strong> (<code>$(...)sep*</code>); a captured <code>expr</code>/<code>ty</code> fragment is an <strong>opaque</strong> node, not re-tokenisable text.</li>
+<li><strong>Hygiene</strong> is the decisive advantage over <code>cpp</code>: macro-introduced identifiers carry a distinct syntax context and cannot capture or be captured by call-site names. <code>#define</code> has none of this; Rust’s collision is impossible by construction.</li>
+<li>Procedural macros are user-written compiler passes (<code>TokenStream -&gt; TokenStream</code>) in a dedicated <code>proc-macro = true</code> crate, built on <strong><code>syn</code></strong> (parse) and <strong><code>quote</code></strong> (emit); three flavours — <code>derive</code>, <code>attribute</code>, function-like. They are <em>not</em> auto-hygienic, so manage <strong>spans</strong> for both hygiene and error reporting.</li>
+<li>Decision order: <strong>function → generics/traits → macro</strong>, last only. Macros tax readability, tooling, and build time; spend that cost only for what the type system cannot express.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Write a <code>vec_of_strings!</code> macro that accepts a comma-separated list of string-literal-or-expression arguments and produces a <code>Vec&lt;String&gt;</code>, calling <code>.to_string()</code> on each. Support a trailing comma. Then call it with <strong>zero</strong> arguments — what type is <code>Vec::new()</code> inferred to be, and why does it still compile here but would fail if you used the result ambiguously?</p>
+</li>
+<li>
+<p>Take the hygiene example’s <code>make_temp!</code> and <em>deliberately</em> try to break it: write a macro <code>leak!</code> that introduces <code>let leaked = ...;</code> and a caller that reads <code>leaked</code> afterwards. Confirm it fails to compile, read the <code>cannot find value leaked in this scope</code> error, and explain in one sentence why this is hygiene working as designed rather than a bug.</p>
+</li>
+<li>
+<p>(★) Implement a <code>tt</code>-munching macro <code>min!</code> that takes one or more comma-separated expressions and expands to nested <code>std::cmp::min</code> calls (<code>min!(a, b, c)</code> → <code>min(a, min(b, c))</code>). You will need a base case (single expression) and a recursive case. Why must the elements be <code>:expr</code> and the recursion be driven by re-invoking <code>min!</code>, and where would a naive <code>$($x:expr),+</code> single-arm definition get stuck?</p>
+</li>
+<li>
+<p>(★) Sketch a derive macro <code>#[derive(FieldNames)]</code> that, for a named-field struct, generates <code>fn field_names() -&gt; &amp;'static [&amp;'static str]</code>. Outline the <code>syn</code> types you’d match on to get at the fields (start from <code>DeriveInput.data</code>), how you’d iterate them in <code>quote!</code>, and how you’d emit a proper <code>compile_error!</code> with a correct <strong>span</strong> if the macro is applied to an enum or a tuple struct instead.</p>
+</li>
+<li>
+<p>Explain why <code>#[proc_macro_derive]</code> functions return <code>TokenStream</code> rather than <code>Result&lt;TokenStream, _&gt;</code>, and rewrite a panicking <code>syn::parse(input).unwrap()</code> into the idiomatic non-panicking pattern. What does the <em>user</em> of your derive see in each case when their annotated code is malformed?</p>
+</li>
+<li>
+<p>For each of these, decide function / generic / declarative macro / proc-macro and justify in one line: (a) a routine that swaps two <code>&amp;mut T</code>; (b) <code>assert_all_eq!(a, b, c, d)</code> that checks every argument is equal and prints the first mismatch; (c) deriving JSON (de)serialisation for arbitrary structs; (d) a <code>#[timed]</code> attribute that wraps a function body in start/stop timing.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="17-advanced-traits-and-types.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="19-project-structure.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="17-advanced-traits-and-types.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="19-project-structure.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

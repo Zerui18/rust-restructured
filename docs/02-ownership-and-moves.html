@@ -1,0 +1,464 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Ownership &amp; Moves - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="2-ownership--moves"><a class="header" href="#2-ownership--moves">2. Ownership &amp; Moves</a></h1>
+<p>This is the chapter the rest of the book pivots on. Ownership is the single mechanism by which Rust statically guarantees memory safety and freedom from data races without a garbage collector and without manual <code>free</code>. Everything later — <a href="03-references-and-borrowing.html">references</a>, <a href="04-lifetimes.html">lifetimes</a>, <a href="15-smart-pointers.html">smart pointers</a>, <a href="13-fearless-concurrency.html">fearless concurrency</a> — is a refinement of, or an escape valve around, the rules introduced here.</p>
+<p>You already know two extreme answers to the question <em>“when does this allocation get freed?”</em>. The garbage-collected answer (Java, OCaml, Python, JS): a runtime traces reachability and frees whenever it likes, at a cost in latency and determinism. The manual answer (C): you call <code>free</code> yourself, and the compiler does not check that you do it exactly once at the right moment. Rust takes a third position: the <em>type system</em> tracks who is responsible for each value, and the compiler inserts the deallocation for you at a statically known point. No tracing, no manual <code>free</code>, no leaks-by-default, and — crucially — it is all proven at compile time, so there is zero runtime overhead.</p>
+<h2 id="ownership-is-an-affine-type-discipline"><a class="header" href="#ownership-is-an-affine-type-discipline">Ownership is an affine type discipline</a></h2>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> In <em>Semantics of Programming Languages</em> and <em>Logic and Proof</em> you met linear logic, where a hypothesis must be used <em>exactly once</em>. Rust’s ownership is the slightly weaker <strong>affine</strong> discipline: a value may be used <em>at most once</em> (zero uses is fine — the value is just dropped unused). A binding to a non-<code>Copy</code> value is a resource; “using” it by move consumes it. Curry–Howard gives you the framing precisely: the type <code>String</code> is not a proposition you may reuse freely; it is a resource whose proof of ownership is spent when you pass it on. This is why <code>let s2 = s1;</code> invalidates <code>s1</code> — the resource has moved, and the affine logic forbids a second use of the spent hypothesis.</p>
+</blockquote>
+<p>The three rules, stated formally enough to reason with:</p>
+<ol>
+<li><strong>Every value has exactly one owning binding.</strong></li>
+<li><strong>There is exactly one owner at a time</strong> (ownership can transfer, but not duplicate, for non-<code>Copy</code> types).</li>
+<li><strong>When the owner goes out of scope, the value is <em>dropped</em></strong> — its destructor runs and its resources are released.</li>
+</ol>
+<p>Rule 3 is the deterministic-destruction rule, and it is the one your C++ instincts will recognise immediately.</p>
+<h2 id="scope-bound-destruction-is-raii-without-the-footguns"><a class="header" href="#scope-bound-destruction-is-raii-without-the-footguns">Scope-bound destruction is RAII without the footguns</a></h2>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is C++ RAII. A <code>String</code> is morally a <code>std::string</code>: it owns a heap buffer, and when it leaves scope its destructor frees that buffer. Where the analogy <em>breaks</em>: in C++ you must hand-write the destructor, copy constructor, move constructor, and assignment operators (the “rule of five”) to get this right, and a forgotten or wrong one is a silent leak or double-free. In Rust the compiler synthesises the drop <em>glue</em> for every type by recursively dropping its fields; you only write a destructor when you have something special to release. And there is no copy constructor at all — copying is never implicit for owning types (see moves, below).</p>
+</blockquote>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    let buf = String::from("hello");   // buf owns a heap allocation here
+    // ... use buf ...
+}                                       // `}`: drop(buf) runs, heap memory freed
+<span class="boring">}</span></code></pre>
+<p>The compiler does not insert a runtime check to decide whether to free. The closing brace is a <em>statically known</em> program point, so <code>rustc</code> emits the deallocation call right there, exactly once. This is the heart of “no overhead”: the drop is as cheap as the <code>free</code> you would have written by hand in C, minus the bugs.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> For a <code>String</code>, the compiler-generated drop calls the allocator’s <code>dealloc</code> on the owned pointer. For a struct, drop glue runs any explicit <code>Drop::drop</code> first, then recursively drops each field. The compiler tracks, per code path, whether a value has been moved out; if a move <em>might</em> have happened on some paths but not others, it inserts a hidden boolean <strong>drop flag</strong> on the stack to decide at runtime whether to drop. Straight-line code with no conditional moves needs no flag — drop points are fully static.</p>
+</blockquote>
+<h2 id="stack-and-heap-and-why-rust-makes-you-care"><a class="header" href="#stack-and-heap-and-why-rust-makes-you-care">Stack and heap, and why Rust makes you care</a></h2>
+<p>You know the mechanics from <em>Computer Architecture &amp; OS</em>: the stack is a contiguous, LIFO region tied to call frames; the heap is a general allocator you request blocks from and must return. What is new is that Rust surfaces this distinction <em>in the type system</em>, because it determines move behaviour.</p>
+<p>A value whose size is known at compile time and contains no owned resources — <code>i32</code>, <code>bool</code>, <code>char</code>, <code>f64</code>, a fixed array of such, a tuple of such — lives entirely on the stack (or in a register). Duplicating it is a <code>memcpy</code> of a fixed number of bytes; there is nothing to free and no aliasing hazard.</p>
+<p>A <code>String</code> or a <code>Vec&lt;T&gt;</code> is different. The <em>handle</em> — three words: <code>(pointer, length, capacity)</code> — lives on the stack, but it points at a heap buffer it owns.</p>
+<pre><code class="language-text">  stack (the String handle)        heap (the owned buffer)
+  +----------+----------+        +---+---+---+---+---+
+  | ptr      | ---------------&gt;  | h | e | l | l | o |
+  | len  = 5 |                   +---+---+---+---+---+
+  | cap  = 8 |
+  +----------+
+</code></pre>
+<p><code>len</code> is the bytes currently used; <code>cap</code> is the bytes the allocator handed out. The handle is <code>Copy</code>-able bit-for-bit, but the <em>buffer</em> is not — and that asymmetry is what forces the move rule.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This handle is exactly <code>std::vector</code>’s <code>{begin, end, end_of_storage}</code> or a <code>std::string</code>’s small layout, and the <code>(ptr, len, cap)</code> triple is the same idea as a Swift <code>Array</code>’s storage reference or an OCaml <code>Bytes.t</code> boxed behind a pointer. The difference is purely <em>who frees the buffer and when</em>, and Rust answers that with ownership rather than ARC (Swift) or the GC (OCaml/Java).</p>
+</blockquote>
+<h2 id="move-semantics-assignment-transfers-the-handle-then-poisons-the-source"><a class="header" href="#move-semantics-assignment-transfers-the-handle-then-poisons-the-source">Move semantics: assignment transfers the handle, then poisons the source</a></h2>
+<p>Consider:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let s1 = String::from("hello");
+let s2 = s1;            // the handle is moved from s1 into s2
+// println!("{s1}");    // ERROR: borrow of moved value: `s1`
+<span class="boring">}</span></code></pre>
+<p><code>let s2 = s1;</code> does a bitwise copy of the <em>handle</em> (the three words) into <code>s2</code>. It does <strong>not</strong> copy the heap buffer. So momentarily both handles point at the same buffer — which would be a double-free waiting to happen when both go out of scope. Rust’s resolution: after the move, <code>s1</code> is statically marked invalid. The buffer now has exactly one owner, <code>s2</code>, and exactly one drop will run.</p>
+<p>There is no flag set at runtime, no nulling-out of <code>s1</code>. The <em>compiler</em> simply refuses to let you read <code>s1</code> again. The move is a “destructive memcpy of the handle”: the bytes are copied, the source binding ceases to exist as far as the type checker is concerned, and there is no leftover moved-from object.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is the decisive break from C++. A C++ move (<code>std::string s2 = std::move(s1);</code>) runs a <em>move constructor</em> that leaves <code>s1</code> in a “valid but unspecified” state — you may still call methods on it, assign to it, and its destructor <em>will still run</em>. That residual moved-from state is a class of bugs (use-after-move that compiles cleanly and does something subtly wrong). Rust has no move constructor and no moved-from state: a moved-from binding is <em>gone</em>, and touching it is a <strong>compile error</strong>, not undefined behaviour. Consequently every Rust move is a trivial <code>memcpy</code> — the type author never writes move logic, and the compiler is free to elide the copy entirely.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Reading a moved-from value gives <code>error[E0382]: borrow of moved value: 's1'</code>, with the note <em>“move occurs because ‘s1’ has type ‘String’, which does not implement the ‘Copy’ trait”</em>. The compiler usually suggests <code>s1.clone()</code>. The right fix depends on intent: if you genuinely need two independent owners, clone; if you only needed to <em>read</em> <code>s1</code>, borrow it with <code>&amp;s1</code> (see <a href="03-references-and-borrowing.html">References &amp; Borrowing</a>) and never move at all.</p>
+</blockquote>
+<h3 id="assigning-over-a-live-binding-drops-the-old-value"><a class="header" href="#assigning-over-a-live-binding-drops-the-old-value">Assigning over a live binding drops the old value</a></h3>
+<p>The mirror image: assigning a fresh value to an existing <code>mut</code> binding drops the previous one <em>immediately</em>, not at end of scope.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut s = String::from("hello");
+s = String::from("ahoy");          // the "hello" buffer is dropped right here
+println!("{s}");                   // "ahoy"
+<span class="boring">}</span></code></pre>
+<p>Nothing points at <code>"hello"</code> after the second line, so the compiler frees it at the point of reassignment.</p>
+<h2 id="copy-vs-clone-implicit-cheap-duplication-vs-explicit-deep-copy"><a class="header" href="#copy-vs-clone-implicit-cheap-duplication-vs-explicit-deep-copy"><code>Copy</code> vs <code>Clone</code>: implicit cheap duplication vs explicit deep copy</a></h2>
+<p>For stack-only types there is no buffer to alias, so invalidating the source would be pointless. These types implement the <strong><code>Copy</code></strong> marker trait, and assignment/passing <em>copies</em> the bits instead of moving:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let x = 5;
+let y = x;            // i32 is Copy: x is bit-copied into y
+println!("{x} {y}");  // both valid — no move happened
+<span class="boring">}</span></code></pre>
+<p><code>Copy</code> means “duplicating this value is a bitwise <code>memcpy</code> and the original remains valid.” It is opt-in but trivially derivable, and the standard library implements it for all the scalars, <code>char</code>, <code>bool</code>, raw pointers, shared references <code>&amp;T</code>, and tuples/arrays whose elements are all <code>Copy</code>. Anything that owns a resource — <code>String</code>, <code>Vec&lt;T&gt;</code>, <code>Box&lt;T&gt;</code>, a file handle — is <strong>not</strong> <code>Copy</code>, because a bitwise duplicate would create two owners of one buffer.</p>
+<p><strong><code>Clone</code></strong> is the explicit, possibly-expensive sibling. <code>s1.clone()</code> performs whatever deep copy the type defines — for <code>String</code>, a fresh heap allocation and a <code>memcpy</code> of the contents — producing a second independent owner:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let s1 = String::from("hello");
+let s2 = s1.clone();              // new heap buffer; s1 still valid
+println!("{s1} {s2}");
+<span class="boring">}</span></code></pre>
+<p>The design principle is visibility: Rust <em>never</em> deep-copies your data implicitly. Any implicit duplication is therefore guaranteed cheap (<code>Copy</code>, a fixed <code>memcpy</code>), and anything expensive is spelled out with a <code>.clone()</code> you can grep for. When you see <code>clone()</code>, you know arbitrary, potentially costly code runs there.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>Copy</code> and <code>Clone</code> are a supertrait pair: <code>Copy: Clone</code>, so every <code>Copy</code> type is also <code>Clone</code>. <code>Copy</code> carries no method; it is a flag the compiler reads to decide whether a <code>let</code>/argument bind is a non-destructive copy or a destructive move. <code>Clone::clone(&amp;self) -&gt; Self</code> is an ordinary method call you can override. You typically write <code>#[derive(Clone, Copy)]</code>; the derive generates a field-wise clone and, for <code>Copy</code>, simply asserts every field is <code>Copy</code>.</p>
+</blockquote>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Map this onto C++: <code>Copy</code> is roughly a trivially-copyable type with an implicit copy constructor that is a <code>memcpy</code>; <code>Clone</code> is an explicit, user-defined copy you must <em>call by name</em>. The break: C++ copy constructors fire implicitly on every pass-by-value, which is why accidental deep copies are a classic C++ performance trap. Rust makes the expensive case syntactically loud (<code>clone()</code>) and the cheap case the only implicit one.</p>
+</blockquote>
+<h2 id="copy-and-drop-are-mutually-exclusive--and-that-is-not-arbitrary"><a class="header" href="#copy-and-drop-are-mutually-exclusive--and-that-is-not-arbitrary"><code>Copy</code> and <code>Drop</code> are mutually exclusive — and that is not arbitrary</a></h2>
+<p>You cannot implement both <code>Copy</code> and <code>Drop</code> for the same type; the compiler rejects it. The reason follows directly from the affine model. <code>Copy</code> says “a bitwise duplicate is a complete, independent value.” <code>Drop</code> says “this value owns something that needs cleanup.” If a type were both, then copying it would produce two values, each of which would run its destructor — two cleanups for one logical resource, i.e. a double-free or double-close. So <code>Copy</code> is exactly the set of types for which “duplicate freely, never run special cleanup” is sound, and <code>Drop</code> is exactly the set for which it is not.</p>
+<h2 id="ownership-flows-through-function-boundaries"><a class="header" href="#ownership-flows-through-function-boundaries">Ownership flows through function boundaries</a></h2>
+<p>Passing an argument and returning a value obey the same move/copy rule as <code>let</code>. Passing a non-<code>Copy</code> value to a function <em>moves</em> it; the callee becomes the owner and drops it (unless it moves it out again):</p>
+<pre class="playground"><code class="language-rust">fn consume(s: String) {       // s owned here
+    println!("{s}");
+}                             // drop(s): buffer freed
+
+fn main() {
+    let text = String::from("hi");
+    consume(text);            // text moved into consume
+    // println!("{text}");    // ERROR: text was moved away
+    let n = 5;
+    takes_copy(n);            // i32 is Copy: n still valid afterwards
+    println!("{n}");
+}
+fn takes_copy(_n: i32) {}</code></pre>
+<p>Returning a value moves ownership <em>out</em> to the caller. The early days of Rust forced an awkward pattern: take a value, do something, and hand it back so the caller could keep using it.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn len_and_return(s: String) -&gt; (String, usize) {
+    let n = s.len();
+    (s, n)                    // give s back so the caller isn't stranded
+}
+<span class="boring">}</span></code></pre>
+<p>This is the move discipline working correctly but painfully. It is the motivation for the next chapter: <strong>borrowing</strong> lets a function <em>use</em> a value through a reference without taking ownership, so you do not have to choreograph handing everything back.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> A loop that moves an owned value out of a binding and then continues iterating will fail: <code>error[E0382]: use of moved value</code>, because after the first iteration the binding is empty. If you meant to reuse the value across iterations, borrow it (<code>&amp;value</code>) or clone per iteration; if you meant to consume a collection element-by-element, iterate with <code>into_iter()</code> so the move is over the elements, not a single binding.</p>
+</blockquote>
+<h2 id="the-drop-trait-custom-destructors"><a class="header" href="#the-drop-trait-custom-destructors">The <code>Drop</code> trait: custom destructors</a></h2>
+<p>Drop glue is synthesised automatically, but when your type wraps a resource the standard library does not know how to release — a C handle, a lock guard, a temp file — you implement <code>Drop</code> to run cleanup at end of scope.</p>
+<pre class="playground"><code class="language-rust">struct TempFile {
+    path: String,
+}
+
+impl Drop for TempFile {
+    fn drop(&amp;mut self) {
+        // real code would call std::fs::remove_file(&amp;self.path)
+        println!("removing {}", self.path);
+    }
+}
+
+fn main() {
+    let _t = TempFile { path: String::from("/tmp/scratch") };
+    println!("working...");
+}   // "removing /tmp/scratch" prints here, automatically</code></pre>
+<p><code>Drop::drop</code> takes <code>&amp;mut self</code>, not <code>self</code> — you are <em>finalising</em> the value in place, not consuming it (the value is already being destroyed; if <code>drop</code> took <code>self</code> by value it would need to drop <em>that</em>, recursing forever). <code>Drop</code> is in the prelude, so no import is needed.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is exactly the resource-cleanup obligation that <em>Concurrent and Distributed Systems</em> drills into you for locks: every <code>acquire</code> needs a matching <code>release</code> on every path, including exceptional ones. Rust encodes the release as the <code>Drop</code> impl of a guard type (<a href="15-smart-pointers.html">smart pointers</a> covers <code>MutexGuard</code>), so the lock is released the instant the guard leaves scope — no manual <code>unlock</code>, no path you forgot, no lock leak on early return.</p>
+</blockquote>
+<h3 id="drop-order-is-defined-deterministic-and-worth-memorising"><a class="header" href="#drop-order-is-defined-deterministic-and-worth-memorising">Drop order is defined, deterministic, and worth memorising</a></h3>
+<p>Within a scope, <strong>variables drop in reverse order of declaration</strong> (LIFO — the last binding created is the first destroyed, matching stack discipline). Within a single value, after any explicit <code>Drop::drop</code> body runs, <strong>fields drop in forward declaration order</strong>. Both are guaranteed by the language, so you can rely on them for ordering-sensitive teardown (e.g. a child resource that must outlive nothing but is declared after its parent).</p>
+<pre class="playground"><code class="language-rust">struct Loud(&amp;'static str);
+impl Drop for Loud {
+    fn drop(&amp;mut self) { println!("drop {}", self.0); }
+}
+
+fn main() {
+    let _a = Loud("a");
+    let _b = Loud("b");
+}   // prints "drop b" then "drop a"  (reverse declaration order)</code></pre>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> The compiler emits drop calls at every scope exit in reverse binding order. For a struct with an explicit <code>Drop</code>, it emits a call to your <code>drop</code> then recursively drops fields in source order. If control flow makes a drop conditional (value moved on one branch, not another), <code>rustc</code> introduces an implicit stack-allocated <strong>drop flag</strong> and branches on it — the only runtime cost ownership ever imposes, and it is elided whenever the analysis is unconditional.</p>
+</blockquote>
+<h3 id="you-cannot-call-drop-yourself-use-stdmemdrop"><a class="header" href="#you-cannot-call-drop-yourself-use-stdmemdrop">You cannot call <code>.drop()</code> yourself; use <code>std::mem::drop</code></a></h3>
+<p>Explicitly invoking the destructor method is forbidden:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let t = TempFile { path: String::from("/tmp/x") };
+// t.drop();   // ERROR
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> <code>t.drop()</code> gives <code>error[E0040]: explicit use of destructor method</code>. The reason: the automatic end-of-scope drop would <em>still</em> run afterwards, double-freeing. To finalise a value early — e.g. release a lock before the end of a long scope — pass it by value to the free function <code>std::mem::drop</code>, which takes ownership and lets the value fall out of scope inside the function:</p>
+</blockquote>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let t = TempFile { path: String::from("/tmp/x") };
+drop(t);                       // runs cleanup now; t is moved, can't be used again
+// t is invalid here — exactly the move rule, so no second drop happens
+<span class="boring">}</span></code></pre>
+<p><code>std::mem::drop</code> is almost comically simple: <code>pub fn drop&lt;T&gt;(_x: T) {}</code>. It takes <code>T</code> <em>by value</em>, so calling it <em>moves</em> the argument in; the function body is empty, so the value immediately goes out of scope at the function’s closing brace and its destructor runs there. Because the value was moved, the original binding is invalidated by the ordinary move rule, so the end-of-scope drop is suppressed — no double free. <code>drop</code> is in the prelude.</p>
+<h2 id="why-moves-are-inevitable-not-arbitrary"><a class="header" href="#why-moves-are-inevitable-not-arbitrary">Why moves are inevitable, not arbitrary</a></h2>
+<p>Step back and the rules collapse into a single invariant the compiler is enforcing: <strong>for any heap allocation (or other owned resource), there is exactly one binding responsible for freeing it, and that binding is statically identifiable at every program point.</strong> Everything else is downstream:</p>
+<ul>
+<li>Implicit deep copies are banned ⇒ duplicating a handle would create two owners ⇒ assignment must <em>move</em> (transfer responsibility) for non-<code>Copy</code> types.</li>
+<li>A moved-from binding must be unusable ⇒ otherwise two bindings could both try to free.</li>
+<li><code>Copy</code> is precisely the types where “duplicate, both valid” is sound (no owned resource) ⇒ those don’t move.</li>
+<li><code>Drop</code> + <code>Copy</code> is unsound ⇒ they’re mutually exclusive.</li>
+<li>Drop runs exactly once at the owner’s scope exit ⇒ deterministic RAII, no GC, no manual <code>free</code>.</li>
+</ul>
+<p>The cost is that you cannot freely share an owned value the way you would pass a Java object reference around. The escape from “move everything” — using a value without consuming it — is <a href="03-references-and-borrowing.html">borrowing</a>: take a <code>&amp;T</code> or <code>&amp;mut T</code>, which lends access for a bounded region without transferring ownership. That is the next chapter, and it is what makes the ownership model ergonomic rather than merely safe.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li>Ownership is an <strong>affine</strong> discipline: each non-<code>Copy</code> value has one owner, may be moved (used) at most once, and is <strong>dropped</strong> deterministically when its owner leaves scope — RAII with compiler-synthesised, leak-free, zero-overhead destruction.</li>
+<li>A move is a <strong>destructive <code>memcpy</code> of the handle</strong> that statically invalidates the source. Unlike C++, there is no move constructor and no valid moved-from state; use-after-move is a <em>compile</em> error (<code>E0382</code>), never UB.</li>
+<li><code>Copy</code> (implicit, cheap, bitwise, source stays valid) is for stack-only resource-free types; <code>Clone</code> (explicit, named, possibly a heap allocation) is the only way to deep-copy. Implicit duplication is therefore always cheap.</li>
+<li><code>Copy</code> and <code>Drop</code> are mutually exclusive: a type with cleanup cannot be silently duplicated, or you’d double-free.</li>
+<li>Drop order is defined: <strong>variables reverse-of-declaration, struct fields forward-of-declaration</strong>. You can’t call <code>.drop()</code> (<code>E0040</code>); force early cleanup with <code>std::mem::drop(x)</code>, which works purely by <em>moving</em> <code>x</code> in.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Write a function <code>fn first_word(s: String) -&gt; usize</code> that returns the index of the first space (or the length if none). Call it, then try to print the original <code>String</code> afterwards. Read the <code>E0382</code> error carefully, then fix it <em>two</em> ways: (a) by cloning at the call site, (b) by changing the signature to borrow. Which is idiomatic and why?</p>
+</li>
+<li>
+<p>Declare four <code>Loud</code> values (the noisy-<code>Drop</code> struct from this chapter) in a single scope, two of them inside a nested <code>{ }</code> block. Predict the exact print order <em>before</em> compiling, then verify. Explain the order using the reverse-declaration and nested-scope rules.</p>
+</li>
+<li>
+<p>Define <code>struct Pair { a: Loud, b: Loud }</code> where <code>Loud</code> has a noisy <code>Drop</code>, and give <code>Pair</code> itself a noisy <code>Drop</code> too. Predict and then verify the order of all three messages when a <code>Pair</code> leaves scope. (★) Now swap the declaration order of <code>a</code> and <code>b</code> and explain what changed and what didn’t.</p>
+</li>
+<li>
+<p>Try to put <code>#[derive(Copy, Clone)]</code> on a struct that contains a <code>String</code> field. Read the error, and explain in one sentence — in terms of ownership of the heap buffer — why the compiler is right to reject it.</p>
+</li>
+<li>
+<p>(★) Write a <code>Guard</code> struct holding a <code>&amp;'static str</code> name with a noisy <code>Drop</code>. In <code>main</code>, create one, then use <code>std::mem::drop</code> to finalise it early, then attempt to use it again on the next line. Predict both the runtime output <em>and</em> the compile error you’ll get from the post-drop use, and explain how the move rule guarantees the destructor runs exactly once.</p>
+</li>
+<li>
+<p>Given <code>let v = vec![String::from("x"), String::from("y")];</code>, write a <code>for</code> loop that moves each <code>String</code> out and passes it to a consuming function. Then try to use <code>v</code> after the loop. Explain why <code>into_iter()</code> is what makes the per-element move legal and why the binding <code>v</code> is unusable afterwards.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="01-language-delta.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="03-references-and-borrowing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="01-language-delta.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="03-references-and-borrowing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

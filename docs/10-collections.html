@@ -1,0 +1,527 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Common Collections - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="10-common-collections"><a class="header" href="#10-common-collections">10. Common Collections</a></h1>
+<p>Arrays and tuples (from <a href="01-language-delta.html">the language delta</a>) are fixed-size and live on the stack: their layout is known at compile time. The collections in <code>std::collections</code> are the opposite — heap-backed, growable, and generic over their element types. You already know what a dynamic array, a hash table, and a balanced tree <em>are</em> (Algorithms). What is new in Rust is not the data structures; it is that every one of them is threaded through the <a href="02-ownership-and-moves.html">ownership</a> and <a href="03-references-and-borrowing.html">borrowing</a> rules. A <code>Vec&lt;T&gt;</code> owns its elements. Indexing returns a <em>borrow</em>, not a copy. Reallocation can invalidate outstanding references — and the borrow checker statically forbids the use-after-free that would result. This chapter is the std collections at working speed, with the ownership consequences foregrounded.</p>
+<h2 id="vect-the-growable-array"><a class="header" href="#vect-the-growable-array"><code>Vec&lt;T&gt;</code>: the growable array</a></h2>
+<p>A <code>Vec&lt;T&gt;</code> is exactly the data structure you would build in C++ as <code>std::vector&lt;T&gt;</code>: a heap allocation plus bookkeeping. Concretely, a <code>Vec&lt;T&gt;</code> value is three words on the stack — a pointer to the heap buffer, a <code>len</code>, and a <code>cap</code> (capacity):</p>
+<pre><code class="language-text">stack:  Vec { ptr ──┐  len: 3  cap: 4 }
+                     ↓
+heap:            [ e0 | e1 | e2 | ___ ]
+</code></pre>
+<p>The elements live contiguously on the heap; <code>len</code> is how many slots are initialised; <code>cap</code> is how many are allocated. When you <code>push</code> into a full buffer, <code>Vec</code> allocates a new buffer (the std implementation grows geometrically, typically doubling), bitwise-copies the old elements over, and frees the old buffer. This is the standard amortised-O(1) push: any single push may be O(n), but a sequence of n pushes is O(n) total.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut v: Vec&lt;i32&gt; = Vec::new();   // empty: ptr dangling, len=0, cap=0
+v.push(5);
+v.push(6);
+
+let w = vec![1, 2, 3];              // vec! macro: type inferred as Vec&lt;i32&gt;
+<span class="boring">}</span></code></pre>
+<p><code>Vec::new()</code> does not allocate; a fresh empty vector has capacity 0 and a dangling (non-null, well-aligned) pointer. The first <code>push</code> triggers the first allocation.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is <code>std::vector&lt;T&gt;</code>, down to the geometric growth and the move-on-realloc. The differences: (1) there is no copy constructor invoked on growth — Rust elements are <em>moved</em> by a bitwise <code>memcpy</code>, because Rust types have no self-referential move constructors (a moved-from value is simply abandoned, see <a href="02-ownership-and-moves.html">moves</a>); (2) <code>Vec</code> has no implicit copy — <code>let w = v;</code> <em>moves</em> the three-word header and leaves <code>v</code> unusable, where C++ would copy unless you wrote <code>std::move</code>.</p>
+</blockquote>
+<h3 id="indexing-vs-get-panic-vs-option"><a class="header" href="#indexing-vs-get-panic-vs-option">Indexing vs <code>get</code>: panic vs <code>Option</code></a></h3>
+<p>There are two ways to read an element, and the choice is about <em>how out-of-bounds is handled</em>, not ergonomics:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let v = vec![10, 20, 30];
+
+let a: &amp;i32 = &amp;v[1];           // indexing: borrows; panics if out of bounds
+let b: Option&lt;&amp;i32&gt; = v.get(5); // get: returns None if out of bounds
+<span class="boring">}</span></code></pre>
+<p><code>v[i]</code> desugars through the <code>Index</code> trait and panics on an out-of-range index — use it when an out-of-bounds access is a <em>bug</em> and crashing is the correct response. <code>v.get(i)</code> returns <code>Option&lt;&amp;T&gt;</code> (<a href="07-enums-and-pattern-matching.html">enums</a>) — use it when the index might legitimately miss (e.g. derived from user input). There is no third option that returns garbage: Rust will not hand you an unchecked element. For mutation, <code>get_mut</code> returns <code>Option&lt;&amp;mut T&gt;</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut v = vec![10, 20, 30];
+if let Some(x) = v.get_mut(1) {
+    *x += 5;                   // dereference the &amp;mut, then write
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> Bounds-checked indexing is the operational cost Rust pays for soundness: array access cannot be proven in-bounds in general, so the safe operation either checks at runtime (<code>[]</code>, panic) or reflects the partiality in the type (<code>get</code>, <code>Option</code>). This is the same move as wrapping a partial function in an option type in OCaml — <code>List.nth_opt</code> rather than <code>List.nth</code>.</p>
+</blockquote>
+<h3 id="reading-while-mutating-the-borrow-rule-that-surprises-everyone"><a class="header" href="#reading-while-mutating-the-borrow-rule-that-surprises-everyone">Reading while mutating: the borrow rule that surprises everyone</a></h3>
+<p>This is the canonical <code>Vec</code> borrow-check failure, and it is worth dwelling on because it is <em>correct</em>, not pedantic:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut v = vec![1, 2, 3, 4, 5];
+let first = &amp;v[0];   // immutable borrow of v begins
+v.push(6);           // wants &amp;mut v — ERROR
+println!("{first}");
+<span class="boring">}</span></code></pre>
+<pre><code class="language-text">error[E0502]: cannot borrow `v` as mutable because it is also borrowed as immutable
+</code></pre>
+<p>The reason is the layout above. <code>first</code> points <em>into the heap buffer</em>. <code>push(6)</code> might reallocate, moving the buffer and leaving <code>first</code> dangling. C++ has exactly this hazard — pushing onto a <code>std::vector</code> invalidates iterators and references — but C++ does not check it, so it is a famous source of use-after-free. Rust’s rule (“one <code>&amp;mut</code> xor any number of <code>&amp;</code>”) makes the hazard a compile error: holding <code>&amp;v[0]</code> is an outstanding <code>&amp;</code> borrow of <code>v</code>, so the <code>&amp;mut v</code> that <code>push</code> needs is rejected. The fix is to dereference/copy before mutating, or to scope the borrow so it ends before the <code>push</code>.</p>
+<p>The same protection covers iteration. A <code>for</code> loop over <code>&amp;v</code> holds a borrow of the whole vector for the loop’s duration, so you cannot <code>push</code> or <code>remove</code> mid-iteration:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut v = vec![1, 2, 3];
+for x in &amp;v {        // borrows v
+    v.push(*x);      // ERROR: cannot mutate v while iterating
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Reallocation invalidating references is <em>iterator invalidation</em> enforced at compile time. Note Rust does not track <em>which</em> index <code>first</code> points at — the borrow is of the whole <code>Vec</code>. So even <code>let first = &amp;v[0]; v.push(6);</code> where logically <code>first</code> might survive is rejected: the borrow checker reasons at the granularity of the whole value, not individual slots. This is conservative but sound.</p>
+</blockquote>
+<h3 id="three-ways-to-iterate-three-ownership-stories"><a class="header" href="#three-ways-to-iterate-three-ownership-stories">Three ways to iterate, three ownership stories</a></h3>
+<p>The single most important <code>Vec</code> distinction for ownership is the trio <code>iter</code> / <code>iter_mut</code> / <code>into_iter</code>. They differ only in what they yield and what happens to the vector (<a href="12-closures-and-iterators.html">more on iterators in 12</a>):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let v = vec![String::from("a"), String::from("b")];
+
+for s in v.iter()      { /* s: &amp;String     — v still usable after */ }
+// v alive here
+
+let mut w = vec![1, 2, 3];
+for n in w.iter_mut()  { *n *= 10; }   // n: &amp;mut i32 — mutate in place
+// w == [10, 20, 30]
+
+let owned = vec![String::from("x"), String::from("y")];
+for s in owned.into_iter() { /* s: String — owned, moved out of the vec */ }
+// owned is CONSUMED — using it here is a compile error
+<span class="boring">}</span></code></pre>
+<p><code>&amp;v</code> in a <code>for</code> loop is sugar for <code>v.iter()</code>; <code>&amp;mut v</code> for <code>v.iter_mut()</code>; a bare <code>v</code> for <code>v.into_iter()</code>. The third <em>consumes</em> the vector and hands you each element <em>by value</em> — this is how you move owned elements out without cloning. For <code>Copy</code> element types (<code>i32</code>) the distinction is mostly academic; for owning types (<code>String</code>, <code>Vec&lt;_&gt;</code>) it is the difference between borrowing the contents and dismantling the container.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>iter()</code>/<code>iter_mut()</code> are <code>begin()</code>/<code>begin()</code> on a <code>const</code> vs non-<code>const</code> C++ container; <code>into_iter()</code> is closest to a <em>move iterator</em> (<code>std::make_move_iterator</code>) — except in Rust it also destroys the container, so there is no risk of touching moved-from elements afterward. In OCaml every <code>List.map</code> is <code>iter</code>-flavoured (immutable); Rust’s <code>iter_mut</code> and <code>into_iter</code> have no OCaml analogue because OCaml has neither mutable-by-default bindings nor affine ownership.</p>
+</blockquote>
+<h3 id="heterogeneity-via-enums"><a class="header" href="#heterogeneity-via-enums">Heterogeneity via enums</a></h3>
+<p><code>Vec&lt;T&gt;</code> is homogeneous — every element is the same type, because the layout demands a fixed stride. To store a “row of mixed cells”, wrap the alternatives in an enum so the <em>static</em> type is uniform:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>enum Cell {
+    Int(i64),
+    Real(f64),
+    Label(String),
+}
+let row = vec![Cell::Int(7), Cell::Label("hi".into()), Cell::Real(2.5)];
+<span class="boring">}</span></code></pre>
+<p>Each slot is <code>size_of::&lt;Cell&gt;()</code> wide (the tag plus the largest variant). When the variant set is open-ended and unknown at compile time, you instead reach for trait objects, <code>Vec&lt;Box&lt;dyn Trait&gt;&gt;</code> — see <a href="09-trait-objects-and-oop.html">trait objects</a>.</p>
+<h3 id="capacity-tuning"><a class="header" href="#capacity-tuning">Capacity tuning</a></h3>
+<p>If you know the size ahead of time, <code>Vec::with_capacity(n)</code> allocates once and eliminates the intermediate reallocations of repeated <code>push</code>. This is a pure performance optimisation — it changes nothing about semantics:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut buf = Vec::with_capacity(1024);   // one allocation, cap &gt;= 1024
+for i in 0..1024 { buf.push(i); }         // no further reallocation
+<span class="boring">}</span></code></pre>
+<p>Also worth knowing: <code>swap_remove(i)</code> removes element <code>i</code> in O(1) by swapping it with the last element (order not preserved), whereas <code>remove(i)</code> is O(n) because it shifts the tail down.</p>
+<h2 id="string-a-vecu8-with-a-utf-8-invariant"><a class="header" href="#string-a-vecu8-with-a-utf-8-invariant"><code>String</code>: a <code>Vec&lt;u8&gt;</code> with a UTF-8 invariant</a></h2>
+<p>A <code>String</code> <em>is</em> a <code>Vec&lt;u8&gt;</code> — same three-word header, same growth strategy — with one added invariant: the bytes are always valid UTF-8. That invariant is exactly why you cannot index a <code>String</code> by integer; the full treatment of UTF-8, <code>char</code>, byte/scalar/grapheme views, and <code>&amp;str</code> slicing lives in <a href="05-slices-and-duality.html">slices and the owned/borrowed duality</a>. Here we focus only on <em>building and mutating</em> strings.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut s = String::new();
+s.push_str("foo");        // append a &amp;str
+s.push('!');              // append a single char
+let owned = "abc".to_string();    // &amp;str -&gt; String
+let also  = String::from("abc");  // identical effect
+<span class="boring">}</span></code></pre>
+<p><code>push_str</code> takes <code>&amp;str</code>, not <code>String</code>, so it borrows rather than consumes its argument — you keep ownership of what you append. Concatenation with <code>+</code> is the one quietly surprising operation:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let a = String::from("Hello, ");
+let b = String::from("world!");
+let c = a + &amp;b;   // a is MOVED; b is borrowed; c is the result
+<span class="boring">}</span></code></pre>
+<p>The <code>+</code> operator calls <code>add(self, &amp;str) -&gt; String</code>. <code>self</code> is taken <em>by value</em>, so the left operand is moved into the result and reused as its buffer — no copy of the left side. The right operand is <code>&amp;str</code>, so <code>&amp;b</code> (a <code>&amp;String</code>) is deref-coerced to <code>&amp;str</code> (<a href="15-smart-pointers.html">coercion in 15</a>) and only <em>its</em> bytes are copied. For anything beyond two operands, reach for <code>format!</code>, which borrows all arguments and is far more readable:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let (x, y, z) = ("tic", "tac", "toe");
+let s = format!("{x}-{y}-{z}");   // borrows everything, allocates once
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Writing <code>let c = a + &amp;b;</code> and then using <code>a</code> gives <code>error[E0382]: borrow of moved value: a</code>. The <code>+</code> operator consumed <code>a</code>. If you need <code>a</code> afterward, either clone it (<code>a.clone() + &amp;b</code>) or use <code>format!("{a}{b}")</code>, which moves nothing. New Rustaceans expect <code>+</code> to behave like <code>String</code> concatenation in Java/Python (which produce a fresh string and leave both operands intact); Rust trades that for a guaranteed buffer reuse on the left.</p>
+</blockquote>
+<h2 id="hashmapk-v-keys-to-values"><a class="header" href="#hashmapk-v-keys-to-values"><code>HashMap&lt;K, V&gt;</code>: keys to values</a></h2>
+<p><code>HashMap&lt;K, V&gt;</code> is a hash table, heap-allocated like <code>Vec</code>. It is not in the prelude, so you must bring it in:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Yellow"), 50);
+<span class="boring">}</span></code></pre>
+<h3 id="ownership-on-insert"><a class="header" href="#ownership-on-insert">Ownership on insert</a></h3>
+<p><code>insert(k, v)</code> <em>takes ownership</em> of both key and value. For <code>Copy</code> types the value is copied in; for owning types like <code>String</code> it is moved, and the map becomes the owner:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let name = String::from("Blue");
+let val  = String::from("ten");
+let mut m = HashMap::new();
+m.insert(name, val);
+// name and val are MOVED — using either is a compile error now
+<span class="boring">}</span></code></pre>
+<p>Reading is by reference. <code>get</code> returns <code>Option&lt;&amp;V&gt;</code> (the key might be absent), and you commonly <code>.copied()</code> to turn <code>Option&lt;&amp;i32&gt;</code> into <code>Option&lt;i32&gt;</code> for a <code>Copy</code> value, then <code>.unwrap_or(default)</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let blue = scores.get("Blue").copied().unwrap_or(0);
+<span class="boring">}</span></code></pre>
+<p>Note you can call <code>get("Blue")</code> with a <code>&amp;str</code> even though the keys are <code>String</code> — <code>HashMap</code> keys can be looked up by any type the key <em>borrows as</em> (<code>String: Borrow&lt;str&gt;</code>), so no temporary <code>String</code> is allocated for the lookup. Iteration yields <code>(&amp;K, &amp;V)</code> pairs <strong>in arbitrary, run-to-run-varying order</strong> — never depend on it.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Iterating a <code>HashMap</code> and expecting insertion or sorted order is a portability/reproducibility bug. The order is randomised per execution (a consequence of the DoS-resistant hashing below). If you need order, use a <code>BTreeMap</code> (sorted by key) or collect into a <code>Vec</code> and sort.</p>
+</blockquote>
+<h3 id="the-entry-api-why-it-beats-get-then-insert"><a class="header" href="#the-entry-api-why-it-beats-get-then-insert">The <code>entry</code> API: why it beats <code>get</code>-then-<code>insert</code></a></h3>
+<p>The natural “insert if absent, otherwise update” pattern is hostile to the borrow checker if you write it the obvious way: a <code>get</code> borrows the map, and the follow-up <code>insert</code> needs a fresh mutable borrow, and threading the two together is awkward. The <code>entry</code> API does the lookup <em>once</em> and hands back a handle to the slot:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut scores = HashMap::new();
+scores.insert(String::from("Blue"), 10);
+
+scores.entry(String::from("Yellow")).or_insert(50); // absent -&gt; inserts 50
+scores.entry(String::from("Blue")).or_insert(50);   // present -&gt; leaves 10
+<span class="boring">}</span></code></pre>
+<p><code>entry(k)</code> returns an <code>Entry</code> enum — <code>Occupied</code> or <code>Vacant</code> — and <code>or_insert(d)</code> returns a <code>&amp;mut V</code> to the existing value (if present) or to the freshly inserted default. Because it returns <code>&amp;mut V</code>, you can read-modify-write through it. The classic word-count is one line of real work:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let text = "the cat the dog the bird";
+let mut counts: HashMap&lt;&amp;str, i32&gt; = HashMap::new();
+for word in text.split_whitespace() {
+    *counts.entry(word).or_insert(0) += 1;
+}
+// counts == {"the": 3, "cat": 1, "dog": 1, "bird": 1}
+<span class="boring">}</span></code></pre>
+<p><code>or_insert(0)</code> returns <code>&amp;mut i32</code>; the leading <code>*</code> dereferences it to apply <code>+= 1</code>. The borrow lasts only for that statement, so the next loop iteration is free to mutate the map again. <code>or_default()</code> does the same with <code>V::default()</code>, and <code>or_insert_with(f)</code> defers constructing the default until it is actually needed (use it when the default is expensive):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut groups: HashMap&lt;i32, Vec&lt;i32&gt;&gt; = HashMap::new();
+for n in 0..6 {
+    groups.entry(n % 2).or_default().push(n);  // bucket by parity
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems / lock granularity.</em> The reason <code>entry</code> “plays nicely with the borrow checker” is the same reason a compare-and-swap beats a lock-read-then-lock-write: it collapses two separately-borrowed operations into one atomic borrow. <code>get</code>-then-<code>insert</code> requires two distinct <code>&amp;</code>/<code>&amp;mut</code> borrows of the same map that the borrow checker must reconcile across a gap; <code>entry</code> holds a single <code>&amp;mut</code> for the whole read-modify-write, which is both sound and a single hash probe.</p>
+</blockquote>
+<h3 id="eq-hash-and-the-hashing-function"><a class="header" href="#eq-hash-and-the-hashing-function"><code>Eq</code>, <code>Hash</code>, and the hashing function</a></h3>
+<p>A type may be a <code>HashMap</code> key only if it implements both <code>Hash</code> and <code>Eq</code> (<a href="08-generics-and-traits.html">traits</a>), and the two must agree: <code>a == b</code> must imply <code>hash(a) == hash(b)</code>. For your own structs, <code>#[derive(Hash, Eq, PartialEq)]</code> gives the field-wise implementations, which is almost always what you want. Floating-point types are <em>not</em> <code>Eq</code> (because of <code>NaN</code>), so <code>f64</code> cannot be a key without a wrapper.</p>
+<p>By default <code>HashMap</code> uses <strong>SipHash 1-3</strong>, a keyed hash seeded with per-process randomness. This is a deliberate choice: it is not the fastest hash, but it resists <em>hash-flooding</em> DoS attacks, where an adversary who can predict your hash function feeds you keys that all collide into one bucket, degrading the table to O(n) per operation. The randomised seed is also why iteration order varies between runs. If you have profiled and the hash is your bottleneck — and your keys are not attacker-controlled — you can swap the hasher by parameterising the map (<code>HashMap&lt;K, V, S&gt;</code> where <code>S: BuildHasher</code>); crates like <code>fxhash</code> or <code>ahash</code> provide faster, non-DoS-resistant hashers as drop-in replacements.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Today’s <code>std</code> <code>HashMap</code> is a port of Google’s SwissTable (the <code>hashbrown</code> crate): open-addressing with SIMD-accelerated probing over a control byte array, not the separate-chaining buckets you may picture from Algorithms. The <code>BuildHasher</code> trait exists precisely so the table can construct a <em>fresh, independently-seeded</em> <code>Hasher</code> per map instance — that per-instance seed is what randomises iteration order and frustrates collision attacks.</p>
+</blockquote>
+<h3 id="constructing-and-collecting"><a class="header" href="#constructing-and-collecting">Constructing and collecting</a></h3>
+<p>You can build a map from an array of pairs, or <code>collect</code> one from any iterator of <code>(K, V)</code> (<a href="12-closures-and-iterators.html">iterators in 12</a>) — the latter is the idiomatic functional construction:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let m = HashMap::from([("a", 1), ("b", 2)]);
+
+let squares: HashMap&lt;i32, i32&gt; = (1..=5).map(|n| (n, n * n)).collect();
+<span class="boring">}</span></code></pre>
+<p><code>with_capacity(n)</code> works here too, pre-sizing the table to avoid rehashing during a known bulk insert.</p>
+<h2 id="the-rest-of-stdcollections-and-when-to-reach-for-each"><a class="header" href="#the-rest-of-stdcollections-and-when-to-reach-for-each">The rest of <code>std::collections</code>, and when to reach for each</a></h2>
+<p><code>Vec</code>, <code>String</code>, and <code>HashMap</code> cover the large majority of programs. The other four exist for specific access patterns. They share the same ownership discipline — owned elements, borrows on read, mutation gated by <code>&amp;mut</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Backing structure</th><th>Ordered?</th><th>Use when</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Vec&lt;T&gt;</code></td><td>growable array</td><td>insertion</td><td>default sequence; index/iterate; push/pop at the <strong>end</strong></td></tr>
+<tr><td><code>VecDeque&lt;T&gt;</code></td><td>ring buffer</td><td>insertion</td><td>a queue or deque: O(1) push/pop at <strong>both</strong> ends</td></tr>
+<tr><td><code>HashMap&lt;K,V&gt;</code></td><td>SwissTable</td><td>no (random)</td><td>key→value lookup, fastest average case</td></tr>
+<tr><td><code>BTreeMap&lt;K,V&gt;</code></td><td>B-tree</td><td><strong>sorted by key</strong></td><td>need keys in order, range queries (<code>.range(a..b)</code>), <code>.first_key_value()</code></td></tr>
+<tr><td><code>HashSet&lt;T&gt;</code></td><td><code>HashMap&lt;T,()&gt;</code></td><td>no</td><td>membership / dedup, fast average case</td></tr>
+<tr><td><code>BTreeSet&lt;T&gt;</code></td><td>B-tree</td><td><strong>sorted</strong></td><td>membership <em>and</em> ordered iteration / ranges</td></tr>
+<tr><td><code>BinaryHeap&lt;T&gt;</code></td><td>binary max-heap</td><td>partial (peek = max)</td><td>priority queue: O(1) <code>peek</code> of the max, O(log n) <code>push</code>/<code>pop</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Two points worth pinning down. First, the <code>Hash</code>-vs-<code>Btree</code> axis is the classic hash-table-vs-balanced-tree tradeoff from Algorithms: <code>HashMap</code> gives O(1) average lookup but no order and worst-case O(n); <code>BTreeMap</code> gives O(log n) lookup <em>and</em> sorted traversal plus range queries, which the hash map fundamentally cannot offer. Choose <code>BTreeMap</code>/<code>BTreeSet</code> whenever ordering or ranges matter, <code>HashMap</code>/<code>HashSet</code> otherwise. Second, <code>BinaryHeap</code> is a <strong>max-heap</strong> — <code>pop</code> returns the <em>largest</em> element. For a min-heap, store <code>std::cmp::Reverse&lt;T&gt;</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::collections::BinaryHeap;
+use std::cmp::Reverse;
+
+let mut max = BinaryHeap::from([3, 1, 4, 1, 5]);
+assert_eq!(max.pop(), Some(5));          // largest first
+
+let mut min = BinaryHeap::new();
+min.push(Reverse(3));
+min.push(Reverse(1));
+assert_eq!(min.pop(), Some(Reverse(1))); // Reverse flips the ordering
+<span class="boring">}</span></code></pre>
+<p>Every owning collection here frees its buffer <em>and</em> recursively drops every element when it goes out of scope — dropping a <code>Vec&lt;String&gt;</code> drops each <code>String</code>, which frees each string’s heap buffer. This is RAII applied transitively, with the borrow checker guaranteeing no reference outlives the collection that owns the data.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li>A <code>Vec&lt;T&gt;</code>/<code>String</code> is <code>(ptr, len, cap)</code> on the stack over a heap buffer; growth is amortised-O(1) but <em>reallocates</em>, which is why holding <code>&amp;v[i]</code> blocks <code>v.push(...)</code> — that rule prevents a use-after-free, statically.</li>
+<li>Indexing (<code>v[i]</code>, <code>s + ...</code>, panicking) vs the checked form (<code>v.get(i)</code>, <code>.entry</code>, returning <code>Option</code>/handles) is a deliberate choice about how absence is handled — Rust never returns garbage.</li>
+<li><code>iter</code> borrows, <code>iter_mut</code> mutably borrows, <code>into_iter</code> <em>consumes and moves out</em> — for owning element types this is the difference between keeping and dismantling the container.</li>
+<li><code>HashMap::insert</code> takes ownership of key and value; the <code>entry</code> API collapses lookup-then-update into a single <code>&amp;mut</code> borrow and one hash probe, which is why it beats <code>get</code>-then-<code>insert</code>.</li>
+<li><code>HashMap</code> order is randomised (SipHash + per-instance seed, for DoS resistance); reach for <code>BTreeMap</code>/<code>BTreeSet</code> whenever you need ordering or ranges, and remember <code>BinaryHeap</code> is a <em>max</em>-heap.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Write <code>fn second(v: &amp;Vec&lt;i32&gt;) -&gt; Option&lt;&amp;i32&gt;</code> two ways: once with <code>v.get(1)</code>, once with indexing. Then call your indexing version with a one-element vector and explain the panic in terms of the <code>Index</code> trait. Which signature is honest about partiality?</p>
+</li>
+<li>
+<p>The following fails to compile. Give the exact error code, explain it via the <code>(ptr, len, cap)</code> layout, and fix it <em>without</em> cloning:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut v = vec![1, 2, 3];
+let top = &amp;v[2];
+v.push(4);
+println!("{top}");
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p>Build <code>fn frequencies(words: &amp;[&amp;str]) -&gt; HashMap&lt;&amp;str, usize&gt;</code> using the <code>entry</code> API in a single statement inside the loop. Then rewrite it with <code>get</code>-then-<code>insert</code> and articulate precisely which two borrows the borrow checker has to reconcile in the second version.</p>
+</li>
+<li>
+<p>You have <code>let owned: Vec&lt;String&gt; = ...;</code> and want one <code>String</code> that concatenates them all. Do it with <code>into_iter</code> and explain why <code>iter</code> would force a <code>.clone()</code> on every element while <code>into_iter</code> does not. (★)</p>
+</li>
+<li>
+<p>(★) <code>let mut h: HashMap&lt;f64, i32&gt; = HashMap::new();</code> does not compile. Name the missing trait bound, explain <em>why</em> <code>f64</code> lacks it (one word: a particular IEEE value), and propose a key type that works while preserving the numeric value.</p>
+</li>
+<li>
+<p>(★) Take a <code>BTreeMap&lt;u32, String&gt;</code> of timestamps to log lines. Using one method call, extract just the entries whose key lies in <code>1000..2000</code>, and explain why the identical request is impossible to express on a <code>HashMap</code>. What is the asymptotic cost of your range query in terms of tree height and result size?</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="09-trait-objects-and-oop.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="11-error-handling.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="09-trait-objects-and-oop.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="11-error-handling.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

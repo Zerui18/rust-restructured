@@ -1,0 +1,461 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Unsafe Rust, FFI &amp; the Memory Model - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="16-unsafe-rust-ffi--the-memory-model"><a class="header" href="#16-unsafe-rust-ffi--the-memory-model">16. Unsafe Rust, FFI &amp; the Memory Model</a></h1>
+<p>Everything you have read so far has been <em>safe Rust</em>: a language whose type checker proves, statically, the absence of use-after-free, double-free, data races, and out-of-bounds access. That proof is the whole product. But the proof rests on a checker that is — and must be — <em>conservative</em>. A sound static analysis rejects every unsafe program and, as a price, also rejects some sound programs it simply cannot reason about. <code>Vec</code>’s growth, <code>split_at_mut</code>’s non-overlapping borrows, a hand-rolled doubly-linked list, calling <code>malloc</code>, talking to an MMIO register at a fixed address — all sound, all unprovable by the borrow checker.</p>
+<p><code>unsafe</code> is the escape hatch for exactly these cases, and it is far narrower than its name suggests. The single most important sentence in this chapter:</p>
+<blockquote>
+<p><strong><code>unsafe</code> does not turn off the borrow checker.</strong> It unlocks exactly five operations the checker cannot verify, and leaves <em>every other</em> check fully on.</p>
+</blockquote>
+<p>The right mental model comes straight from Logic and Proof and Semantics. Safe Rust is a system in which the compiler <em>discharges</em> the memory-safety proof obligation for you. <code>unsafe</code> is you writing, in effect, <code>// trust me: I have a proof</code>. You take on an obligation the checker handed back because it could not close it. Get the proof right and your code is as sound as any safe code — <code>Vec</code> and <code>Box</code> are nothing but unsafe code wearing a correct proof. Get it wrong and you have a bug of exactly the C/C++ flavour you came to Rust to escape.</p>
+<h2 id="the-five-superpowers-and-nothing-else"><a class="header" href="#the-five-superpowers-and-nothing-else">The five superpowers (and nothing else)</a></h2>
+<p>Inside an <code>unsafe</code> block (or an <code>unsafe fn</code> body, via an inner <code>unsafe</code> block) you gain the ability to:</p>
+<ol>
+<li><strong>Dereference a raw pointer</strong> (<code>*const T</code>, <code>*mut T</code>).</li>
+<li><strong>Call an <code>unsafe fn</code></strong> (including any function declared in an <code>extern</code> block).</li>
+<li><strong>Implement an <code>unsafe trait</code></strong> (e.g. <code>Send</code>, <code>Sync</code>).</li>
+<li><strong>Access or modify a mutable <code>static</code></strong>.</li>
+<li><strong>Read a field of a <code>union</code></strong>.</li>
+</ol>
+<p>That is the complete list. There is no sixth. Crucially, the following are <em>still checked</em> inside <code>unsafe</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>unsafe {
+    let x = 5;
+    let r = &amp;mut x;   // error[E0596]: cannot borrow `x` as mutable — still checked
+}
+<span class="boring">}</span></code></pre>
+<p>Ownership, borrowing, lifetimes, <code>Sized</code>, exhaustiveness, type checking — all unaffected. If you write <code>&amp;mut</code> to immutable data inside <code>unsafe</code>, you still get the same error you would outside it. <code>unsafe</code> is not a mode; it is a five-item capability grant.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is unlike C, where there is no boundary at all: <em>every</em> pointer deref is “unsafe” and the language never tells you. It is closer to Haskell’s <code>unsafePerformIO</code> or Swift’s <code>Unsafe...Pointer</code> family — a syntactically marked island where a specific invariant is your responsibility. The analogy to C++’s <code>reinterpret_cast</code> breaks down because C++ gives you no list of exactly which operations became newly dangerous; in Rust the grep-able <code>unsafe</code> keyword <em>is</em> the audit trail.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> In Semantics of Programming Languages, <em>soundness</em> is the theorem “well-typed programs do not go wrong” — progress + preservation. Safe Rust’s type system is sound <em>by construction</em>: the safety proof is part of type checking. An <code>unsafe</code> block is a point where the meta-theorem’s premise is locally assumed rather than proved. The whole-program soundness theorem then holds <strong>only if</strong> every <code>unsafe</code> block’s hand-discharged obligation is actually valid. One wrong <code>unsafe</code> and the theorem is false for the entire program — soundness is not local.</p>
+</blockquote>
+<h2 id="undefined-behaviour-the-same-beast-as-in-c"><a class="header" href="#undefined-behaviour-the-same-beast-as-in-c">Undefined behaviour: the same beast as in C</a></h2>
+<p>What exactly are you promising not to do? You are promising not to cause <strong>undefined behaviour (UB)</strong>. This is the identical concept from your C and C++ course: a precondition the language assumes the program never violates, and on whose violation the compiler is licensed to do <em>anything</em> — including miscompile code far away from the violation, because the optimiser reasoned under an assumption you broke.</p>
+<p>Rust’s UB list (the <a href="https://doc.rust-lang.org/reference/behavior-considered-undefined.html">Reference’s full list</a> is authoritative) includes:</p>
+<ul>
+<li><strong>Dereferencing a dangling, null, or unaligned pointer</strong> — same as C.</li>
+<li><strong>Reading uninitialised memory</strong>, or producing an <em>invalid value</em> for a type: a <code>bool</code> that is not <code>0</code>/<code>1</code>, a <code>char</code> outside the Unicode scalar range, a <code>&amp;T</code>/<code>&amp;mut T</code> that is null or dangling, an enum with an out-of-range discriminant. Producing such a value is instant UB even if you never “use” it.</li>
+<li><strong>Out-of-bounds access</strong> via raw pointer arithmetic (<code>.add</code>, <code>.offset</code>).</li>
+<li><strong>Data races</strong> — concurrent unsynchronised access where at least one side writes.</li>
+<li><strong>Breaking the aliasing rules</strong> — having a live <code>&amp;mut T</code> while any other pointer reads or writes the same memory (see the memory model below). This is the one with no C equivalent and the one that bites hardest.</li>
+</ul>
+<p>The asymmetry with C: in safe Rust <em>none</em> of these are reachable; inside <code>unsafe</code> all of them are. The optimiser is <em>more</em> aggressive than a typical C compiler because <code>&amp;mut T</code> carries a no-aliasing guarantee (below), so UB here can produce stranger results than the equivalent C bug.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> A common cargo-cult error is <code>let x: bool = unsafe { std::mem::transmute(2u8) };</code>. This compiles. It is instant UB — <code>2</code> is not a valid <code>bool</code> — and the optimiser may now assume <code>x</code> is simultaneously <code>true</code> and <code>false</code> in different branches. The fix is never to construct invalid values; use <code>2u8 != 0</code> for an explicit conversion. <code>transmute</code> is the single most dangerous function in the language and almost always the wrong tool.</p>
+</blockquote>
+<h2 id="raw-pointers-c-pointers-re-typed"><a class="header" href="#raw-pointers-c-pointers-re-typed">Raw pointers: C pointers, re-typed</a></h2>
+<p>Raw pointers are the heart of the first superpower. <code>*const T</code> and <code>*mut T</code> are <em>exactly</em> C’s <code>const T*</code> and <code>T*</code>: a machine word holding an address, with no guarantees. Specifically they may be null, may dangle, may alias each other and references freely, are not bound by lifetimes, and run no destructor when dropped.</p>
+<p>You can <em>create</em> them in completely safe code — only <em>dereferencing</em> requires <code>unsafe</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut count = 7i32;
+let p_const: *const i32 = &amp;raw const count; // raw borrow operators (1.82+)
+let p_mut:   *mut i32   = &amp;raw mut count;
+
+unsafe {
+    println!("{}", *p_const);  // deref: superpower #1
+    *p_mut = 9;
+}
+assert_eq!(count, 9);
+<span class="boring">}</span></code></pre>
+<p>The <code>&amp;raw const</code> / <code>&amp;raw mut</code> operators are the modern, correct way to take a raw pointer: they produce a pointer <em>without</em> first creating an intermediate reference, which matters because forming even a transient <code>&amp;mut</code> to a place you are about to alias is itself UB under the aliasing model. (The old <code>&amp;v as *const _</code> form silently creates that reference.) You can also conjure a pointer from an integer — <code>let p = 0xdead_beef_usize as *const i32;</code> — legal to write, UB to dereference, because nothing guarantees anything lives there.</p>
+<p>The asterisk in <code>*const T</code> is part of the <em>type name</em>, not a dereference; <code>*p_const</code> is the deref. You can hold a <code>*const</code> and a <code>*mut</code> to one location and write through one while reading the other — the compiler will not stop you, and you will have hand-built a data race. That freedom is the point: it lets you express patterns the borrow checker rejects.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> A <code>*const T</code>/<code>*mut T</code> is one pointer-sized word for <code>Sized</code> <code>T</code>, byte-identical to a C pointer — this is why FFI works with zero marshalling. A <em>fat</em> raw pointer <code>*const [T]</code> or <code>*const dyn Trait</code> is two words (pointer + length, or pointer + vtable), exactly like the <code>&amp;[T]</code>/<code>&amp;dyn</code> fat references from <a href="05-slices-and-duality.html">slices</a> and <a href="09-trait-objects-and-oop.html">trait objects</a>. <code>&amp;T as *const T</code> is a no-op at the machine level — references and raw pointers have identical representation; the only difference is the static guarantees the type carries.</p>
+</blockquote>
+<h2 id="the-safeunsafe-boundary-soundness-as-the-contract"><a class="header" href="#the-safeunsafe-boundary-soundness-as-the-contract">The safe/unsafe boundary: soundness as the contract</a></h2>
+<p>The professional use of <code>unsafe</code> is never to sprinkle it at call sites. It is to <strong>encapsulate</strong> a minimal unsafe core behind a <em>sound safe API</em>. The canonical example is <code>slice::split_at_mut</code>, which hands back two mutable sub-slices of one slice — provably non-overlapping, but the borrow checker only sees “two <code>&amp;mut</code> from the same <code>values</code>” and refuses (<a href="03-references-and-borrowing.html">references</a>):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::slice;
+
+fn split_at_mut(values: &amp;mut [i32], mid: usize) -&gt; (&amp;mut [i32], &amp;mut [i32]) {
+    let len = values.len();
+    let ptr = values.as_mut_ptr();
+    assert!(mid &lt;= len);                       // the proof's precondition
+    // SAFETY: `mid &lt;= len`, so both ranges lie within the original
+    // allocation and `[0, mid)` is disjoint from `[mid, len)`. The two
+    // resulting &amp;mut slices therefore never alias.
+    unsafe {
+        (
+            slice::from_raw_parts_mut(ptr, mid),
+            slice::from_raw_parts_mut(ptr.add(mid), len - mid),
+        )
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>The function is <em>not</em> marked <code>unsafe</code>: its signature is callable from safe code, and <strong>no input can make it cause UB</strong>. That property is the definition of <strong>soundness</strong> for a safe abstraction. The <code>assert!</code> is load-bearing — it converts the precondition into a checked panic, so the only path into the <code>unsafe</code> block is one where the proof holds. <code>from_raw_parts_mut</code> and <code>.add</code> are themselves <code>unsafe fn</code>s whose contracts (“valid for <code>len</code> elements”, “offset stays in-bounds”) this function discharges.</p>
+<p>The inverse — a safe-looking function that <em>can</em> be driven to UB by some safe caller — is <strong>unsound</strong>, and an unsound abstraction is a <em>bug</em>, full stop, even if it never misbehaves in your tests. <code>Vec</code>, <code>Box</code>, <code>Rc</code>, <code>Mutex</code>, <code>String</code> are all this pattern: a tiny audited <code>unsafe</code> core, wrapped so no safe caller can ever trigger UB. You have run on unsafe code the entire book; it was sound, so you never noticed.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is the same discipline as a C++ class with a class invariant maintained by every method (RAII, your C++ course): private raw members, public methods that preserve the invariant. The difference Rust adds is the <em>enforced boundary</em>: the <code>unsafe</code> keyword marks precisely where the invariant is hand-maintained, so an auditor greps for <code>unsafe</code> and reads only those sites. In C++ the invariant-maintaining code and the merely-correct code are visually identical.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>unsafe fn</code> and a safe fn containing an <code>unsafe</code> block are <em>different contracts</em>. An <code>unsafe fn</code> pushes the proof obligation onto its <strong>caller</strong> (the caller’s <code>unsafe</code> block is the promise). A safe fn that internally uses <code>unsafe</code> keeps the obligation <strong>inside itself</strong> and discharges it for all callers. <code>split_at_mut</code> is the latter; <code>from_raw_parts_mut</code> is the former. Choosing which to write is choosing where the proof obligation lives.</p>
+</blockquote>
+<h2 id="mutable-statics-and-unsafe-traits"><a class="header" href="#mutable-statics-and-unsafe-traits">Mutable statics and unsafe traits</a></h2>
+<p>A <code>static</code> is a global with a fixed address (unlike a <code>const</code>, which the compiler may inline and duplicate at each use). An immutable <code>static</code> is fine and safe to read. A <code>static mut</code> is global <em>mutable</em> state, and reading or writing it is superpower #4 — because nothing stops two threads touching it concurrently, i.e. a data race:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>static mut TICKS: u64 = 0;
+
+/// SAFETY: caller must guarantee no concurrent access from another thread.
+unsafe fn tick() {
+    unsafe { TICKS += 1; }
+}
+<span class="boring">}</span></code></pre>
+<p>Modern Rust additionally <em>denies by default</em> taking a reference to a <code>static mut</code> (the <code>static_mut_refs</code> lint) — even the invisible <code>&amp;</code> inside <code>println!("{TICKS}")</code> — because a <code>&amp;mut</code> to a global is an aliasing landmine; you must go through a raw pointer, <code>*(&amp;raw const TICKS)</code>. The idiom is to avoid <code>static mut</code> entirely and reach for the <a href="13-fearless-concurrency.html">thread-safe primitives</a> (<code>AtomicU64</code>, <code>Mutex</code>, <code>OnceLock</code>) which encode the synchronisation in the type and stay in safe code.</p>
+<p>Superpower #3, the <strong><code>unsafe trait</code></strong>, you already met. A trait is <code>unsafe</code> when implementing it asserts an invariant the compiler cannot check. The marquee examples are <code>Send</code>/<code>Sync</code> from <a href="13-fearless-concurrency.html">concurrency</a>: auto-derived structurally, but if you build a type around a raw pointer (<code>!Send</code>/<code>!Sync</code>) and <em>know</em> your synchronisation makes it thread-safe, you assert it with <code>unsafe impl Send for MyType {}</code> — promising the data-race-freedom theorem the auto-derivation refused. A wrong <code>unsafe impl Send</code> manufactures UB from entirely safe-looking downstream code.</p>
+<h2 id="ffi-the-c-abi-boundary"><a class="header" href="#ffi-the-c-abi-boundary">FFI: the C ABI boundary</a></h2>
+<p>The original reason <code>unsafe</code> exists is that the hardware and the rest of the software universe are written in C. <strong>FFI</strong> (Foreign Function Interface) is how Rust calls C and C calls Rust, through the <code>extern</code> keyword.</p>
+<h3 id="calling-c-from-rust"><a class="header" href="#calling-c-from-rust">Calling C from Rust</a></h3>
+<pre class="playground"><code class="language-rust">unsafe extern "C" {
+    // libc's abs; the "C" selects the C ABI (calling convention).
+    fn abs(input: i32) -&gt; i32;
+
+    // No memory-safety preconditions, so we can mark it `safe`:
+    safe fn strlen(s: *const std::ffi::c_char) -&gt; usize;
+}
+
+fn main() {
+    let n = unsafe { abs(-42) }; // declared-unsafe by default
+    println!("{n}");
+}</code></pre>
+<p>The <code>"C"</code> string is the <strong>ABI</strong>: it tells rustc to use C’s calling convention (argument registers, stack layout) at the assembly level. The whole <code>extern</code> block is <code>unsafe</code> because the foreign side does not obey Rust’s rules and rustc cannot check it — so by default every declared function is <code>unsafe</code> to call. The 2024-edition refinement is the <code>safe</code> keyword: a function with genuinely no memory-safety preconditions may be written <code>safe fn</code>, and callers skip the <code>unsafe</code> block. <code>safe</code> does not <em>make</em> it safe; it is <em>your promise</em> that it is, and you own the consequences if wrong.</p>
+<h3 id="calling-rust-from-c"><a class="header" href="#calling-rust-from-c">Calling Rust from C</a></h3>
+<p>The other direction exports a Rust function under the C ABI with an un-mangled name:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[unsafe(no_mangle)]
+pub extern "C" fn rust_add(a: i32, b: i32) -&gt; i32 {
+    a + b
+}
+<span class="boring">}</span></code></pre>
+<p><code>extern "C"</code> gives it the C calling convention. <code>#[unsafe(no_mangle)]</code> (the <code>unsafe(...)</code> wrapper is 2024-edition syntax) suppresses name mangling so the symbol is literally <code>rust_add</code> and C’s linker can find it — mangling is the compiler rewriting names to encode types/modules for overloading and monomorphisation, from Compiler Construction; C cannot parse the mangled form. The <code>unsafe(...)</code> wrapper is there because un-mangled symbols can <em>collide</em> across libraries, and avoiding collisions is now your responsibility. Compile as a <code>cdylib</code>/<code>staticlib</code>, declare <code>int rust_add(int, int);</code> on the C side, link, done.</p>
+<h3 id="layout-structs-and-strings-across-the-boundary"><a class="header" href="#layout-structs-and-strings-across-the-boundary">Layout, structs, and strings across the boundary</a></h3>
+<p>C only understands C layout. Rust’s default <code>struct</code> layout is <strong>unspecified</strong> — the compiler may reorder fields to minimise padding — so a struct shared with C must be annotated <code>#[repr(C)]</code> to force C’s declaration-order, C-padding layout:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[repr(C)]
+pub struct Point { pub x: f64, pub y: f64 } // matches `struct Point { double x, y; }`
+<span class="boring">}</span></code></pre>
+<p>Strings are the classic trap: Rust’s <code>&amp;str</code>/<code>String</code> are UTF-8 with a length and <em>no terminating NUL</em>; C strings are NUL-terminated <code>char*</code> with no length. They are not interchangeable. Cross the boundary with <code>std::ffi::CString</code> (owns a NUL-terminated buffer, to send <em>to</em> C) and <code>CStr</code> (borrows one, to receive <em>from</em> C):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::ffi::{CString, c_char};
+
+unsafe extern "C" { safe fn puts(s: *const c_char) -&gt; i32; }
+
+let owned = CString::new("hello from rust").unwrap(); // appends the NUL
+puts(owned.as_ptr());                                 // &amp;owned keeps it alive
+// `owned` must outlive the call; if it drops, `as_ptr()` dangles — UB.
+<span class="boring">}</span></code></pre>
+<p><strong>Ownership does not cross FFI automatically.</strong> The <code>Drop</code>-based RAII ownership model of <a href="02-ownership-and-moves.html">chapter 2</a> is a Rust-only fiction; C has no idea your <code>Box</code> should be freed by Rust’s allocator. The boundary rules, all <em>your</em> proof obligation:</p>
+<ul>
+<li>Memory allocated by Rust is freed by Rust (round-trip the pointer back through a Rust <code>extern "C"</code> free function via <code>Box::from_raw</code>); C memory is freed by C. Mixing allocators is UB.</li>
+<li>A pointer handed to C must stay valid as long as C may use it — the <code>CString</code> trap above is the most common dangling-pointer bug in Rust FFI.</li>
+<li><code>Box::into_raw</code> <em>releases</em> ownership across the boundary (leaking it from Rust’s view); <code>Box::from_raw</code> <em>reclaims</em> it. These are the explicit ownership-transfer verbs FFI forces you to write by hand, because the type system stops at the boundary.</li>
+</ul>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>#[repr(C)]</code> is the equivalent of caring about <code>struct</code> layout for a wire protocol or <code>mmap</code>’d header in C. The analogy breaks down on <em>default</em> layout: in C, declaration order <em>is</em> the layout, full stop. In Rust the default is deliberately unspecified so the compiler can pack fields, and you must opt in to the C guarantee. Treat any <code>struct</code> that touches FFI, hardware, or a file format without <code>#[repr(C)]</code> as a bug.</p>
+</blockquote>
+<h2 id="the-aliasing-model-why-mut-is-noalias"><a class="header" href="#the-aliasing-model-why-mut-is-noalias">The aliasing model: why <code>&amp;mut</code> is <code>noalias</code></a></h2>
+<p>This is the part with no C analogue, and the reason Rust’s optimiser can be more aggressive than C’s. Rust guarantees a live <code>&amp;mut T</code> is the <em>unique</em> path to its referent — no other live reference or pointer may read or write that memory while the <code>&amp;mut</code> is usable. rustc tells LLVM this by tagging <code>&amp;mut</code> parameters <code>noalias</code> (and <code>&amp;T</code> <code>readonly</code>), the hint C’s <code>restrict</code> gives but applied <em>automatically and pervasively</em>. The optimiser then keeps values in registers and reorders loads/stores across calls, trusting nothing else can observe or clobber that location.</p>
+<p>The catch for <code>unsafe</code> authors: this guarantee holds for <em>raw-pointer code too</em>. If you create a <code>&amp;mut</code> and a raw pointer to the same place and write through both while the <code>&amp;mut</code> is live, you have violated <code>noalias</code> — UB — even though no <code>&amp;mut</code>/<code>&amp;mut</code> pair ever existed. This is why <code>&amp;raw mut x</code> exists: it takes a pointer without ever forming the conflicting reference.</p>
+<p>The <em>formalisation</em> of “the rules raw pointers must obey to coexist with references” is an active research model. <strong>Stacked Borrows</strong> (Jung et al.) modelled borrows as a per-location stack of permission tags, each access checking and popping the stack; its successor <strong>Tree Borrows</strong> generalises this to a tree to admit more valid patterns. Neither is yet <em>the</em> normative spec — but <strong>Miri implements them</strong>, so they are the de-facto operational semantics your unsafe code is tested against today.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Stacked/Tree Borrows is a small-step <strong>operational semantics</strong> in the exact sense of Semantics of Programming Languages: a state (the per-location borrow stack/tree) and reduction rules that get <em>stuck</em> (UB) on an illegal access. It is the operationalisation of the aliasing discipline that the borrow checker enforces statically — the dynamic semantics whose soundness the static type system is meant to guarantee. <code>&amp;mut</code>-as-<code>noalias</code> is the regions-and-uniqueness story from the lectures, pushed all the way down to the machine.</p>
+</blockquote>
+<h2 id="tooling-how-to-actually-trust-your-unsafe-code"><a class="header" href="#tooling-how-to-actually-trust-your-unsafe-code">Tooling: how to actually trust your unsafe code</a></h2>
+<p>The borrow checker is <em>static</em> and now stopped helping, so you need dynamic tools that run your program and watch for violations:</p>
+<ul>
+<li><strong>Miri</strong> (<code>cargo +nightly miri test</code>) interprets your program against Rust’s abstract machine <em>and</em> the Tree-Borrows model. It catches OOB access, use-after-free, invalid values, unaligned access, data races, and aliasing violations no other tool sees, because it knows about <code>noalias</code>. On <code>slice::from_raw_parts_mut(0x1234 as *mut i32, 10000)</code> it reports a dangling pointer with no provenance.</li>
+<li><strong>AddressSanitizer / ThreadSanitizer</strong> (<code>RUSTFLAGS="-Zsanitizer=address"</code>, nightly) — the ASan/TSan from your C work, instrumenting the real binary. They catch heap/stack overflows and data races <em>in machine code</em>, including across the FFI boundary into C where Miri cannot reach.</li>
+<li><strong><code>cargo-careful</code></strong> runs your tests with extra debug assertions baked into a specially built std.</li>
+</ul>
+<p>The decisive limitation: all three are <em>dynamic</em>. <strong>If Miri flags your code it is a bug; if Miri is silent your code is not proven correct</strong> — only that the tested paths were clean. Coverage of your unsafe paths is a first-class testing concern, exactly as in C.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> The cardinal sin is reaching for <code>unsafe</code> to silence the borrow checker on safe code — e.g. transmuting <code>&amp;T</code> to <code>&amp;mut T</code> to “just mutate it”. This is <em>always</em> UB (it fabricates a second <code>&amp;mut</code>/aliasing <code>&amp;</code>, breaking <code>noalias</code>), even when it appears to work, and the optimiser will eventually miscompile it. The fix is one of: <code>RefCell</code>/<code>Cell</code>/<code>Mutex</code> for interior mutability (<a href="15-smart-pointers.html">smart pointers</a>), a redesign of ownership, or — if you genuinely need raw pointers — <code>&amp;raw mut</code> plus a <em>written-down</em> <code>// SAFETY:</code> proof and a Miri run. If you cannot articulate the proof in the comment, you do not have one.</p>
+</blockquote>
+<h2 id="when-unsafe-is-justified"><a class="header" href="#when-unsafe-is-justified">When <code>unsafe</code> is justified</a></h2>
+<p><code>unsafe</code> is justified, roughly, only when: (1) you are at an FFI/hardware/OS boundary where Rust’s guarantees provably do not apply; (2) you implement a data structure whose soundness the borrow checker cannot see (intrusive lists, arenas, lock-free structures) and wrap it in a sound safe API; or (3) you have a <em>measured</em> performance need that a checked bound demonstrably costs. The deliverable is always the same: a minimal <code>unsafe</code> block, a <code>// SAFETY:</code> comment stating the discharged proof, and Miri/sanitizer coverage. Everything else is cargo-culting; the community norm — encoded in lints like <code>clippy::undocumented_unsafe_blocks</code> — treats an unexplained <code>unsafe</code> as a code smell. The motivation is not pedantry: the entire memory-safety-vulnerability class (CWE-119 buffer overflow, CWE-416 use-after-free) that drives roughly 70% of critical CVEs at Microsoft and Google lives <em>only</em> inside unsafe code in a Rust program. Minimising and auditing <code>unsafe</code> is the security argument for the language.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li><code>unsafe</code> unlocks exactly five superpowers — deref raw pointers, call <code>unsafe fn</code>, <code>unsafe impl</code>, touch <code>static mut</code>, read <code>union</code> fields — and <strong>turns off no other check</strong>. Ownership, borrowing, lifetimes, and types are all still enforced inside <code>unsafe</code>. It is a capability grant, not a mode switch.</li>
+<li>The model is proof-theoretic: <code>unsafe</code> is you discharging a memory-safety obligation the conservative checker handed back. Soundness is <em>not local</em> — one wrong <code>unsafe</code> block falsifies the safety theorem for the whole program, and the optimiser (which trusts <code>&amp;mut</code> is <code>noalias</code>) can miscompile far from the violation.</li>
+<li>The professional pattern is <em>encapsulation</em>: a tiny audited <code>unsafe</code> core behind a <strong>sound</strong> safe API — one no safe caller can drive to UB. That is precisely what <code>Vec</code>, <code>Box</code>, <code>Rc</code>, and <code>split_at_mut</code> are. An unsound “safe” API is a bug even if it never misbehaves in testing.</li>
+<li>Raw pointers (<code>*const T</code>/<code>*mut T</code>) <em>are</em> C pointers — no lifetimes, may alias, may dangle, no destructor; create with <code>&amp;raw const</code>/<code>&amp;raw mut</code>, deref only in <code>unsafe</code>. FFI rides the C ABI via <code>extern "C"</code>, needs <code>#[repr(C)]</code> for shared structs and <code>CString</code>/<code>CStr</code> for strings, and <strong>ownership does not cross the boundary</strong> — you transfer it by hand with <code>into_raw</code>/<code>from_raw</code>.</li>
+<li>The compiler stopped checking, so <em>you</em> must: Miri (aliasing + the abstract machine, dynamic), ASan/TSan (the real binary, across FFI), <code>cargo-careful</code>. Miri flagging means a bug; Miri silent means <em>only</em> “the tested paths were clean”, never “proven sound”.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Write a safe-looking function <code>fn get(v: &amp;[i32], i: usize) -&gt; i32 { unsafe { *v.as_ptr().add(i) } }</code> with no bounds check. Argue why this function is <strong>unsound</strong> by exhibiting one safe caller that triggers UB. Then make it sound <em>without</em> removing the <code>unsafe</code>, and write the <code>// SAFETY:</code> comment that justifies it. (The point: unsoundness is a property of the <em>API</em>, reachable from safe code, not of the <code>unsafe</code> block in isolation.)</p>
+</li>
+<li>
+<p>Take this and run it under <code>cargo +nightly miri run</code>: <code>let r = &amp;mut 0i32; let p = r as *mut i32; *r = 1; unsafe { *p = 2; } println!("{}", *r);</code>. Predict whether Miri complains <em>before</em> running. Explain the verdict in terms of <code>noalias</code> and which of the two writes-through-<code>p</code> (relative to the live <code>&amp;mut r</code>) is the aliasing violation. Then rewrite using <code>&amp;raw mut</code> so it is sound.</p>
+</li>
+<li>
+<p>Build a minimal FFI round-trip: a <code>#[unsafe(no_mangle)] pub extern "C" fn make_buf(n: usize) -&gt; *mut u8</code> that <code>Box::into_raw</code>s a zeroed buffer, and a matching <code>free_buf(*mut u8, usize)</code> that reclaims it with <code>Box::from_raw</code>. Write down, for each function, the exact precondition the C caller must uphold, and explain what goes wrong if C calls <code>free_buf</code> twice or with a mismatched length.</p>
+</li>
+<li>
+<p>Explain, with a concrete field layout, why <code>#[repr(Rust)]</code> (the default) makes <code>struct Header { tag: u8, len: u32 }</code> unsafe to pass to C, and what <code>#[repr(C)]</code> changes. Predict the size and field offsets under each <code>repr</code> and verify with <code>std::mem::{size_of, offset_of}</code>.</p>
+</li>
+<li>
+<p>(★) Implement an <code>unsafe impl Send for MyCell</code> for a type wrapping a <code>*mut T</code>, in two scenarios: one where the impl is <em>sound</em> (state an invariant — e.g. it is only ever accessed behind an external <code>Mutex</code>) and one where it is <em>unsound</em>. For the unsound one, write a two-thread program that exhibits a real data race, and confirm <code>cargo +nightly miri test</code> detects it. Articulate precisely which theorem the auto-derivation refused to prove and which you (wrongly) asserted.</p>
+</li>
+<li>
+<p>(★) The function <code>fn alias(x: &amp;mut i32) -&gt; (&amp;i32, &amp;mut i32)</code> cannot be written in safe Rust — explain why in one sentence using aliasing-XOR-mutability. Now attempt it with raw pointers and <code>transmute</code>/<code>from_raw</code>. Determine whether <em>any</em> implementation can be sound, and if not, prove it: exhibit the UB and name the rule (<code>noalias</code>) it violates. (The lesson: <code>unsafe</code> lets you write <em>unprovable-but-true</em> things, not <em>false</em> things — there is no sound proof here to discharge.)</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="15-smart-pointers.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="17-advanced-traits-and-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="15-smart-pointers.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="17-advanced-traits-and-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

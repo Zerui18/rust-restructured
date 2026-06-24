@@ -1,0 +1,705 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Capstones: a CLI tool &amp; a Multithreaded Web Server - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="21-capstones-a-cli-tool--a-multithreaded-web-server"><a class="header" href="#21-capstones-a-cli-tool--a-multithreaded-web-server">21. Capstones: a CLI tool &amp; a Multithreaded Web Server</a></h1>
+<p>Twenty chapters of theory. Now we cash it in. This chapter is two projects, each engineered to force you to <em>use</em> the machinery — not the happy path, the load-bearing parts. Project A is a command-line utility: a “field cutter” that selects columns from delimited text. It exercises argument parsing, file vs. stdin I/O, the binary/library split, <code>Result</code>-based error handling with <code>?</code>, exit codes, and the stdout/stderr distinction. Project B is an HTTP server built from a raw <code>TcpListener</code> upward, culminating in a thread pool you write yourself out of channels, <code>Arc&lt;Mutex&lt;_&gt;&gt;</code>, and boxed closures — with graceful shutdown via <code>Drop</code>. Together they touch ownership, lifetimes, traits, generics, closures, concurrency, and the standard library, which is the point.</p>
+<p>The designs here are mine, not the standard book’s <code>grep</code> and <code>Hello!</code> server. The mechanics are identical; the framing is for an engineer who already knows what a socket and an <code>argv</code> are.</p>
+<hr>
+<h2 id="project-a--fcut-a-field-cutter"><a class="header" href="#project-a--fcut-a-field-cutter">Project A — <code>fcut</code>, a field cutter</a></h2>
+<p>The spec: read lines of delimited text, print only the requested fields. <code>fcut -d, -f 1,3 data.csv</code> prints columns 1 and 3 of <code>data.csv</code>, comma-separated. With no file argument, read stdin so the tool composes in a pipeline: <code>cat data.csv | fcut -f 2</code>. This is a deliberately small <code>cut(1)</code>, chosen because every interesting decision — parsing, error paths, I/O sources, testing — shows up at a scale you can hold in your head.</p>
+<h3 id="step-0-the-binlib-split-decided-up-front"><a class="header" href="#step-0-the-binlib-split-decided-up-front">Step 0: the bin/lib split, decided up front</a></h3>
+<p>The single most important structural decision in a Rust CLI is the one the standard library cannot make for you: <strong><code>main.rs</code> should be thin and untestable; <code>lib.rs</code> should be fat and tested.</strong> The integration-test harness (see <a href="20-testing-and-tooling.html">chapter 20</a>) compiles your crate as an external dependency and can only reach <code>pub</code> items in the library crate — it cannot call <code>fn main</code>. So anything you want to test must live in <code>lib.rs</code>.</p>
+<p>Concretely, <code>main</code> is allowed exactly four jobs: parse the arguments, build a config, call the library’s <code>run</code>, and turn any returned error into a message-on-stderr-plus-exit-code. Everything else — parsing config from raw args, splitting fields, formatting output — is library logic returning <code>Result</code>, so a test can assert on it directly.</p>
+<pre><code class="language-text">fcut/
+├── Cargo.toml
+├── src/
+│   ├── main.rs      # thin: args → run() → exit code
+│   └── lib.rs       # fat: Config, run(), cut_line(), errors
+└── tests/
+    └── cli.rs       # integration tests over the public API
+</code></pre>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> In C the equivalent is keeping <code>main.c</code> to <code>getopt</code> + <code>exit</code>, and putting logic in a separately-compiled <code>.o</code> you can link into a test driver. In Java you’d extract a <code>static</code> method off <code>Main</code> so JUnit can call it. Rust <em>enforces</em> the discipline through crate visibility rather than leaving it to convention: a <code>tests/</code> file genuinely cannot see private items or <code>main</code>, so the split is load-bearing, not stylistic. Where the analogy breaks: there is no separate “compile the test driver” step — <code>cargo test</code> builds both the lib and each <code>tests/*.rs</code> as its own crate automatically.</p>
+</blockquote>
+<h3 id="step-1-reading-the-arguments"><a class="header" href="#step-1-reading-the-arguments">Step 1: reading the arguments</a></h3>
+<p><code>std::env::args()</code> returns an iterator of <code>String</code>. (<code>args_os()</code> yields <code>OsString</code> and never panics on non-UTF-8 paths; <code>args()</code> panics on invalid Unicode, which is fine for a learning tool, wrong for <code>find</code>-style filename munging.) The zeroth element is the program name, exactly as <code>argv[0]</code> in C — useful for usage messages, otherwise skipped.</p>
+<p>For a tool this size I’ll hand-roll the parser to show the seams, then tell you to never do that again. We parse into a <code>Config</code>, validating as we go and returning <code>Result</code> rather than panicking:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// src/lib.rs
+pub struct Config {
+    pub fields: Vec&lt;usize&gt;, // 1-based column numbers
+    pub delimiter: char,
+    pub path: Option&lt;String&gt;, // None ⇒ read stdin
+}
+
+impl Config {
+    /// Parse already-collected args (excluding argv[0]).
+    pub fn build(args: &amp;[String]) -&gt; Result&lt;Config, String&gt; {
+        let mut fields = None;
+        let mut delimiter = '\t';
+        let mut path = None;
+        let mut it = args.iter();
+
+        while let Some(arg) = it.next() {
+            match arg.as_str() {
+                "-f" =&gt; {
+                    let spec = it.next().ok_or("-f requires an argument")?;
+                    fields = Some(parse_fields(spec)?);
+                }
+                "-d" =&gt; {
+                    let d = it.next().ok_or("-d requires an argument")?;
+                    delimiter = d.chars().next().ok_or("-d needs a character")?;
+                }
+                other if other.starts_with('-') =&gt; {
+                    return Err(format!("unknown flag: {other}"));
+                }
+                other =&gt; path = Some(other.to_string()),
+            }
+        }
+
+        Ok(Config {
+            fields: fields.ok_or("missing required -f")?,
+            delimiter,
+            path,
+        })
+    }
+}
+
+fn parse_fields(spec: &amp;str) -&gt; Result&lt;Vec&lt;usize&gt;, String&gt; {
+    spec.split(',')
+        .map(|s| s.parse::&lt;usize&gt;().map_err(|_| format!("bad field: {s}")))
+        .collect() // Result&lt;Vec&lt;_&gt;, _&gt;: the first Err short-circuits
+}
+<span class="boring">}</span></code></pre>
+<p>Two things worth dwelling on. First, <code>parse_fields</code> collects an iterator of <code>Result&lt;usize, String&gt;</code> directly into a <code>Result&lt;Vec&lt;usize&gt;, String&gt;</code>. This is the <code>collect</code>-into-<code>Result</code> trick from <a href="12-closures-and-iterators.html">chapter 12</a>: <code>FromIterator</code> is implemented so that the first <code>Err</code> short-circuits and becomes the whole result. It is the iterator-level analogue of <code>?</code>. Second, <code>ok_or</code> converts an <code>Option</code> into a <code>Result</code> so the <code>?</code> in <code>build</code>’s callers (and the <code>?</code> here) can propagate a uniform error type.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>Option::ok_or</code> is the bridge between OCaml’s <code>option</code> and <code>('a, 'b) result</code>. In OCaml you’d <code>match ... with None -&gt; Error "..." | Some x -&gt; Ok x</code>; <code>ok_or</code> is exactly that combinator, and <code>ok_or_else</code> takes a closure so you don’t allocate the error string unless the <code>None</code> case fires. The break: Rust’s <code>?</code> then drives the propagation, where OCaml leaves you threading the <code>result</code> by hand or with a <code>let*</code> monadic operator.</p>
+</blockquote>
+<h3 id="step-15-in-production-use-clap"><a class="header" href="#step-15-in-production-use-clap">Step 1.5: in production, use <code>clap</code></a></h3>
+<p>Hand-parsing teaches the shape; it does not scale to <code>--help</code>, abbreviations, subcommands, or value validation. The community default is <strong><code>clap</code></strong> with its derive API. You declare a struct and annotate it; the macro generates the parser, the help text, and the error messages:</p>
+<pre class="playground"><code class="language-rust">use clap::Parser;
+
+#[derive(Parser)]
+#[command(version, about = "select fields from delimited text")]
+struct Cli {
+    /// Comma-separated 1-based field numbers, e.g. 1,3,5
+    #[arg(short = 'f', value_delimiter = ',', required = true)]
+    fields: Vec&lt;usize&gt;,
+
+    /// Field delimiter
+    #[arg(short = 'd', default_value_t = '\t')]
+    delimiter: char,
+
+    /// Input file; reads stdin if omitted
+    path: Option&lt;String&gt;,
+}
+
+fn main() {
+    let cli = Cli::parse(); // exits with a clap-formatted error on bad input
+    // ...
+}</code></pre>
+<p>Add it with <code>cargo add clap --features derive</code>. <code>Cli::parse()</code> reads <code>env::args_os()</code>, validates, and on failure prints a usage message to stderr and exits with code 2 — the conventional “usage error” code. The <code>value_delimiter = ','</code> attribute even reproduces our <code>parse_fields</code> for free. The derive macro is monomorphised, ordinary Rust code emitted at compile time (see <a href="18-macros.html">chapter 18</a>); there is no runtime reflection, unlike Java annotation processors that lean on reflection at startup.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <code>clap</code>’s derive is a textbook Compiler Construction exercise: the <code>#[derive(Parser)]</code> proc-macro consumes the struct’s token stream as input and <em>emits</em> a parser as output — a source-to-source translation running inside <code>rustc</code>. The struct is effectively a grammar; the generated code is the recursive-descent recogniser. You wrote parsers by hand in that course; here the metaprogram writes them for you, type-checked against the very struct that declared the grammar.</p>
+</blockquote>
+<h3 id="step-2-the-io-source--file-or-stdin-uniformly"><a class="header" href="#step-2-the-io-source--file-or-stdin-uniformly">Step 2: the I/O source — file or stdin, uniformly</a></h3>
+<p>We want <code>run</code> to treat “a file” and “standard input” identically. Both are byte streams; the standard-library abstraction for “a thing I can read lines from” is the <code>BufRead</code> trait. The trick is to obtain a <code>Box&lt;dyn BufRead&gt;</code> — a trait object (see <a href="09-trait-objects-and-oop.html">chapter 9</a>) — so the rest of the code is agnostic about which concrete reader it holds:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::error::Error;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader, Write};
+
+pub fn run(config: Config, out: &amp;mut impl Write) -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+    let reader: Box&lt;dyn BufRead&gt; = match &amp;config.path {
+        Some(p) =&gt; Box::new(BufReader::new(File::open(p)?)),
+        None =&gt; Box::new(BufReader::new(io::stdin().lock())),
+    };
+
+    for line in reader.lines() {
+        let line = line?; // io::Error per line (e.g. invalid UTF-8)
+        writeln!(out, "{}", cut_line(&amp;line, &amp;config))?;
+    }
+    Ok(())
+}
+
+/// Pure function: trivially unit-testable.
+pub fn cut_line(line: &amp;str, config: &amp;Config) -&gt; String {
+    let cols: Vec&lt;&amp;str&gt; = line.split(config.delimiter).collect();
+    config
+        .fields
+        .iter()
+        .filter_map(|&amp;f| cols.get(f - 1).copied()) // 1-based → 0-based; skip OOB
+        .collect::&lt;Vec&lt;_&gt;&gt;()
+        .join(&amp;config.delimiter.to_string())
+}
+<span class="boring">}</span></code></pre>
+<p>Note <code>run</code> takes <code>out: &amp;mut impl Write</code> rather than printing directly. That single change makes the <em>entire output path</em> testable: a test passes a <code>Vec&lt;u8&gt;</code> (which implements <code>Write</code>) and inspects the bytes; <code>main</code> passes <code>io::stdout().lock()</code>. This is dependency injection done with a generic bound rather than an interface-typed field — and because <code>impl Write</code> monomorphises, there is zero dispatch cost for the real <code>stdout</code> case.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>Box&lt;dyn BufRead&gt;</code> is a fat pointer: one word to the heap-allocated reader, one word to its vtable. Each <code>reader.lines()</code> call dispatches through that vtable — one indirect call per line. <code>out: &amp;mut impl Write</code>, by contrast, is <em>static</em> dispatch: the compiler emits one monomorphised <code>run</code> per concrete <code>W</code>, and <code>writeln!</code> inlines straight into a direct call. I mixed the two deliberately: the input side genuinely needs runtime polymorphism (the source is decided at runtime), the output side does not.</p>
+</blockquote>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>io::stdin().lock()</code> returns a <code>StdinLock</code> that holds the global stdin mutex for as long as it lives — RAII exactly as in C++. Reading line-by-line without locking re-acquires the lock per call; locking once and reading through the guard is both faster and the borrow that lets <code>BufRead</code> work. The analogy to C’s <code>flockfile</code>/<code>funlockfile</code> is exact, except Rust ties release to scope so you cannot forget <code>funlockfile</code>.</p>
+</blockquote>
+<h3 id="step-3-error-handling-exit-codes-stdout-vs-stderr"><a class="header" href="#step-3-error-handling-exit-codes-stdout-vs-stderr">Step 3: error handling, exit codes, stdout vs stderr</a></h3>
+<p><code>run</code> returns <code>Result&lt;(), Box&lt;dyn Error&gt;&gt;</code>. The <code>Box&lt;dyn Error&gt;</code> (trait-object error, from <a href="11-error-handling.html">chapter 11</a>) lets <code>?</code> absorb <em>any</em> error type that implements <code>std::error::Error</code> — <code>io::Error</code> from <code>File::open</code>, <code>ParseIntError</code>, our own <code>String</code>-via-<code>From</code> — without us declaring a bespoke enum. For a binary, where the only consumer is a human reading stderr, that erasure is the right trade; a library should expose a concrete error type so callers can match on it.</p>
+<p><code>main</code> ties it together. It must do two things the library deliberately does <em>not</em>: choose the process exit code, and route messages to stderr.</p>
+<pre class="playground"><code class="language-rust">// src/main.rs
+use std::io::{self, Write};
+use std::process;
+use fcut::{run, Config};
+
+fn main() {
+    let args: Vec&lt;String&gt; = std::env::args().skip(1).collect();
+
+    let config = Config::build(&amp;args).unwrap_or_else(|err| {
+        eprintln!("fcut: {err}");
+        process::exit(2); // 2 = usage error, by convention
+    });
+
+    let stdout = io::stdout();
+    if let Err(err) = run(config, &amp;mut stdout.lock()) {
+        eprintln!("fcut: {err}");
+        process::exit(1); // 1 = runtime failure
+    }
+}</code></pre>
+<p><code>eprintln!</code> writes to stderr; <code>println!</code>/<code>writeln!(stdout, …)</code> write to stdout. The distinction is not cosmetic — it is the contract that makes <code>fcut -f 2 data.csv &gt; out.txt</code> work: the selected fields land in <code>out.txt</code> while any error message (“No such file”) still reaches your terminal. Mix the two and you silently poison the output file with diagnostics. Test it: run with a missing file and <code>&gt; /dev/null</code>; you should still see the error.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Reaching for <code>process::exit()</code> <em>inside</em> <code>run</code> to bail on an error. It compiles, runs, and is a latent bug: <code>process::exit</code> terminates immediately, skipping every destructor — open files are not flushed, your <code>Drop</code> impls do not run, and integration tests can’t observe the failure because the test process dies too. The fix is structural: errors propagate up via <code>?</code> as <code>Result</code>, and <em>only <code>main</code></em> converts a <code>Result</code> into an exit code. Keep <code>exit</code> out of the library entirely.</p>
+</blockquote>
+<h3 id="step-4-testing--unit-integration-and-doc"><a class="header" href="#step-4-testing--unit-integration-and-doc">Step 4: testing — unit, integration, and doc</a></h3>
+<p>Because the logic lives in <code>lib.rs</code> as pure-ish functions, the tests are cheap. Unit tests sit beside the code with <code>#[cfg(test)]</code>; integration tests in <code>tests/cli.rs</code> drive the public API as an external crate (see <a href="20-testing-and-tooling.html">chapter 20</a>):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// in src/lib.rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cuts_selected_fields_in_order() {
+        let cfg = Config { fields: vec![3, 1], delimiter: ',', path: None };
+        assert_eq!(cut_line("a,b,c", &amp;cfg), "c,a");
+    }
+
+    #[test]
+    fn out_of_range_field_is_skipped_not_panicked() {
+        let cfg = Config { fields: vec![9], delimiter: ',', path: None };
+        assert_eq!(cut_line("a,b", &amp;cfg), ""); // get() + filter_map ⇒ no panic
+    }
+
+    #[test]
+    fn missing_f_is_an_error() {
+        assert!(Config::build(&amp;["data.csv".to_string()]).is_err());
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>The <code>out_of_range</code> test is the one that matters: it pins down that <code>cols.get(f - 1)</code> returns <code>None</code> rather than indexing-and-panicking. Indexing <code>cols[f - 1]</code> would compile and pass the happy-path test, then panic in production on a short line — exactly the failure mode the borrow checker <em>cannot</em> catch, because bounds are a runtime property. Choosing <code>get</code> + <code>filter_map</code> over <code>[]</code> is the safety decision; the test enforces it.</p>
+<p>A <strong>doc test</strong> doubles as documentation and a compiled, executed example — <code>cargo test</code> runs the code in <code>///</code> comments:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Selects fields from a delimited line.
+///
+/// ```
+/// use fcut::{cut_line, Config};
+/// let cfg = Config { fields: vec![2], delimiter: ' ', path: None };
+/// assert_eq!(cut_line("alpha beta gamma", &amp;cfg), "beta");
+/// ```
+pub fn cut_line(line: &amp;str, config: &amp;Config) -&gt; String { /* ... */ }
+<span class="boring">}</span></code></pre>
+<p>If you change the API and forget to update the doc example, <code>cargo test</code> fails. Documentation that lies is now a build error — a property no amount of discipline gives you in C or Java.</p>
+<hr>
+<h2 id="project-b--a-multithreaded-http-server-from-tcplistener"><a class="header" href="#project-b--a-multithreaded-http-server-from-tcplistener">Project B — a multithreaded HTTP server from <code>TcpListener</code></a></h2>
+<p>Now we go down a layer. We will speak HTTP over raw TCP using only <code>std::net</code>, then make it concurrent with a thread pool we build ourselves. The pedagogical payoff is the pool: it is where ownership, <code>Send</code>/<code>Sync</code>, <code>Arc</code>, <code>Mutex</code>, channels, closures, and trait objects all have to cooperate, and the borrow checker forces a correct design.</p>
+<h3 id="step-1-accept-a-connection"><a class="header" href="#step-1-accept-a-connection">Step 1: accept a connection</a></h3>
+<p>TCP and HTTP are both request/response protocols; TCP carries opaque bytes, HTTP defines what those bytes mean. <code>std::net::TcpListener::bind</code> returns a <code>Result</code> (binding fails if the port is taken), and <code>incoming()</code> yields a stream of <code>Result&lt;TcpStream&gt;</code> — one per <em>connection attempt</em>, which is why each can independently fail (the OS connection table can be full).</p>
+<pre class="playground"><code class="language-rust">use std::net::{TcpListener, TcpStream};
+
+fn main() {
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+        handle(stream);
+    }
+}</code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is the Berkeley sockets model from Computer Networking, named in Rust types: <code>bind</code> is <code>bind(2)</code>, <code>incoming()</code> wraps <code>accept(2)</code>, and a <code>TcpStream</code> is a connected socket file descriptor. The difference from the C you wrote is that the descriptor is <em>owned</em>: when <code>stream</code> is dropped at the end of the loop body, Rust calls <code>close(2)</code> for you — no leaked descriptors, no double-close. The RAII discipline from Programming in C/C++ applied to kernel resources.</p>
+</blockquote>
+<h3 id="step-2-parse-a-request-route-respond"><a class="header" href="#step-2-parse-a-request-route-respond">Step 2: parse a request, route, respond</a></h3>
+<p>An HTTP request begins with a request line: <code>GET /path HTTP/1.1\r\n</code>, followed by headers and a blank line. For a minimal server we read just the first line, route on it, and write back a status line, a <code>Content-Length</code> header, a blank line, and a body. <code>TcpStream</code> implements <code>Read</code> and <code>Write</code>; wrapping it in a <code>BufReader</code> gives us <code>.lines()</code>.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::fs;
+use std::io::{BufRead, BufReader, Write};
+use std::net::TcpStream;
+use std::thread;
+use std::time::Duration;
+
+fn handle(mut stream: TcpStream) {
+    let buf = BufReader::new(&amp;stream);
+    let request_line = buf.lines().next().unwrap().unwrap();
+
+    let (status, body) = match request_line.as_str() {
+        "GET / HTTP/1.1" =&gt; ("200 OK", "&lt;h1&gt;up&lt;/h1&gt;".to_string()),
+        "GET /slow HTTP/1.1" =&gt; {
+            thread::sleep(Duration::from_secs(5)); // simulate a slow handler
+            ("200 OK", "&lt;h1&gt;eventually&lt;/h1&gt;".to_string())
+        }
+        _ =&gt; ("404 NOT FOUND", fs::read_to_string("404.html").unwrap()),
+    };
+
+    let response = format!(
+        "HTTP/1.1 {status}\r\nContent-Length: {}\r\n\r\n{body}",
+        body.len()
+    );
+    stream.write_all(response.as_bytes()).unwrap();
+}
+<span class="boring">}</span></code></pre>
+<p>We <code>match</code> on <code>request_line.as_str()</code> because <code>match</code> does no auto-deref coercion the way <code>==</code> does; matching a <code>String</code> against <code>&amp;str</code> literals requires the explicit slice. Run it, hit <code>http://127.0.0.1:7878/</code> and <code>/slow</code> in two tabs, and you will watch the defect: the <code>/slow</code> request blocks the <em>entire</em> server for five seconds because the loop is serial. One slow client starves everyone. That is the problem the pool solves.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> <code>buf.lines().next().unwrap().unwrap()</code> panics on a client that connects and sends nothing (the first <code>unwrap</code> hits <code>None</code>), or on a malformed line. A real server returns 400; here it crashes the worker thread. This is fine for a teaching server and a landmine in production — the lesson is that <em>every</em> <code>unwrap</code> on network input is a remote-triggerable panic. Production code propagates with <code>?</code> and a <code>Result</code>-returning <code>handle</code>.</p>
+</blockquote>
+<h3 id="step-3-the-wrong-fix-then-the-right-interface"><a class="header" href="#step-3-the-wrong-fix-then-the-right-interface">Step 3: the wrong fix, then the right interface</a></h3>
+<p>The naive fix is <code>thread::spawn(move || handle(stream))</code> per connection. It works and <code>/slow</code> no longer blocks <code>/</code> — but it is a denial-of-service vector: ten million connections spawn ten million threads and exhaust the OS. We want a <em>bounded</em> number of worker threads pulling jobs from a queue. The target interface mirrors <code>thread::spawn</code> so call sites barely change:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let pool = ThreadPool::new(4);
+for stream in listener.incoming() {
+    let stream = stream.unwrap();
+    pool.execute(move || handle(stream));
+}
+<span class="boring">}</span></code></pre>
+<p>Now we design <code>ThreadPool</code> so that this compiles. We will let the compiler’s error messages drive the design — “compiler-driven development,” the dual of the test-driven approach in Project A.</p>
+<h3 id="step-4-what-execute-must-accept"><a class="header" href="#step-4-what-execute-must-accept">Step 4: what <code>execute</code> must accept</a></h3>
+<p><code>execute</code> takes a closure and ships it to a worker. Three questions, all answered by the type system:</p>
+<ul>
+<li><strong>Which <code>Fn</code> trait?</strong> Each job runs exactly once, so <code>FnOnce()</code> — matching the <code>Once</code> in the name (closures and the <code>Fn</code>/<code>FnMut</code>/<code>FnOnce</code> hierarchy: <a href="12-closures-and-iterators.html">chapter 12</a>).</li>
+<li><strong><code>Send</code>?</strong> Yes — the closure is created on the main thread and <em>moves</em> to a worker thread, so its captured state must be safe to transfer across threads (<a href="13-fearless-concurrency.html">chapter 13</a>).</li>
+<li><strong><code>'static</code>?</strong> Yes — the worker may outlive the stack frame that created the closure, so the closure may not borrow locals; it must own everything it captures.</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn execute&lt;F&gt;(&amp;self, f: F)
+where
+    F: FnOnce() + Send + 'static,
+{ /* ... */ }
+<span class="boring">}</span></code></pre>
+<p>To <em>store</em> such closures in a queue we need a uniform type. Closures each have a unique anonymous type, so we erase them behind a boxed trait object. The job type is:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>type Job = Box&lt;dyn FnOnce() + Send + 'static&gt;;
+<span class="boring">}</span></code></pre>
+<p><code>Box&lt;dyn FnOnce()&gt;</code> is a heap-allocated, type-erased callable — a fat pointer (data + vtable) just like <code>Box&lt;dyn BufRead&gt;</code> in Project A. This is the moment closures and trait objects unify: a closure that captures <code>stream</code> becomes an anonymous struct holding <code>stream</code>, boxed and dispatched dynamically.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Each closure compiles to an anonymous struct whose fields are its captures; the <code>FnOnce::call_once</code> impl is the body. <code>Box::new(f)</code> heap-allocates that struct; the <code>dyn FnOnce()</code> coercion attaches its vtable. Calling <code>job()</code> is one indirect call through the vtable. Historically <code>Box&lt;dyn FnOnce()&gt;</code> was hard to <em>call</em> — invoking <code>FnOnce</code> consumes <code>self</code> by value, but a <code>Box&lt;dyn …&gt;</code> has no statically known size to move. Modern Rust special-cases calling a boxed <code>FnOnce</code>, so <code>job()</code> just works. This is the runtime price of a thread pool: one allocation and one indirect call per job.</p>
+</blockquote>
+<h3 id="step-5-the-queue--a-channel-behind-arcmutexreceiver"><a class="header" href="#step-5-the-queue--a-channel-behind-arcmutexreceiver">Step 5: the queue — a channel behind <code>Arc&lt;Mutex&lt;Receiver&gt;&gt;</code></a></h3>
+<p>The pool owns a channel’s <code>Sender</code>; <code>execute</code> sends a <code>Job</code> down it. Each worker needs the <code>Receiver</code> to pull jobs. But <code>mpsc</code> is <strong>m</strong>ultiple-<strong>p</strong>roducer, <strong>s</strong>ingle-<strong>c</strong>onsumer: the <code>Receiver</code> is <em>not</em> <code>Clone</code>, and we have <em>N</em> consumers. So we share one <code>Receiver</code> across all workers — shared ownership across threads is <code>Arc</code>, and shared <em>mutable</em> access (each <code>recv</code> mutates the receiver’s state) needs a <code>Mutex</code>. Hence the canonical <code>Arc&lt;Mutex&lt;Receiver&lt;Job&gt;&gt;&gt;</code> (smart pointers and interior mutability: <a href="15-smart-pointers.html">chapter 15</a>).</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::sync::{mpsc, Arc, Mutex};
+use std::thread;
+
+pub struct ThreadPool {
+    workers: Vec&lt;Worker&gt;,
+    sender: Option&lt;mpsc::Sender&lt;Job&gt;&gt;, // Option so Drop can take() it
+}
+
+impl ThreadPool {
+    /// Create a pool with `size` worker threads.
+    ///
+    /// # Panics
+    /// Panics if `size == 0`.
+    pub fn new(size: usize) -&gt; ThreadPool {
+        assert!(size &gt; 0);
+        let (sender, receiver) = mpsc::channel();
+        let receiver = Arc::new(Mutex::new(receiver));
+
+        let mut workers = Vec::with_capacity(size);
+        for id in 0..size {
+            workers.push(Worker::new(id, Arc::clone(&amp;receiver)));
+        }
+        ThreadPool { workers, sender: Some(sender) }
+    }
+
+    pub fn execute&lt;F&gt;(&amp;self, f: F)
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let job = Box::new(f);
+        self.sender.as_ref().unwrap().send(job).unwrap();
+    }
+}
+
+struct Worker {
+    id: usize,
+    thread: Option&lt;thread::JoinHandle&lt;()&gt;&gt;, // Option so Drop can take() it
+}
+
+impl Worker {
+    fn new(id: usize, receiver: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Job&gt;&gt;&gt;) -&gt; Worker {
+        let thread = thread::spawn(move || loop {
+            // Lock, recv, UNLOCK, then run — order is critical.
+            let message = receiver.lock().unwrap().recv();
+            match message {
+                Ok(job) =&gt; {
+                    println!("worker {id}: running a job");
+                    job();
+                }
+                Err(_) =&gt; {
+                    println!("worker {id}: channel closed, exiting");
+                    break;
+                }
+            }
+        });
+        Worker { id, thread: Some(thread) }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>The single subtlest line in the whole project is <code>let message = receiver.lock().unwrap().recv();</code>. The temporary <code>MutexGuard</code> returned by <code>lock()</code> lives only for this statement: we acquire the lock, <code>recv</code> one job, and the guard drops at the semicolon — <em>before</em> <code>job()</code> runs. That ordering is what makes the pool concurrent. If you instead wrote</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// WRONG — serialises everything:
+while let Ok(job) = receiver.lock().unwrap().recv() {
+    job();
+}
+<span class="boring">}</span></code></pre>
+<p>the guard’s lifetime extends across the entire <code>while let</code> body (a <code>while let</code> holds its scrutinee’s temporaries for the loop body), so a worker holds the mutex <em>while executing the job</em>, and the pool degrades to one-at-a-time — the very serialisation we set out to kill. The borrow checker won’t flag this; it is a correctness bug hiding in a lifetime rule. The <code>match</code>/<code>break</code> form drops the guard at the <code>;</code>, then runs the job unlocked.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is precisely the CSP/message-passing model from Concurrent &amp; Distributed Systems realised with ownership. The channel <code>send</code> <em>moves</em> the <code>Job</code> from main to worker — there is no shared mutable job, so no data race on it; ownership transfer is the synchronisation. The <code>Arc&lt;Mutex&lt;Receiver&gt;&gt;</code> is the one genuinely shared resource, and the <code>Mutex</code> serialises access to <em>dequeueing</em> (which must be atomic) while leaving job <em>execution</em> parallel. Holding the lock only across <code>recv</code> is the textbook “minimise the critical section” rule, here enforced by where you put a semicolon.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>Arc&lt;T&gt;</code> is a pointer to a heap allocation carrying <code>T</code> plus two atomic counters (strong/weak). <code>Arc::clone</code> is an atomic increment, not a deep copy — all four workers point at the <em>same</em> <code>Mutex&lt;Receiver&gt;</code>. <code>Rc</code> would be faster (non-atomic refcount) but is <code>!Send</code>, so it cannot cross the <code>thread::spawn</code> boundary; the compiler rejects it. That <code>!Send</code>-ness is the type system encoding “this refcount is not safe to touch from two threads,” the data-race-freedom proof from <a href="13-fearless-concurrency.html">chapter 13</a> discharged structurally.</p>
+</blockquote>
+<h3 id="step-6-graceful-shutdown-via-drop"><a class="header" href="#step-6-graceful-shutdown-via-drop">Step 6: graceful shutdown via <code>Drop</code></a></h3>
+<p><code>Ctrl-C</code> kills threads mid-request. We want shutdown to (a) stop accepting jobs and (b) let in-flight jobs finish. The mechanism is RAII: implement <code>Drop</code> on <code>ThreadPool</code> to join every worker. Two obstacles, both instructive.</p>
+<p>First, joining consumes the <code>JoinHandle</code> (<code>join(self)</code> takes ownership), but in <code>drop(&amp;mut self)</code> we only have a <em>mutable borrow</em> of each worker — you cannot move a field out of a borrow (error E0507). That is why <code>Worker::thread</code> is <code>Option&lt;JoinHandle&lt;()&gt;&gt;</code>: <code>Option::take</code> swaps in <code>None</code> and hands us the owned handle, the standard move-out-of-<code>&amp;mut</code> idiom.</p>
+<p>Second, the workers <code>loop</code> forever on <code>recv</code>, so <code>join</code> would block eternally. We must <em>close the channel</em> to make <code>recv</code> return <code>Err</code> and break each loop. The <code>Sender</code> is also wrapped in <code>Option</code> so we can <code>take</code> and drop it first:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl Drop for ThreadPool {
+    fn drop(&amp;mut self) {
+        // 1. Close the channel: drop the only Sender.
+        drop(self.sender.take());
+        //    Every worker's blocked recv() now returns Err ⇒ its loop breaks.
+
+        // 2. Join each worker so in-flight jobs finish.
+        for worker in &amp;mut self.workers {
+            println!("joining worker {}", worker.id);
+            if let Some(thread) = worker.thread.take() {
+                thread.join().unwrap();
+            }
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>Order is everything: dropping the <code>Sender</code> <em>before</em> joining is what unblocks the workers; reverse it and <code>drop</code> deadlocks. Now <code>main</code> can shut down deterministically — e.g. serve a fixed number of requests for a demo:</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let pool = ThreadPool::new(4);
+    for stream in listener.incoming().take(4) { // demo: stop after 4
+        pool.execute(move || handle(stream.unwrap()));
+    }
+    println!("shutting down");
+    // pool drops here → Drop runs → channel closes → workers join
+}</code></pre>
+<p>When <code>pool</code> leaves scope, <code>Drop</code> runs: the channel closes, each worker’s <code>recv</code> returns <code>Err</code>, the loops break, the threads finish their current job and exit, and <code>join</code> collects them — clean shutdown, every destructor honoured.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is C++ RAII with the missing half supplied: in C++ you <em>also</em> write a destructor that joins, but nothing stops you from forgetting it or moving the object and double-joining. Rust guarantees <code>drop</code> runs exactly once at scope exit (unless you <code>std::mem::forget</code> or <code>process::exit</code>), and the move checker prevents using a moved-from pool. The <code>Option</code>-<code>take</code> dance is the price for <code>Drop</code>’s <code>&amp;mut self</code> not permitting field moves — a wrinkle C++ avoids because its destructor can freely move members, but at the cost of the use-after-move guarantees Rust keeps.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> A subtle double-panic hazard: <code>thread.join().unwrap()</code> inside <code>drop</code> panics if a worker panicked. Since <code>drop</code> itself can run <em>during</em> unwinding from another panic, a panic here causes a double-panic, which aborts the process immediately and skips remaining cleanup. Fine for a demo; production code logs the join error instead of unwrapping. The general rule: destructors should not panic.</p>
+</blockquote>
+<hr>
+<h2 id="where-to-go-next-the-ecosystem"><a class="header" href="#where-to-go-next-the-ecosystem">Where to go next: the ecosystem</a></h2>
+<p>Everything in Project B is real and works, and you should not ship it. The point was to see the gears; production Rust stands on crates that have already solved these problems at industrial quality.</p>
+<ul>
+<li><strong><code>serde</code></strong> — the (de)serialisation framework. <code>#[derive(Serialize, Deserialize)]</code> turns a struct into JSON, TOML, MessagePack, and more, all monomorphised at compile time with no reflection. If <code>fcut</code> grew a config file or the server spoke JSON, <code>serde</code> is the answer.</li>
+<li><strong><code>tokio</code></strong> — the dominant async runtime (<a href="14-async.html">chapter 14</a>). Where our pool maps one OS thread per concurrent job, <code>tokio</code> multiplexes thousands of <code>async</code> tasks onto a small thread pool via an epoll/kqueue event loop. Crucially, the <em>concurrency model</em> — jobs handed to workers — is the same; tasks are just cheaper than threads, so you scale to tens of thousands of connections instead of dozens.</li>
+<li><strong><code>axum</code> / <code>actix-web</code></strong> — production HTTP frameworks atop <code>tokio</code>. Routing, extractors, middleware, typed request/response bodies, TLS. Our entire Step 2 collapses to a router and a handler function; you never touch a raw <code>TcpStream</code>.</li>
+<li><strong><code>rayon</code></strong> — data parallelism. <code>iter()</code> becomes <code>par_iter()</code> and your <code>map</code>/<code>filter</code>/<code>sum</code> pipeline runs across a work-stealing thread pool, kept data-race-free by the same <code>Send</code>/<code>Sync</code> bounds. It is the thread pool of Project B, productionised and made invisible.</li>
+</ul>
+<p>And the honest note the standard book makes too: <strong>the async version is how you would write Project B in production.</strong> Our thread-per-job pool is a clear teaching model, but a server holding ten thousand connections wants ten thousand cheap tasks, not ten thousand OS threads. The async building blocks — futures, <code>await</code>, the runtime — are <a href="14-async.html">chapter 14</a>; now that you have built the synchronous pool by hand, you can see exactly which problem <code>tokio</code> is solving and why it is shaped the way it is. Many async runtimes, <code>tokio</code> included, <em>are</em> thread pools under the hood — you have built a small, honest version of the thing they generalise.</p>
+<hr>
+<h2 id="a-send-off"><a class="header" href="#a-send-off">A send-off</a></h2>
+<p>Twenty-two chapters ago the thesis was that Rust buys memory safety and data-race freedom <em>at compile time, with no garbage collector and no runtime check on the hot path</em>, by making ownership a typing discipline. Everything since has been that thesis cashed out: borrowing is aliasing-XOR-mutability; lifetimes are regions; <code>Send</code>/<code>Sync</code> are the data-race proof; <code>Drop</code> is RAII the compiler runs for you; traits are bounded polymorphism that monomorphises; <code>?</code> and <code>Result</code> are error handling without exceptions. The two projects here did not introduce one genuinely new idea — they <em>composed</em> old ones, and that composition is where Rust either rewards you or fights you. When it fights you, the error message is almost always pointing at a real bug you would have shipped in C.</p>
+<p>You now know enough to read the standard library’s source, contribute to a crate, and — most importantly — to argue with the borrow checker and usually concede it was right. Go build something that would have been a segfault in another language. That is the whole point.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li><strong>Bin/lib split is structural, not stylistic.</strong> <code>main.rs</code> parses args, calls <code>run</code>, and maps <code>Result</code>→exit-code; everything testable lives in <code>lib.rs</code> because the integration harness can only reach <code>pub</code> library items and never <code>main</code>. Inject the output sink as <code>&amp;mut impl Write</code> so the output path is testable too.</li>
+<li><strong><code>process::exit</code> and panics skip destructors.</strong> Keep <code>exit</code> in <code>main</code> only; propagate with <code>?</code> everywhere else. Route diagnostics to stderr and data to stdout so redirection works — that distinction is a contract, not decoration.</li>
+<li><strong>A thread pool unifies half the book:</strong> jobs are <code>Box&lt;dyn FnOnce() + Send + 'static&gt;</code> (closures-as-trait-objects), shipped over an <code>mpsc</code> channel (ownership-transfer message passing), pulled by workers sharing one <code>Arc&lt;Mutex&lt;Receiver&gt;&gt;</code> (thread-safe shared ownership + synchronised dequeue). <code>Rc</code> fails here precisely because it is <code>!Send</code>.</li>
+<li><strong>Lock scope is concurrency.</strong> Hold the <code>MutexGuard</code> only across <code>recv</code> (end the statement with <code>;</code>), never across <code>job()</code>. A <code>while let receiver.lock()…</code> accidentally extends the guard over the loop body and serialises the pool — a correctness bug the borrow checker cannot catch.</li>
+<li><strong>Graceful shutdown is <code>Drop</code> + closing the channel.</strong> <code>Option::take</code> moves the <code>JoinHandle</code>/<code>Sender</code> out of <code>&amp;mut self</code>; drop the <code>Sender</code> <em>first</em> to make <code>recv</code> return <code>Err</code> and break the worker loops, <em>then</em> <code>join</code>. Reverse the order and <code>drop</code> deadlocks.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>In <code>fcut</code>, change <code>cols.get(f - 1)</code> to <code>cols[f - 1]</code> and run the out-of-range test. Read the panic. Now reason about <em>why</em> no borrow-checker error appeared — what category of property is “index in bounds,” and which of Rust’s guarantees explicitly does <em>not</em> cover it? Restore the <code>get</code> version and add a test for <code>-f 0</code> (1-based field zero), which currently underflows <code>usize</code>; decide whether that should be a parse error in <code>Config::build</code> and implement it.</p>
+</li>
+<li>
+<p>Make <code>fcut</code>’s <code>run</code> print to stdout via <code>eprintln!</code> by mistake, then run <code>fcut -f 1 data.csv &gt; out.txt</code>. Inspect <code>out.txt</code> and your terminal. Explain in one sentence what broke and why the stdout/stderr split is load-bearing for composability.</p>
+</li>
+<li>
+<p>(★) Replace <code>fcut</code>’s hand-rolled parser with <code>clap</code>’s derive API (<code>cargo add clap --features derive</code>). Then deliberately break it: pass <code>-f abc</code>. Compare <code>clap</code>’s error/exit-code to your hand-rolled version’s. Now make a field a validated <code>u16</code> port-style argument with a custom <code>value_parser</code> and trigger its error. What did you get for free, and what is the compile-time cost (hint: look at build time before/after)?</p>
+</li>
+<li>
+<p>In Project B’s <code>Worker::new</code>, replace the <code>match</code>/<code>break</code> body with <code>while let Ok(job) = receiver.lock().unwrap().recv() { job(); }</code>. Add a <code>thread::sleep(Duration::from_secs(3))</code> inside <code>handle</code> and fire four <code>/</code> requests at a 4-worker pool simultaneously. Time them. They serialise — explain precisely which temporary’s lifetime causes it and why moving the <code>;</code> fixes it.</p>
+</li>
+<li>
+<p>(★) Try to share the <code>mpsc::Receiver</code> across workers using <code>Rc&lt;RefCell&lt;Receiver&gt;&gt;</code> instead of <code>Arc&lt;Mutex&lt;Receiver&gt;&gt;</code>. Predict the exact trait that fails to be satisfied (<code>Send</code>? <code>Sync</code>?) before compiling, then verify against the error. Explain at the field level why <code>Arc</code> is <code>Send</code>/<code>Sync</code> (given a <code>Send + Sync</code> payload) but <code>Rc</code> is neither — tie it to the atomic vs non-atomic refcount.</p>
+</li>
+<li>
+<p>Remove the <code>Option</code> from <code>Worker::thread</code> and try to <code>join</code> in <code>Drop</code> directly: <code>worker.thread.join()</code>. Read error E0507 (“cannot move out of … behind a mutable reference”). Explain why <code>Drop::drop</code> takes <code>&amp;mut self</code> rather than <code>self</code>, and why that forces either <code>Option::take</code> or <code>Vec::drain(..)</code> to extract owned values. Then break shutdown the other way: in <code>Drop</code>, <code>join</code> the workers <em>before</em> dropping the <code>Sender</code>. Observe the deadlock and explain it in terms of which <code>recv</code> never returns.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="20-testing-and-tooling.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="appendix-mapping.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="20-testing-and-tooling.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="appendix-mapping.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

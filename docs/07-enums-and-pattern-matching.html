@@ -1,0 +1,582 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Enums &amp; Pattern Matching - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="7-enums--pattern-matching"><a class="header" href="#7-enums--pattern-matching">7. Enums &amp; Pattern Matching</a></h1>
+<p>You already know this construct under another name. In OCaml you wrote <code>type shape = Circle of float | Rect of float * float</code>; in Foundations you destructured it with <code>match</code>. Rust’s <code>enum</code> <em>is</em> the OCaml variant — a <strong>sum type</strong>, a tagged union — wearing C-family syntax. So the conceptual delta in this chapter is small but the engineering payoff is enormous: Rust takes the OCaml sum type, gives it a guaranteed memory layout, makes its constructors first-class functions, fuses it with the ownership system from <a href="02-ownership-and-moves.html">ownership</a>, and then uses <em>exhaustiveness checking</em> — a totality argument straight out of your Semantics course — to statically eliminate two of the most expensive bug classes in the C/Java world: the null dereference and the unhandled case.</p>
+<p>If <a href="06-structs-and-methods.html">structs</a> are Rust’s product types (a value of <code>Point</code> is an <code>x</code> <strong>and</strong> a <code>y</code>), enums are its sum types (a value of <code>Shape</code> is a <code>Circle</code> <strong>or</strong> a <code>Rect</code>). Everything else in this chapter follows from taking that “or” seriously.</p>
+<h2 id="enums-are-sum-types-with-a-runtime-tag"><a class="header" href="#enums-are-sum-types-with-a-runtime-tag">Enums are sum types with a runtime tag</a></h2>
+<p>Here is the definition that anchors the whole chapter:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>enum Shape {
+    Dot,                       // unit-like: no payload
+    Circle(f64),               // tuple-like: one anonymous field
+    Rect { w: f64, h: f64 },   // struct-like: named fields
+}
+<span class="boring">}</span></code></pre>
+<p>Three styles of variant, mirroring the three struct flavours from <a href="06-structs-and-methods.html">structs</a>: a <em>unit-like</em> variant carries no data, a <em>tuple-like</em> variant carries positional fields, and a <em>struct-like</em> variant carries named fields. Crucially, different variants of the <strong>same</strong> enum may carry <strong>different</strong> payloads. That is the property a struct cannot give you: a struct with a <code>kind</code> tag plus an optional payload field would have to allocate room for every possible payload at once and trust you to keep <code>kind</code> consistent with the payload. The enum makes the tag and the payload inseparable — the type system guarantees you can never read the <code>Rect</code> fields out of a value that is actually a <code>Circle</code>.</p>
+<p>Construct values by naming the variant under the enum’s namespace:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let a = Shape::Dot;
+let b = Shape::Circle(2.0);
+let c = Shape::Rect { w: 3.0, h: 4.0 };
+<span class="boring">}</span></code></pre>
+<p>A subtle, useful fact: the tuple-like constructor <code>Shape::Circle</code> is <em>itself a function</em> of type <code>fn(f64) -&gt; Shape</code>. You can pass it to a higher-order function exactly as you would in OCaml:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let radii = [1.0, 2.0, 3.0];
+let circles: Vec&lt;Shape&gt; = radii.into_iter().map(Shape::Circle).collect();
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is OCaml’s <code>type</code> with <code>|</code> variants, almost beat for beat — and the <code>Shape::Circle</code>-as-function trick is exactly OCaml treating a constructor as a function in <code>List.map Circle xs</code>. The analogy breaks down against C and Java. A C <code>enum</code> is just a named integer; it carries no payload and offers no type safety. The faithful C analogue is a <code>struct { enum tag; union { ... }; }</code> discriminated union — but C will not stop you reading the wrong union arm, which is exactly the unsoundness Rust closes. Java has no sum types until sealed interfaces (Java 17+); before that you reached for the visitor pattern or a class hierarchy, both of which scatter one logical type across many files.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> An enum is laid out as a <em>discriminant</em> (the tag, an integer wide enough to count the variants) followed by enough space for the largest variant’s payload. <code>Shape</code> above is roughly <code>{ tag: u8, payload: [the bigger of f64 and (f64,f64)] }</code>, so <code>size_of::&lt;Shape&gt;()</code> is dominated by the <code>Rect</code> arm plus tag and alignment padding — every <code>Shape</code>, even a <code>Dot</code>, occupies that worst-case size. This is the same trade-off as a C tagged union, except rustc both computes the layout and inserts the tag checks the C programmer had to write by hand. The exact discriminant type and ordering are unspecified unless you pin them with <code>#[repr(...)]</code> (see <a href="16-unsafe-and-ffi.html">unsafe and FFI</a>).</p>
+</blockquote>
+<h2 id="optiont-the-null-pointer-made-honest"><a class="header" href="#optiont-the-null-pointer-made-honest"><code>Option&lt;T&gt;</code>: the null pointer, made honest</a></h2>
+<p>Now the single most important enum in the language. It is defined in the standard library as nothing more exotic than:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>enum Option&lt;T&gt; {
+    None,
+    Some(T),
+}
+<span class="boring">}</span></code></pre>
+<p>A generic sum type (we cover generics properly in <a href="08-generics-and-traits.html">generics and traits</a>; read <code>&lt;T&gt;</code> here the way you read OCaml’s <code>'a option</code>). <code>Option&lt;T&gt;</code> is so fundamental it is in the prelude — you write <code>Some</code>/<code>None</code> without qualification — and it is Rust’s answer to what Tony Hoare called his “billion-dollar mistake”: the null reference.</p>
+<p>In C, every <code>T*</code> is implicitly nullable, and the compiler does nothing to make you check. In Java every reference is implicitly nullable, and the NPE is a <em>runtime</em> event. Rust’s move is to make absence a <em>value of a distinct type</em>: a <code>String</code> is always a real string, and “maybe a string” is a different type, <code>Option&lt;String&gt;</code>, with a different shape. You cannot accidentally use an <code>Option&lt;String&gt;</code> where a <code>String</code> is wanted — the types don’t unify — so the compiler forces you to handle the <code>None</code> case <em>before</em> you can touch the inner value. The billion-dollar mistake becomes a compile error.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn first_word(s: &amp;str) -&gt; Option&lt;&amp;str&gt; {
+    s.split_whitespace().next()   // None if the string is all whitespace
+}
+
+// You cannot do `first_word(s).len()` — Option&lt;&amp;str&gt; has no `.len()`.
+// You must first establish that there *is* a word:
+match first_word("  hello world") {
+    Some(w) =&gt; println!("first word: {w}"),
+    None    =&gt; println!("(empty)"),
+}
+<span class="boring">}</span></code></pre>
+<p><code>Result&lt;T, E&gt;</code> is the same idea applied to fallible operations: <code>enum Result&lt;T, E&gt; { Ok(T), Err(E) }</code>. We mention it here only so the shape is familiar; the full treatment, including the <code>?</code> operator, lives in <a href="11-error-handling.html">error handling</a>.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> In Semantics, a type system is <em>sound</em> when “well-typed programs do not go wrong” — the progress-and-preservation argument. <code>Option&lt;T&gt;</code> is exactly how Rust extends that guarantee to cover absence. “Dereferencing null” is a way for a program to go wrong; by reifying absence into the type, Rust pushes that failure mode out of the set of well-typed programs entirely. Java’s <code>null</code> is the classic counterexample where the type system <em>fails</em> to be sound in this respect: <code>String s</code> claims to be a string but may be <code>null</code>, and the unsoundness is only caught dynamically.</p>
+</blockquote>
+<h2 id="match-an-expression-and-a-totality-check"><a class="header" href="#match-an-expression-and-a-totality-check"><code>match</code>: an expression, and a totality check</a></h2>
+<p><code>match</code> compares a <em>scrutinee</em> against a sequence of <em>arms</em>, each arm being a pattern, an optional guard, and an expression. The first arm whose pattern matches wins, and its expression becomes the value of the whole <code>match</code>.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn area(s: &amp;Shape) -&gt; f64 {
+    match s {
+        Shape::Dot            =&gt; 0.0,
+        Shape::Circle(r)      =&gt; std::f64::consts::PI * r * r,
+        Shape::Rect { w, h }  =&gt; w * h,
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>Three things to internalise immediately, because they distinguish <code>match</code> from C’s <code>switch</code>:</p>
+<ol>
+<li>
+<p><strong>It is an expression, not a statement.</strong> <code>area</code> has no <code>return</code>; the <code>match</code> <em>is</em> the function body. This is the OCaml/expression-oriented model from Foundations, not the C statement model. Every arm must produce a value of the same type.</p>
+</li>
+<li>
+<p><strong>No fall-through.</strong> Unlike C’s <code>switch</code>, arms do not fall through to the next; there is no <code>break</code>. Each arm is self-contained.</p>
+</li>
+<li>
+<p><strong>It is exhaustive — and that is checked at compile time.</strong> You must handle every possible value of the scrutinee. Omit the <code>Dot</code> arm and the program does not compile:</p>
+</li>
+</ol>
+<pre><code class="language-text">error[E0004]: non-exhaustive patterns: `&amp;Shape::Dot` not covered
+</code></pre>
+<p>This exhaustiveness check is the single most valuable property of <code>match</code>. It is a <strong>totality</strong> argument: the compiler proves your function is defined on every inhabitant of the input type. When you later add a <code>Triangle</code> variant to <code>Shape</code>, every <code>match</code> that has not been updated becomes a compile error pointing you at exactly the code that needs attention. In a Java <code>switch</code> or a chain of <code>instanceof</code>, that same change fails silently and you discover the gap in production.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is precisely OCaml’s “this pattern-matching is not exhaustive” warning from Foundations, promoted from a warning to a hard error. Formally it is a coverage/totality check over the inhabitants of an algebraic data type — the compiler verifies that the patterns partition the value space. Tie it to Semantics: making the function <em>total</em> (defined everywhere on its domain) is what lets <code>match</code> be sound as an expression — there is no “stuck” configuration where no arm applies.</p>
+</blockquote>
+<h3 id="binding-catch-alls-and-_"><a class="header" href="#binding-catch-alls-and-_">Binding, catch-alls, and <code>_</code></a></h3>
+<p>Arms can bind parts of the scrutinee to names (that is how <code>r</code>, <code>w</code>, and <code>h</code> above came into scope). To make a <code>match</code> exhaustive without enumerating everything, end with a catch-all:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn classify(n: u8) -&gt; &amp;'static str {
+    match n {
+        0       =&gt; "zero",
+        1 | 2   =&gt; "small",     // `|` is the pattern-or operator
+        3..=9   =&gt; "single digit",
+        other   =&gt; {            // binds the value, for use in the arm
+            if other &gt;= 100 { "big" } else { "medium" }
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>A bare identifier like <code>other</code> is an <em>irrefutable</em> pattern (defined below) that matches anything and binds it. If you need a catch-all but do not need the value, use <code>_</code>, the wildcard, which matches anything and binds <em>nothing</em>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match config_flag {
+    1 =&gt; enable(),
+    _ =&gt; {}          // ignore everything else, bind nothing
+}
+<span class="boring">}</span></code></pre>
+<p>The difference between <code>_</code> and <code>_name</code> matters for ownership: <code>_name</code> still <em>binds</em> (and therefore can move) the value, whereas <code>_</code> never binds. Matching <code>Some(_s)</code> against an <code>Option&lt;String&gt;</code> moves the <code>String</code>; matching <code>Some(_)</code> does not.</p>
+<h2 id="all-the-pattern-syntax-in-one-place"><a class="header" href="#all-the-pattern-syntax-in-one-place">All the pattern syntax, in one place</a></h2>
+<p>Everything above used patterns; now we catalogue the full grammar. Patterns describe the <em>shape</em> of data, and the same syntax works in <code>match</code>, <code>if let</code>, <code>while let</code>, <code>let</code>, function parameters, and <code>for</code>.</p>
+<p><strong>Literals and ranges.</strong> Match against concrete values, or inclusive ranges with <code>..=</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match byte {
+    b'a'..=b'z' =&gt; "lowercase",
+    b'0'..=b'9' =&gt; "digit",
+    0           =&gt; "nul",
+    _           =&gt; "other",
+}
+<span class="boring">}</span></code></pre>
+<p>Ranges in patterns are restricted to integers and <code>char</code>, because those are the only types for which rustc can decide at compile time whether a range is empty (and thus reason about exhaustiveness). Note the <code>..=</code> (inclusive); the half-open <code>..</code> is <em>not</em> a pattern range — it means something else, below.</p>
+<p><strong>Alternation with <code>|</code>.</strong> <code>1 | 2 | 3</code> matches any of the three. Combined with <code>@</code> and guards it composes (see below); note its precedence interacts with guards — <code>4 | 5 | 6 if cond</code> parses as <code>(4 | 5 | 6) if cond</code>, the guard applies to the whole alternation.</p>
+<p><strong>Destructuring structs.</strong> Bind fields by name, optionally renaming or matching literals:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Point { x: i32, y: i32 }
+
+let Point { x, y } = p;                  // shorthand: binds x and y
+let Point { x: a, y: b } = p;            // rename to a, b
+match p {
+    Point { x: 0, y }          =&gt; println!("on y-axis at {y}"),
+    Point { x, y: 0 }          =&gt; println!("on x-axis at {x}"),
+    Point { x, .. }            =&gt; println!("x is {x}, ignore the rest"),
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Destructuring enums.</strong> The pattern mirrors the variant’s declaration — that symmetry is the whole point:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match msg {
+    Shape::Dot            =&gt; 0.0,
+    Shape::Circle(r)      =&gt; r * r,       // tuple-like → positional
+    Shape::Rect { w, h }  =&gt; w * h,       // struct-like → named
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Nested patterns.</strong> Patterns compose to arbitrary depth, which is where they earn their keep against <code>if</code>/<code>else</code> ladders:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match point_in_option {
+    Some(Point { x: 0, y: 0 }) =&gt; "origin",
+    Some(Point { x: 0, .. })   =&gt; "on y-axis",
+    Some(_)                    =&gt; "somewhere",
+    None                       =&gt; "absent",
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Ignoring with <code>_</code> and <code>..</code>.</strong> <code>_</code> ignores exactly one position; <code>..</code> ignores <em>all the remaining</em> positions of a tuple, array, or struct. <code>..</code> may appear at most once per pattern, because <code>(.., x, ..)</code> would be ambiguous about how many elements to skip — and rustc rejects it for that reason:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let (first, .., last) = (1, 2, 3, 4, 5);   // first = 1, last = 5
+<span class="boring">}</span></code></pre>
+<p><strong><code>@</code> bindings.</strong> Bind a value to a name <em>and</em> test it against a sub-pattern in one go. Without <code>@</code> you can test a range <em>or</em> capture the value, but not both:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match id {
+    n @ 1..=9   =&gt; println!("single digit {n}"),  // tested AND bound
+    n @ 10..=99 =&gt; println!("two digits {n}"),
+    _           =&gt; println!("out of range"),
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Match guards.</strong> An extra <code>if</code> condition after the pattern, able to use the pattern’s bindings and to express things no pattern can (like relating two bindings, or comparing against an outer variable):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>match opt {
+    Some(x) if x % 2 == 0 =&gt; println!("even {x}"),
+    Some(x)               =&gt; println!("odd {x}"),
+    None                  =&gt; {}
+}
+<span class="boring">}</span></code></pre>
+<p>Beware: a guard <em>defeats exhaustiveness analysis</em>. The compiler cannot reason about arbitrary boolean conditions, so <code>Some(x) if x % 2 == 0</code> is not treated as covering any <code>Some</code>; you still need a fallback arm. Use guards for refinement, not as your only handler of a variant.</p>
+<h3 id="shadowing-inside-patterns--the-classic-gotcha"><a class="header" href="#shadowing-inside-patterns--the-classic-gotcha">Shadowing inside patterns — the classic gotcha</a></h3>
+<p>Because each <code>match</code>/<code>if let</code>/<code>while let</code> arm opens a new scope, a <em>bare name</em> in a pattern introduces a fresh binding that <strong>shadows</strong> any outer variable of the same name. This bites people constantly:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let x = Some(5);
+let y = 10;
+match x {
+    Some(50) =&gt; println!("fifty"),
+    Some(y)  =&gt; println!("matched, y = {y}"),  // NEW y, shadows outer y; binds 5
+    _        =&gt; println!("default"),
+}
+// outer y is still 10 here
+<span class="boring">}</span></code></pre>
+<p>If your intent was “match when the inner value <em>equals the outer</em> <code>y</code>”, the pattern <code>Some(y)</code> does the opposite — it captures the inner value into a new <code>y</code>. The fix is a guard against a differently-named binding: <code>Some(n) if n == y</code>.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Forgetting that patterns bind rather than compare is the most common <code>match</code> bug for newcomers from C, where <code>case y:</code> would compare. There is no compiler <em>error</em> here — the code compiles and runs, it just always takes the <code>Some(_)</code> arm. The idiomatic fix is to bind to a fresh name and compare in a guard (<code>Some(n) if n == y</code>), or to inline the constant if it is one (<code>Some(10) =&gt; ...</code>).</p>
+</blockquote>
+<h2 id="refutability-which-patterns-go-where"><a class="header" href="#refutability-which-patterns-go-where">Refutability: which patterns go where</a></h2>
+<p>A pattern is <strong>irrefutable</strong> if it matches every possible value of its type (e.g. <code>x</code>, <code>(a, b)</code>, <code>Point { x, y }</code> — they cannot fail), and <strong>refutable</strong> if some value fails to match (e.g. <code>Some(x)</code>, <code>1..=5</code>, <code>Shape::Circle(r)</code>). This distinction is <em>the</em> rule that decides which construct a pattern is legal in:</p>
+<ul>
+<li><strong>Irrefutable only:</strong> <code>let</code>, function parameters, <code>for</code> loop variables. These contexts have no “didn’t match” branch, so a pattern that could fail makes no sense.</li>
+<li><strong>Refutable (and irrefutable, with a warning):</strong> <code>if let</code>, <code>while let</code>, <code>let ... else</code>. These exist precisely to branch on success/failure, so an irrefutable pattern there is pointless and rustc warns.</li>
+</ul>
+<p>This is why you cannot write <code>let Some(x) = maybe;</code>:</p>
+<pre><code class="language-text">error[E0005]: refutable pattern in local binding
+  = note: `let` bindings require an "irrefutable pattern", like a `struct` or
+          an `enum` with only one variant
+help: you might want to use `let else` to handle the variant that isn't matched
+</code></pre>
+<p>The <code>let</code> form must always succeed because there is nowhere to put the failure. The compiler even points you at the fix: <code>let ... else</code>.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Refutability is the static decision procedure behind exhaustiveness from your Semantics/Foundations work, viewed from the other side. An irrefutable pattern is one whose coverage is the entire type — a single arm that is <em>total</em> on its own. <code>let PATTERN = EXPR;</code> is sound only when <code>PATTERN</code> is total, because there is no second arm to handle the gap; the compiler discharges exactly that proof obligation before accepting the binding.</p>
+</blockquote>
+<h2 id="the-conditional-family-if-let-let--else-while-let-matches"><a class="header" href="#the-conditional-family-if-let-let--else-while-let-matches">The conditional family: <code>if let</code>, <code>let ... else</code>, <code>while let</code>, <code>matches!</code></a></h2>
+<p>When you care about <em>one</em> pattern and want to ignore the rest, a full <code>match</code> with a <code>_ =&gt; {}</code> arm is noise. The conditional forms are sugar over that pattern.</p>
+<p><strong><code>if let</code></strong> runs a block only when one refutable pattern matches, optionally with <code>else</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if let Some(w) = first_word(line) {
+    println!("first word: {w}");
+} else {
+    println!("blank line");
+}
+<span class="boring">}</span></code></pre>
+<p>You can chain <code>else if let</code> for unrelated conditions — more flexible than <code>match</code> (which tests one scrutinee) but, critically, <em>not</em> exhaustiveness-checked. Drop a case and the compiler stays silent. That is the price of the conciseness; pay it knowingly.</p>
+<p><strong><code>let ... else</code></strong> is the early-return idiom and, in my view, the most underused construct for newcomers. It binds in the <em>enclosing</em> scope on success and <em>diverges</em> (returns, breaks, panics) on failure — flattening the dreaded rightward-drift staircase:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn config_port(raw: Option&lt;&amp;str&gt;) -&gt; u16 {
+    // happy path stays at the top level; failure exits early
+    let Some(text) = raw else {
+        return 8080;            // the `else` block MUST diverge
+    };
+    let Ok(port) = text.trim().parse::&lt;u16&gt;() else {
+        return 8080;
+    };
+    port                        // `text` and `port` are live here, unindented
+}
+<span class="boring">}</span></code></pre>
+<p>The <code>else</code> block is mandatory and must not fall through to the code after it — it has to <code>return</code>, <code>break</code>, <code>continue</code>, or <code>panic!</code>. The bindings introduced by the pattern escape into the surrounding scope, which is exactly what makes it a “guard clause” in the classic sense. Compare this to the OCaml/C habit of nesting the success case ever deeper inside <code>match</code>/<code>if</code>; <code>let ... else</code> lets you assert preconditions linearly and keep the main logic at the left margin.</p>
+<p><strong><code>while let</code></strong> loops as long as the pattern keeps matching — the idiomatic way to drain something that yields <code>Some</code>/<code>Ok</code> until it stops:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut stack = vec![1, 2, 3];
+while let Some(top) = stack.pop() {   // stops when pop() returns None
+    println!("{top}");
+}
+<span class="boring">}</span></code></pre>
+<p><strong><code>matches!</code></strong> is a macro that reduces a <code>match</code>-against-one-pattern-with-an-optional-guard to a <code>bool</code>, ideal in <code>filter</code>/<code>assert</code> positions where you want a predicate, not control flow:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let is_vowel = |c: char| matches!(c, 'a' | 'e' | 'i' | 'o' | 'u');
+assert!(matches!(opt, Some(n) if n &gt; 3));
+<span class="boring">}</span></code></pre>
+<h2 id="binding-modes-match-ergonomics-and-ref"><a class="header" href="#binding-modes-match-ergonomics-and-ref">Binding modes (match ergonomics) and <code>ref</code></a></h2>
+<p>One wrinkle that interacts hard with <a href="03-references-and-borrowing.html">borrowing</a>: when you <code>match</code> on a <em>reference</em>, you usually want the bindings to be <em>references into</em> the original value, not <em>moves out of</em> it. Moving a field out of a borrowed value would invalidate the original — and the borrow checker forbids it.</p>
+<p>Modern Rust handles this with <strong>match ergonomics</strong>: when the scrutinee is a reference and the pattern is not, bindings automatically take a borrow in the same mode (shared for <code>&amp;T</code>, mutable for <code>&amp;mut T</code>). This is why matching <code>&amp;Option&lt;String&gt;</code> just works:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let name = Some(String::from("Ada"));
+match &amp;name {                          // scrutinee is &amp;Option&lt;String&gt;
+    Some(s) =&gt; println!("{} chars", s.len()),  // s is &amp;String — borrowed, not moved
+    None    =&gt; {}
+}
+println!("{name:?}");                  // name is still fully owned and usable
+<span class="boring">}</span></code></pre>
+<p>Had you matched <code>name</code> itself (not <code>&amp;name</code>), the <code>Some(s)</code> arm would <em>move</em> the <code>String</code> out, and the final <code>println!</code> would fail to compile. The older, explicit way to force a borrow without ergonomics is the <code>ref</code> (and <code>ref mut</code>) keyword inside the pattern — <code>Some(ref s)</code> says “bind <code>s</code> as <code>&amp;String</code>”. You will see <code>ref</code> in older code and occasionally still need it when the source is owned but you want a borrow; reach for matching on <code>&amp;value</code> first.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Match ergonomics is a purely compile-time elaboration: rustc tracks a “default binding mode” as it descends through reference layers in the pattern and rewrites bare bindings into <code>ref</code>/<code>ref mut</code> accordingly. No runtime cost, no extra indirection — the emitted code is identical to what you would get writing <code>ref</code> by hand. It exists so the common, safe case (borrow the inner data) is also the syntactically lightest, while the move-out case stays explicit and visible.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> <code>match val { Some(s) =&gt; ..., None =&gt; ... }</code> where <code>val: Option&lt;String&gt;</code> and you <em>use <code>val</code> afterwards</em> gives <code>error[E0382]: borrow of partially moved value: val</code> (or “use of moved value”). The arm moved the <code>String</code> out. Fix: match on <code>&amp;val</code> so ergonomics makes <code>s: &amp;String</code>, or use <code>val.as_ref()</code> to turn <code>&amp;Option&lt;String&gt;</code> into <code>Option&lt;&amp;String&gt;</code> before matching. The mental rule: match the reference, not the value, whenever you still need the original.</p>
+</blockquote>
+<h2 id="memory-layout-niche-optimisation"><a class="header" href="#memory-layout-niche-optimisation">Memory layout: niche optimisation</a></h2>
+<p>A naive layout of <code>Option&lt;T&gt;</code> is “tag byte plus room for a <code>T</code>”, which would make <code>Option&lt;&amp;i32&gt;</code> larger than <code>&amp;i32</code> — a real cost given how ubiquitous <code>Option</code> is. Rust avoids this with <strong>niche optimisation</strong>: if <code>T</code> already has a bit pattern (a <em>niche</em>) that can never occur as a valid value, rustc uses that forbidden pattern to encode <code>None</code>, with <strong>zero</strong> extra space.</p>
+<p>The canonical niche is the null pointer. A <code>&amp;T</code> or <code>Box&lt;T&gt;</code> is guaranteed non-null, so <code>None</code> is represented as all-zero bits and <code>Some(ptr)</code> is the pointer itself:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>assert_eq!(size_of::&lt;&amp;i32&gt;(),         size_of::&lt;Option&lt;&amp;i32&gt;&gt;());   // both 8
+assert_eq!(size_of::&lt;Box&lt;i32&gt;&gt;(),     size_of::&lt;Option&lt;Box&lt;i32&gt;&gt;&gt;()); // both 8
+assert_eq!(size_of::&lt;NonZeroU32&gt;(),   size_of::&lt;Option&lt;NonZeroU32&gt;&gt;()); // both 4
+<span class="boring">}</span></code></pre>
+<p>So <code>Option&lt;&amp;T&gt;</code> is genuinely a nullable pointer at the machine level — you get C’s compact representation and Rust’s safety, simultaneously, with the null check <em>enforced by the type</em>. Types without a spare niche still need a discriminant: <code>Option&lt;i32&gt;</code> is 8 bytes (4 for the <code>i32</code>, plus a tag word with alignment), because every 32-bit pattern is a valid <code>i32</code> and there is nothing to steal for <code>None</code>. (<code>bool</code> has a niche — only <code>0</code> and <code>1</code> are valid — so <code>Option&lt;bool&gt;</code> fits in one byte.)</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This recovers, <em>safely</em>, the C idiom where you overload a sentinel value to mean “absent” — a <code>char *</code> of <code>NULL</code>, an index of <code>-1</code>, a <code>find</code> returning <code>npos</code>. In C you and every caller must remember the sentinel and check it by hand; nothing in the type records the convention. Niche-optimised <code>Option&lt;&amp;T&gt;</code> gives you byte-for-byte the same representation, but the compiler <em>forces</em> the check and there is no way to forget which value is the sentinel. The analogy breaks down on safety, not on layout: the bits are identical, the guarantees are not.</p>
+</blockquote>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li>An <code>enum</code> is a <strong>sum type</strong> (OCaml variant / tagged union), laid out as a discriminant plus space for the largest variant. The tag and payload are inseparable, so reading the wrong arm is impossible.</li>
+<li><code>Option&lt;T&gt;</code> reifies absence as a <em>value of a distinct type</em>, turning the null dereference from a runtime crash into a compile error. <code>Result&lt;T, E&gt;</code> does the same for failure (<a href="11-error-handling.html">error handling</a>).</li>
+<li><code>match</code> is an <strong>expression</strong> and is <strong>exhaustive</strong> — a compile-time totality check that forces every case to be handled and flags every site when you add a variant.</li>
+<li><strong>Refutability</strong> decides placement: irrefutable patterns only in <code>let</code>/params/<code>for</code>; refutable patterns drive <code>if let</code>/<code>while let</code>/<code>let ... else</code>. Use <code>let ... else</code> to keep the happy path unindented.</li>
+<li>Match the <strong>reference</strong> (<code>&amp;val</code>), not the owned value, when you still need the original — match ergonomics then borrows the inner data instead of moving it.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Define <code>enum Json { Null, Bool(bool), Num(f64), Str(String), Arr(Vec&lt;Json&gt;), Obj(Vec&lt;(String, Json)&gt;) }</code> and write <code>fn depth(j: &amp;Json) -&gt; usize</code> returning the maximum nesting depth. Then add a <code>Json::Date(...)</code> variant and observe which <code>match</code> sites stop compiling — that is the totality check doing your refactoring for you.</p>
+</li>
+<li>
+<p>Explain why <code>let Shape::Circle(r) = shape;</code> fails to compile, quote the error code, and give two distinct fixes (one using <code>match</code>, one using <code>let ... else</code>). Which one is appropriate when <code>shape</code> might legitimately be any variant at runtime?</p>
+</li>
+<li>
+<p>The following compiles and runs but always prints <code>"other"</code>. Find the bug without running it, and fix it so it prints <code>"target"</code> when <code>code == limit</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let code = 7;
+let limit = 7;
+match code {
+    limit =&gt; println!("target"),   // why does this not do what it looks like?
+    _     =&gt; println!("other"),
+}
+<span class="boring">}</span></code></pre>
+<p>(Bonus: the compiler emits a <em>warning</em> here too — what is it, and why?)</p>
+</li>
+<li>
+<p>(★) Write <code>fn sum_tree(t: &amp;Tree) -&gt; i32</code> for <code>enum Tree { Leaf(i32), Node(Box&lt;Tree&gt;, Box&lt;Tree&gt;) }</code>. Do it by matching on <code>&amp;t</code>. Then try writing it by matching on <code>t</code> by value and explain the exact borrow-checker error you get, in terms of moving out of a shared reference.</p>
+</li>
+<li>
+<p>(★) Predict <code>size_of</code> for each, then verify with a program: <code>Option&lt;i32&gt;</code>, <code>Option&lt;&amp;i32&gt;</code>, <code>Option&lt;Box&lt;i32&gt;&gt;</code>, <code>Option&lt;Option&lt;&amp;i32&gt;&gt;</code>, and <code>Option&lt;bool&gt;</code>. Explain <em>each</em> result in terms of niche optimisation — in particular, why <code>Option&lt;Option&lt;&amp;i32&gt;&gt;</code> does <strong>not</strong> stay pointer-sized but <code>Option&lt;&amp;i32&gt;</code> does.</p>
+</li>
+<li>
+<p>Refactor a function written as a deeply nested <code>if let { if let { ... } }</code> staircase (invent one that parses two <code>Option&lt;&amp;str&gt;</code> fields and validates them) into a flat sequence of <code>let ... else</code> guard clauses. State precisely what each <code>else</code> block must do for the code to compile.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="06-structs-and-methods.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="08-generics-and-traits.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="06-structs-and-methods.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="08-generics-and-traits.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

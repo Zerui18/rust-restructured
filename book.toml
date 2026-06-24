@@ -1,0 +1,24 @@
+[book]
+title = "Rust, Restructured — A Systems-and-Semantics Path to Mastery"
+authors = ["Assembled for Zerui Chen"]
+description = "The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background."
+language = "en"
+src = "src"
+
+[build]
+build-dir = "docs"
+
+[output.html]
+default-theme = "ayu"
+preferred-dark-theme = "ayu"
+smart-punctuation = true
+mathjax-support = true
+no-section-label = false
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.playground]
+editable = false
+copyable = true

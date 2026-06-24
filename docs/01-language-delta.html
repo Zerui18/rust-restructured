@@ -1,0 +1,552 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The Language Delta: Rust as a diff from C and OCaml - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="1-the-language-delta-rust-as-a-diff-from-c-and-ocaml"><a class="header" href="#1-the-language-delta-rust-as-a-diff-from-c-and-ocaml">1. The Language Delta: Rust as a diff from C and OCaml</a></h1>
+<p>You already know how to write a <code>for</code> loop. This chapter does not teach you what a variable is. Instead, it reads Rust’s surface syntax as a <em>diff</em> against two languages you already hold in your head: C (the procedural, statically-typed, manual-memory machine model) and OCaml (the expression-oriented, type-inferred, immutable-by-default ML). Rust is, almost line for line, a deliberate merge of the two — ML’s front end welded onto C’s back end. Most of the “surprises” in this chapter are just one parent’s habit colliding with the other’s.</p>
+<p>The deep machinery — ownership, borrowing, lifetimes — starts in <a href="02-ownership-and-moves.html">ownership</a>. Here we clear the syntactic ground so that nothing trips you later. The recurring theme, and the answer to almost every “why does Rust do <em>that</em>?”: <strong>so the compiler can prove memory- and data-race-safety statically, at zero runtime cost.</strong> Hold that as your invariant; we will keep cashing it out.</p>
+<h2 id="bindings-let-immutable-by-default-and-mut"><a class="header" href="#bindings-let-immutable-by-default-and-mut">Bindings: <code>let</code>, immutable by default, and <code>mut</code></a></h2>
+<p>A <code>let</code> binding looks like C’s declaration but behaves like OCaml’s <code>let</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let x = 5;        // type inferred as i32
+let y: f64 = 2.0; // optional annotation, ML-style: name : type
+<span class="boring">}</span></code></pre>
+<p>The first divergence from C: <strong>bindings are immutable by default.</strong> <code>x = 6;</code> is a compile error, not a warning.</p>
+<pre><code class="language-text">error[E0384]: cannot assign twice to immutable variable `x`
+</code></pre>
+<p>To opt into mutation you write <code>let mut x = 5;</code>. This is the inverse of C and Java, where everything is mutable unless you sprinkle <code>const</code>/<code>final</code>. The default is flipped on purpose: an immutable binding is a fact the compiler (and the reader) can rely on, and — looking ahead — immutability is the cheaper, contention-free half of the borrow rules in <a href="03-references-and-borrowing.html">references and borrowing</a>. <code>mut</code> is not just a lint; it is load-bearing type information.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Think OCaml <code>let x = 5</code> (a binding, not a mutable cell), but with an explicit escape hatch. C’s <code>const int x</code> is the closest analogy for the <em>default</em>, except Rust’s <code>mut</code> annotates the <em>binding</em>, not the type — there is no <code>const</code>-poisoning of pointer types the way <code>const char *</code> differs from <code>char *</code>. The analogy to OCaml’s <code>ref</code> breaks down too: <code>mut</code> does not introduce a level of indirection the way <code>ref</code>/<code>:=</code> does; the variable <em>is</em> the storage and you assign through its name.</p>
+</blockquote>
+<h2 id="shadowing--and-why-it-is-not-mut"><a class="header" href="#shadowing--and-why-it-is-not-mut">Shadowing — and why it is not <code>mut</code></a></h2>
+<p>You may bind the same name twice. The second <code>let</code> does not mutate the first binding; it creates a brand-new binding that <em>shadows</em> the old one for the rest of the scope:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let count = "  42  ";
+let count = count.trim();        // &amp;str, whitespace stripped
+let count: u32 = count.parse().unwrap(); // now a u32 — different type!
+<span class="boring">}</span></code></pre>
+<p>This is exactly OCaml’s shadowing, and it is categorically different from <code>mut</code>:</p>
+<ul>
+<li>Shadowing introduces a <em>new variable</em> (possibly a new type, as above: <code>&amp;str</code> then <code>u32</code>). <code>mut</code> keeps the same variable and forbids changing its type.</li>
+<li>Shadowing requires the <code>let</code> keyword every time, so an accidental re-assignment without <code>let</code> is still caught.</li>
+<li>After a chain of shadowing transformations, the final binding can be immutable. You get the ergonomics of “transform in place” without giving up the guarantee that the value won’t change <em>after</em> you’re done with it.</li>
+</ul>
+<p>A scope-local shadow reverts when the scope ends:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let n = 6;
+{
+    let n = n * 2;     // inner n == 12
+    println!("{n}");   // 12
+}
+println!("{n}");       // 6 again — inner binding is gone
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Coming from C/Java, the instinct is <code>let mut spaces = "   "; spaces = spaces.len();</code>. That is <code>error[E0308]: mismatched types — expected &amp;str, found usize</code>, because <code>mut</code> cannot change the <em>type</em> of <code>spaces</code>. The fix is shadowing: <code>let spaces = spaces.len();</code>. The compiler is telling you these are conceptually two different values that happen to share a name.</p>
+</blockquote>
+<h2 id="const-and-static"><a class="header" href="#const-and-static"><code>const</code> and <code>static</code></a></h2>
+<p>Two ways to name a compile-time-known constant, and they are not interchangeable:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>const MAX_RETRIES: u32 = 3 * 5;       // inlined; no fixed address
+static GREETING: &amp;str = "hello";      // a single object with a 'static address
+<span class="boring">}</span></code></pre>
+<ul>
+<li><code>const</code> requires a type annotation, must be a <em>constant expression</em> (evaluated at compile time), and is conceptually <em>inlined</em> at each use site — like a C <code>#define</code> with real types and scoping, or C++ <code>constexpr</code>. It has no stable memory address.</li>
+<li><code>static</code> is a single global with a fixed address that lives for the whole program (its lifetime is <code>'static</code>; see <a href="04-lifetimes.html">lifetimes</a>). A <code>static mut</code> exists but is <code>unsafe</code> to touch, because a mutable global is a data race waiting to happen — see <a href="16-unsafe-and-ffi.html">unsafe</a>. Reach for <code>const</code> by default.</li>
+</ul>
+<p>Convention: <code>SCREAMING_SNAKE_CASE</code> for both.</p>
+<h2 id="type-inference-local-hindleymilner-not-global"><a class="header" href="#type-inference-local-hindleymilner-not-global">Type inference: local Hindley–Milner, not global</a></h2>
+<p>Inside a function body Rust infers types the way you expect from OCaml — you rarely annotate locals:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let v = vec![1, 2, 3];   // Vec&lt;i32&gt;
+let total: i64 = v.iter().sum(); // annotation steers `sum`'s output type
+<span class="boring">}</span></code></pre>
+<p>But the inference is deliberately <em>local</em>. <strong>Function signatures are never inferred</strong> — every parameter and the return type must be annotated:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn add(x: i32, y: i32) -&gt; i32 { x + y }
+<span class="boring">}</span></code></pre>
+<p>This is a hard rule, and it is a design choice, not a limitation of the algorithm. OCaml will happily infer the type of <code>let add x y = x + y</code> across the whole module. Rust refuses at the function boundary so that (a) type errors stay local and produce comprehensible messages instead of cascading across files, and (b) the public API of a function is documented and stable regardless of its body. The cost is a few annotations; the payoff is that inference within a body can be aggressive precisely because the boundaries are pinned.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Foundations of Computer Science.</em> This is Hindley–Milner with the let-generalisation scoped to the function body and the principal type at each <code>fn</code> boundary fixed by annotation rather than inferred. Unlike the global unification you saw in OCaml, Rust solves a constraint set per function, seeded by the signature. The inference is also influenced <em>backwards</em> by later use (note how <code>let guess: u32 = "42".parse().unwrap();</code> lets <code>parse</code> pick its return type from the annotation) — that’s unification flowing both directions, not C-style forward-only declaration.</p>
+</blockquote>
+<h2 id="scalar-types-sized-explicit-non-coercing"><a class="header" href="#scalar-types-sized-explicit-non-coercing">Scalar types: sized, explicit, non-coercing</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Category</th><th>Rust</th><th>C analogue</th><th>Note for you</th></tr>
+</thead>
+<tbody>
+<tr><td>Signed int</td><td><code>i8 i16 i32 i64 i128 isize</code></td><td><code>int8_t … intptr_t</code></td><td><code>i32</code> is the inference default</td></tr>
+<tr><td>Unsigned int</td><td><code>u8 u16 u32 u64 u128 usize</code></td><td><code>uint8_t … size_t</code></td><td><code>usize</code> is the index/length type</td></tr>
+<tr><td>Float</td><td><code>f32 f64</code></td><td><code>float double</code></td><td><code>f64</code> is the default; IEEE-754</td></tr>
+<tr><td>Boolean</td><td><code>bool</code> (1 byte)</td><td><code>_Bool</code></td><td>only <code>true</code>/<code>false</code>, no int coercion</td></tr>
+<tr><td>Character</td><td><code>char</code> (4 bytes)</td><td>—</td><td>a Unicode scalar, not a C <code>char</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Three things that will bite C and OCaml muscle memory:</p>
+<p><strong>Sizes are in the name.</strong> There is no implementation-defined <code>int</code>. <code>i32</code> is 32 bits everywhere. <code>isize</code>/<code>usize</code> are pointer-width (the moral equivalent of <code>ptrdiff_t</code>/<code>size_t</code>), and indexing a collection yields a <code>usize</code> — using a different width as an index is a type error, not a silent conversion.</p>
+<p><strong>No implicit numeric coercion. None.</strong> This is the single biggest break from C’s arithmetic. <code>let x: i64 = some_i32;</code> does not compile; you must write <code>some_i32 as i64</code> or <code>i64::from(some_i32)</code>. C’s integer-promotion and the entire usual-arithmetic-conversions ritual simply do not exist. Mixing an <code>i32</code> and a <code>u8</code> in <code>+</code> is a compile error. The reason is the invariant again: silent widening/narrowing is a classic source of bugs (sign flips, truncation), so Rust forces the conversion to be written, where it is auditable.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let a: i32 = 1000;
+let b: u8 = 5;
+// let c = a + b;        // error[E0308]: mismatched types
+let c = a + b as i32;    // explicit, fine
+<span class="boring">}</span></code></pre>
+<p><strong><code>if</code> takes a <code>bool</code>, full stop.</strong> There is no truthiness:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let n = 3;
+// if n { ... }   // error[E0308]: expected `bool`, found integer
+if n != 0 { /* ... */ }
+<span class="boring">}</span></code></pre>
+<p>Unlike C/JS/Python, <code>0</code>, <code>""</code>, and null-likes are not falsy. This kills a whole class of <code>if (ptr)</code> / <code>if (count)</code> ambiguities.</p>
+<h3 id="integer-overflow-debug-panics-release-wraps"><a class="header" href="#integer-overflow-debug-panics-release-wraps">Integer overflow: debug panics, release wraps</a></h3>
+<p>What does <code>255u8 + 1</code> do? The answer is <em>profiled</em>:</p>
+<ul>
+<li><strong>Debug builds</strong>: overflow is checked and <em>panics</em> (a clean, defined abort — see <a href="11-error-handling.html">error handling</a>). The bug surfaces during development.</li>
+<li><strong>Release builds</strong> (<code>--release</code>): the check is omitted for speed, and arithmetic <em>wraps</em> using two’s complement (<code>255u8 + 1 == 0</code>).</li>
+</ul>
+<p>Crucially, <strong>relying on the wrap is considered a bug.</strong> If you actually want a specific behaviour, say so explicitly with the method families: <code>wrapping_add</code> (wrap in all modes), <code>checked_add</code> (returns <code>Option</code>, <code>None</code> on overflow), <code>overflowing_add</code> (returns <code>(value, bool)</code>), <code>saturating_add</code> (clamps to min/max).</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let x: u8 = 250;
+assert_eq!(x.wrapping_add(10), 4);        // 260 mod 256
+assert_eq!(x.checked_add(10), None);      // signals overflow
+assert_eq!(x.saturating_add(10), 255);    // clamps
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> In debug, rustc emits an LLVM checked-add intrinsic plus a branch to a panic. In release it emits a plain <code>add</code> and the overflow is wrapping by definition of two’s complement on the hardware. This is <em>not</em> C, where signed overflow is undefined behaviour the optimiser may exploit. Rust’s signed overflow is always <em>defined</em> (panic or wrap), never UB — there is no <code>-fwrapv</code> footgun, and the optimiser is never licensed to assume overflow can’t happen.</p>
+</blockquote>
+<h3 id="char-is-a-unicode-scalar-value"><a class="header" href="#char-is-a-unicode-scalar-value"><code>char</code> is a Unicode scalar value</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let a = 'z';
+let zed: char = 'ℤ';
+let cat = '😻';     // a single char
+<span class="boring">}</span></code></pre>
+<p>A <code>char</code> is <strong>4 bytes</strong> and holds exactly one Unicode scalar value (any code point in <code>U+0000..=U+D7FF</code> or <code>U+E000..=U+10FFFF</code>, i.e. everything except surrogate halves). This is nothing like C’s <code>char</code> (a byte) or <code>wchar_t</code>. It is <em>not</em> a UTF-8 byte and <em>not</em> a UTF-8 grapheme either — string iteration and the byte-vs-char-vs-grapheme distinction is a genuine subtlety covered in <a href="10-collections.html">collections</a>. Single quotes are <code>char</code>; double quotes are <code>&amp;str</code>.</p>
+<h2 id="compound-types-tuples-and-fixed-arrays"><a class="header" href="#compound-types-tuples-and-fixed-arrays">Compound types: tuples and fixed arrays</a></h2>
+<p><strong>Tuples</strong> are anonymous, fixed-arity, heterogeneous products — straight out of OCaml:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let t: (i32, f64, u8) = (500, 6.4, 1);
+let (x, y, z) = t;        // destructuring let
+let first = t.0;          // positional access via .N
+<span class="boring">}</span></code></pre>
+<p>The empty tuple <code>()</code> is the <strong>unit type</strong>, and it matters enormously — it is Rust’s “no meaningful value,” the type of an expression evaluated for effect. (OCaml’s <code>unit</code>, exactly.) We’ll lean on it the moment we discuss expressions below.</p>
+<p><strong>Arrays</strong> <code>[T; N]</code> are fixed-length, stack-allocated, homogeneous — like C arrays but with the length as part of the type:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let xs: [i32; 5] = [1, 2, 3, 4, 5];
+let zeros = [0u8; 16];    // [value; count]: sixteen zero bytes
+<span class="boring">}</span></code></pre>
+<p>The crucial delta from C: <strong>indexing is bounds-checked.</strong> <code>xs[10]</code> does not read adjacent memory; it <em>panics</em> with <code>index out of bounds: the len is 5 but the index is 10</code>. When the index is a compile-time constant the check is elided; when it comes from runtime data the check happens at runtime. This is the array-out-of-bounds half of “memory safety” made concrete — Rust traps instead of letting you stroll off the end the way C does. The compiler cannot know a user-supplied index in advance, so it inserts a guard; safety beats the saved comparison.</p>
+<p>For a growable, heap-backed sequence you want <code>Vec&lt;T&gt;</code>, and for a borrowed <em>view</em> into either an array or a <code>Vec</code> you want a <em>slice</em> <code>&amp;[T]</code> — these, and why <code>[T; N]</code> / <code>Vec&lt;T&gt;</code> / <code>&amp;[T]</code> form a family, are the subject of <a href="05-slices-and-duality.html">slices and the owned/borrowed duality</a>.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>[T; N]</code> is C’s <code>T arr[N]</code> with the length promoted into the type (so <code>[i32; 4]</code> and <code>[i32; 5]</code> are <em>distinct types</em> and a function taking one rejects the other — unlike C, where arrays decay to bare pointers and lose their length at the first opportunity). The decay-to-pointer move has no equivalent; Rust keeps the length, which is exactly what makes bounds checks and the <code>for x in arr</code> loop below possible.</p>
+</blockquote>
+<h2 id="the-big-one-rust-is-expression-oriented"><a class="header" href="#the-big-one-rust-is-expression-oriented">The big one: Rust is expression-oriented</a></h2>
+<p>If you internalise one thing from this chapter, make it this. Like OCaml and unlike C/Java, <strong>almost everything in Rust is an expression that evaluates to a value.</strong> Blocks, <code>if</code>, <code>match</code>, and <code>loop</code> all produce values. The distinction Rust draws is:</p>
+<ul>
+<li><strong>Statements</strong> perform an action and evaluate to nothing (<code>let y = 6;</code> is a statement; a <code>fn</code> definition is a statement).</li>
+<li><strong>Expressions</strong> evaluate to a value (<code>5 + 6</code>, a function call, a macro call, a block <code>{ … }</code>).</li>
+</ul>
+<p>A <code>let</code> binding is a <em>statement</em>, and it does <strong>not</strong> itself evaluate to a value — so unlike C, you cannot write <code>x = y = 6</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// let x = (let y = 6);  // error: expected expression, found `let` statement
+<span class="boring">}</span></code></pre>
+<p>This is the opposite of C, where assignment is an expression returning the assigned value (the source of <code>if (x = 0)</code> bugs). Rust amputates that footgun by making <code>let</code> a statement.</p>
+<h3 id="blocks-evaluate-to-their-trailing-expression"><a class="header" href="#blocks-evaluate-to-their-trailing-expression">Blocks evaluate to their trailing expression</a></h3>
+<p>A <code>{ … }</code> block is an expression. Its value is the last expression inside it — <strong>written without a trailing semicolon</strong>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let y = {
+    let a = 3;
+    a + 1          // no semicolon: this is the block's value
+};                 // y == 4
+<span class="boring">}</span></code></pre>
+<p>The semicolon is the pivotal piece of punctuation in Rust, and it does the opposite of what it does in C. A trailing semicolon <strong>discards</strong> the value and turns the expression into a statement whose value is <code>()</code>. Drop the semicolon and the expression’s value becomes the block’s value. This rule unifies <code>let x = { … }</code> with function return below.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> In big-step operational semantics, a Rust block is <code>⟨e₁; e₂; …; eₙ⟩</code> where the value of the whole is the value of <code>eₙ</code>. A trailing semicolon is the rule <code>e ; ⤳ ()</code> — it sequences <code>e</code> for its side effects and yields unit. This is precisely OCaml’s <code>e1; e2</code> sequencing, where <code>e1 : unit</code>, generalised: in Rust <em>every</em> non-final statement is implicitly forced to type-check as a statement, and the type of the block is the type of its tail expression (or <code>()</code> if there is none).</p>
+</blockquote>
+<h3 id="functions-return-their-tail-expression"><a class="header" href="#functions-return-their-tail-expression">Functions return their tail expression</a></h3>
+<p>There is no <code>return</code> keyword on the happy path. The body is a block; the function returns the block’s trailing (semicolon-less) expression. The return type follows <code>-&gt;</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn five() -&gt; i32 { 5 }          // returns 5
+
+fn add_one(x: i32) -&gt; i32 {
+    x + 1                        // no semicolon ⇒ this is the return value
+}
+<span class="boring">}</span></code></pre>
+<p><code>return</code> exists, but it is for <em>early</em> exit only:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn classify(n: i32) -&gt; &amp;'static str {
+    if n &lt; 0 { return "negative"; }
+    "non-negative"
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> The number-one beginner error, and it hits OCaml veterans too: <code>fn add_one(x: i32) -&gt; i32 { x + 1; }</code>. The stray semicolon turns <code>x + 1</code> into a statement, so the block yields <code>()</code>, and you get <code>error[E0308]: mismatched types — expected i32, found ()</code>, with the helpful note <code>implicitly returns () as its body has no tail or return expression</code>. The fix the compiler suggests is literally “remove this semicolon.” When a function with a non-<code>()</code> return type “returns nothing,” look for a rogue semicolon first.</p>
+</blockquote>
+<p>A function with no <code>-&gt;</code> returns <code>()</code> implicitly — that is what <code>main</code> and <code>fn another()</code> do. This is why <code>()</code> is not a curiosity: it is the value of every “void” function and every semicolon-terminated block.</p>
+<p><strong>No function overloading.</strong> Unlike C++ and Java, you cannot define two functions with the same name and different parameter types. Names are unique within a scope; the polymorphism you’d reach for overloading to express is done with <em>generics</em> and <em>traits</em> instead (see <a href="08-generics-and-traits.html">generics and traits</a>). And there is no <code>void f(int) {}</code> vs <code>void f(float) {}</code> — one name, one function.</p>
+<h2 id="control-flow-as-expressions"><a class="header" href="#control-flow-as-expressions">Control flow as expressions</a></h2>
+<h3 id="if-is-an-expression"><a class="header" href="#if-is-an-expression"><code>if</code> is an expression</a></h3>
+<p>Because <code>if</code>/<code>else</code> produces a value, it replaces C’s ternary <code>?:</code> (which Rust deliberately omits):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let parity = if n % 2 == 0 { "even" } else { "odd" };
+<span class="boring">}</span></code></pre>
+<p>Both arms must have the <strong>same type</strong> (<code>if cond { 5 } else { "six" }</code> is <code>error[E0308]: if and else have incompatible types</code>), because the binding needs one statically known type. An <code>if</code> without <code>else</code> has type <code>()</code>, so it can only be used in value position when its single arm is also <code>()</code>.</p>
+<h3 id="loop-is-an-expression-that-can-yield-a-value"><a class="header" href="#loop-is-an-expression-that-can-yield-a-value"><code>loop</code> is an expression that can yield a value</a></h3>
+<p><code>loop { … }</code> is an unconditional infinite loop. Uniquely, <code>break</code> can carry a value <em>out</em> of it, making <code>loop</code> an expression:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut counter = 0;
+let result = loop {
+    counter += 1;
+    if counter == 10 { break counter * 2; }  // break WITH a value
+};                                            // result == 20
+<span class="boring">}</span></code></pre>
+<p>This is the idiomatic “retry until success, then hand the result back” construct — there is no equivalent in C, where <code>break</code> is value-less. (<code>while</code> and <code>for</code> do <em>not</em> yield values this way; their type is always <code>()</code>, because they may run zero times and there’d be no value to produce.)</p>
+<h3 id="while-is-the-conditional-loop"><a class="header" href="#while-is-the-conditional-loop"><code>while</code> is the conditional loop</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut n = 3;
+while n != 0 {
+    println!("{n}!");
+    n -= 1;
+}
+<span class="boring">}</span></code></pre>
+<p>Same as C’s <code>while</code>, minus the truthiness — the condition must be <code>bool</code>.</p>
+<h3 id="for-iterates-over-iterators-not-indices"><a class="header" href="#for-iterates-over-iterators-not-indices"><code>for</code> iterates over iterators, not indices</a></h3>
+<p>This is a real break from the C <code>for (i = 0; i &lt; n; i++)</code> idiom. Rust’s <code>for</code> is the iterator-based <code>foreach</code> you know from OCaml/Java/Swift — there is no three-clause C form at all:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let xs = [10, 20, 30, 40, 50];
+for x in xs {               // x takes each element by value
+    println!("{x}");
+}
+
+for i in 0..5 { /* 0,1,2,3,4 */ }      // a Range is an iterator
+for i in (1..4).rev() { /* 3,2,1 */ }  // ranges compose with iterator adapters
+<span class="boring">}</span></code></pre>
+<p>The reason this is the <em>idiomatic and faster</em> choice (not merely the safe one): iterating by index, <code>while i &lt; xs.len() { xs[i] }</code>, forces a bounds check on every access, and a fencepost slip is a panic waiting to happen. The <code>for x in xs</code> form is driven by the iterator protocol, knows it stays in bounds, and the compiler routinely elides the checks entirely. Iterators are a centrepiece of idiomatic Rust and get their own treatment in <a href="12-closures-and-iterators.html">closures and iterators</a>.</p>
+<h3 id="labeled-loops"><a class="header" href="#labeled-loops">Labeled loops</a></h3>
+<p><code>break</code>/<code>continue</code> target the innermost loop by default. To break out of an outer loop, label it with a leading-quote name:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>'outer: for i in 0..5 {
+    for j in 0..5 {
+        if i * j &gt; 6 { break 'outer; }   // exits BOTH loops
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>Labels also combine with the value-carrying break: <code>break 'outer some_value</code>. (<code>return</code>, by contrast, always unwinds the whole <em>function</em>, not just a loop.)</p>
+<h2 id="a-5-line-taste-of-match"><a class="header" href="#a-5-line-taste-of-match">A 5-line taste of <code>match</code></a></h2>
+<p><code>if</code>/<code>else if</code> chains are the wrong tool once you’re discriminating over several cases. Rust’s <code>match</code> is a value-producing expression with <strong>exhaustiveness checking</strong> — the compiler rejects your code if you forget a case. A teaser; the full power (over enums, with binding and guards) is in <a href="07-enums-and-pattern-matching.html">enums and pattern matching</a>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let label = match n {
+    0 =&gt; "zero",
+    1 | 2 =&gt; "small",
+    3..=9 =&gt; "medium",
+    _ =&gt; "large",        // the wildcard; required here for exhaustiveness
+};
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Foundations of Computer Science.</em> This is OCaml’s <code>match … with</code> — including the exhaustiveness analysis. The C <code>switch</code> is the false friend: it has fall-through, no exhaustiveness guarantee, and operates only on integers/enums. Rust’s <code>match</code> is a total function from the matched value’s type to the result type, and the compiler discharges the proof of totality (Curry–Howard: the wildcard <code>_</code> is the case that makes the function total). Forget a variant of an <code>enum</code> and you get a compile error, not a silent default.</p>
+</blockquote>
+<h2 id="comments-and-a-note-on-println"><a class="header" href="#comments-and-a-note-on-println">Comments and a note on <code>println!</code></a></h2>
+<p>Line comments are <code>//</code>; block comments <code>/* … */</code> nest. Doc comments <code>///</code> and <code>//!</code> feed <code>rustdoc</code> and are covered in <a href="20-testing-and-tooling.html">testing and tooling</a>.</p>
+<p>You have seen <code>println!("{x}")</code>. The trailing <code>!</code> means it is a <strong>macro</strong>, not a function — the formatting string is parsed and type-checked <em>at compile time</em>, which is why <code>{x}</code> can capture the variable <code>x</code> directly and why a wrong number of arguments is a compile error, not a runtime crash like C’s <code>printf</code>. Macros get a full treatment in <a href="18-macros.html">macros</a>; for now, read <code>!</code> as “this is a macro.”</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li><strong>Bindings are immutable by default; <code>mut</code> is type-level information, not a hint.</strong> Shadowing (<code>let</code> again) makes a <em>new</em> binding that may even change type — categorically different from <code>mut</code>, which keeps the same variable and the same type.</li>
+<li><strong>There is no implicit numeric coercion and no truthiness.</strong> Conversions are written with <code>as</code>/<code>from</code>; <code>if</code> demands a <code>bool</code>. Integer overflow panics in debug and wraps (defined, never UB) in release — and relying on the wrap is a bug; say <code>wrapping_add</code>/<code>checked_add</code> if you mean it.</li>
+<li><strong>Rust is expression-oriented like OCaml: blocks, <code>if</code>, <code>match</code>, and <code>loop</code> all yield values.</strong> The trailing-semicolon-or-not rule is the pivot: no semicolon ⇒ the expression is the block’s/function’s value; semicolon ⇒ discard it and yield <code>()</code>.</li>
+<li><strong>Functions return their tail expression; <code>return</code> is for early exit only. There is no overloading.</strong> A non-<code>()</code> return type plus “returns nothing” almost always means a stray semicolon.</li>
+<li><strong><code>for</code> iterates over iterators (and ranges), never C-style indices</strong>, which is both safer (no fencepost panics) and faster (elided bounds checks). <code>loop</code> can carry a value out via <code>break value</code>; <code>while</code>/<code>for</code> cannot.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>Predict the compiler’s verdict, then check: <code>let mut s = "hi"; s = s.len();</code>. What error code, and why is <code>mut</code> the wrong tool? Rewrite it so it compiles.</li>
+<li>Write <code>fn abs_diff(a: i32, b: i32) -&gt; i32</code> <em>without</em> using <code>return</code> and without an explicit <code>if … return</code>. Now add a single semicolon somewhere in the body that makes it fail to compile, and state the exact error message you expect.</li>
+<li>(★) Without running it, give the value and type of each <code>let</code> below, or mark it a compile error and name the cause:
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let a = { let x = 2; x * x };
+let b = if a &gt; 3 { a } else { "small" };
+let c = loop { break a + 1; };
+let d = { 7; };
+<span class="boring">}</span></code></pre>
+</li>
+<li><code>let big: u8 = 200; let sum = big + big;</code> — describe what happens in a debug build vs a <code>--release</code> build, and rewrite the line three ways using the explicit overflow-method families so that (a) it clamps, (b) it signals failure, (c) it wraps deliberately.</li>
+<li>Rewrite this index loop as an idiomatic <code>for</code>, and explain in one sentence what runtime work the compiler is now free to omit:
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let v = [3, 1, 4, 1, 5];
+let mut i = 0;
+while i &lt; v.len() { println!("{}", v[i]); i += 1; }
+<span class="boring">}</span></code></pre>
+</li>
+<li>(★) Using a labeled <code>loop</code>, write a search over a 2-D array <code>[[i32; 4]; 4]</code> that, on finding the first element greater than 10, breaks out of <em>both</em> loops and binds that element to a <code>let</code> outside the loops. (Hint: combine a loop label with <code>break</code>’s value-carrying form. Why can’t you do this with <code>for</code>?)</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="00-orientation.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="02-ownership-and-moves.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="00-orientation.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="02-ownership-and-moves.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

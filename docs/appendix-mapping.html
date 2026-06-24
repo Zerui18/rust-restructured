@@ -1,0 +1,301 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Appendix: Mapping to the official book &amp; your Tripos courses - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="appendix-mapping-to-the-official-book--your-tripos-courses"><a class="header" href="#appendix-mapping-to-the-official-book--your-tripos-courses">Appendix. Mapping to the official book &amp; your Tripos courses</a></h1>
+<p>This book is the official <em>Rust Programming Language</em> (21 chapters) reassembled by conceptual dependency rather than beginner ramp. Two consequences follow, and this appendix indexes both:</p>
+<ol>
+<li><strong>Where is the “for everyone” version?</strong> Every module below names the official chapter(s) it derives from, so when you want the canonical, slower, beginner-pitched treatment of a topic you can jump straight to it. Read the official book as the <em>reference manual</em>; read this one as the <em>theory</em>.</li>
+<li><strong>What did I already learn that this leans on?</strong> Each module names the Cambridge Tripos course(s) whose machinery it reuses, so you can revisit your own notes for the formal framing. These are study anchors, not prerequisites: the 🎓 <em>Tripos link</em> callouts inside each module make the connection precise.</li>
+</ol>
+<p>A word on the chapter column: the official book is not a partition we re-shuffled one-to-one. We <strong>merged</strong> topics it splits (pattern matching, traits), <strong>compressed</strong> topics it stretches (the ch. 1–3 on-ramp), and <strong>gathered</strong> the three faces of the memory model (ownership, lifetimes, smart pointers) that it scatters across hundreds of pages. So several rows cite the same official chapter, and a few official chapters are deliberately dissolved across multiple modules. The “moved and why” notes below explain each non-trivial deviation.</p>
+<h2 id="the-table"><a class="header" href="#the-table">The table</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>This book (module)</th><th>Official Rust Book ch.</th><th>Leans on (Tripos)</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="00-orientation.html">00 · Orientation: the thesis of Rust</a></td><td>Foreword, Introduction</td><td>Programming in C and C++; Computer Architecture; Operating Systems</td></tr>
+<tr><td><a href="01-language-delta.html">01 · The Language Delta</a></td><td>1 Getting Started; 2 Guessing Game; 3 Common Programming Concepts</td><td>Foundations of CS (OCaml); Programming in C and C++; Compiler Construction</td></tr>
+<tr><td><a href="02-ownership-and-moves.html">02 · Ownership &amp; Moves</a></td><td>4.1–4.2 (Ownership; Move semantics)</td><td>Programming in C and C++; Semantics of PL; Logic and Proof</td></tr>
+<tr><td><a href="03-references-and-borrowing.html">03 · References &amp; Borrowing</a></td><td>4.2 (References &amp; Borrowing)</td><td>Programming in C and C++; Semantics of PL; Concurrent &amp; Distributed Systems</td></tr>
+<tr><td><a href="04-lifetimes.html">04 · Lifetimes as Regions</a></td><td>10.3 (Validating References with Lifetimes)</td><td>Semantics of PL; Logic and Proof; Compiler Construction</td></tr>
+<tr><td><a href="05-slices-and-duality.html">05 · Slices &amp; the Owned/Borrowed Duality</a></td><td>4.3 (The Slice Type)</td><td>Programming in C and C++; Computer Architecture; Algorithms</td></tr>
+<tr><td><a href="06-structs-and-methods.html">06 · Structs &amp; Methods</a></td><td>5 Structs</td><td>Programming in C and C++; Further Java/OOP</td></tr>
+<tr><td><a href="07-enums-and-pattern-matching.html">07 · Enums &amp; Pattern Matching</a></td><td>6 Enums &amp; Pattern Matching; 18 Patterns &amp; Matching</td><td>Foundations of CS (OCaml); Compiler Construction; Logic and Proof</td></tr>
+<tr><td><a href="08-generics-and-traits.html">08 · Generics &amp; Traits</a></td><td>10.1–10.2 (Generics; Traits)</td><td>Foundations of CS (OCaml); Compiler Construction; Further Java/OOP</td></tr>
+<tr><td><a href="09-trait-objects-and-oop.html">09 · Trait Objects, Dynamic Dispatch &amp; “OOP”</a></td><td>17 OOP Features</td><td>Further Java/OOP; Compiler Construction; Programming in C and C++</td></tr>
+<tr><td><a href="10-collections.html">10 · Common Collections</a></td><td>8 Common Collections</td><td>Algorithms; Foundations of CS (OCaml); Computer Architecture</td></tr>
+<tr><td><a href="11-error-handling.html">11 · Error Handling</a></td><td>9 Error Handling</td><td>Foundations of CS (OCaml); Semantics of PL; Logic and Proof</td></tr>
+<tr><td><a href="12-closures-and-iterators.html">12 · Closures &amp; Iterators</a></td><td>13 Functional Features</td><td>Foundations of CS (OCaml); Compiler Construction</td></tr>
+<tr><td><a href="13-fearless-concurrency.html">13 · Fearless Concurrency</a></td><td>16 Fearless Concurrency</td><td>Concurrent &amp; Distributed Systems; Operating Systems; Computer Architecture</td></tr>
+<tr><td><a href="14-async.html">14 · Asynchronous Rust</a></td><td>17 Async/Await</td><td>Concurrent &amp; Distributed Systems; Operating Systems; Computer Networking</td></tr>
+<tr><td><a href="15-smart-pointers.html">15 · Smart Pointers &amp; Interior Mutability</a></td><td>15 Smart Pointers</td><td>Programming in C and C++; Semantics of PL; Concurrent &amp; Distributed Systems</td></tr>
+<tr><td><a href="16-unsafe-and-ffi.html">16 · Unsafe Rust, FFI &amp; the Memory Model</a></td><td>20.1 (Unsafe Rust)</td><td>Programming in C and C++; Computer Architecture; Operating Systems; Cybersecurity</td></tr>
+<tr><td><a href="17-advanced-traits-and-types.html">17 · Advanced Traits &amp; Types</a></td><td>20.2–20.3 (Advanced Traits; Advanced Types)</td><td>Foundations of CS (OCaml); Compiler Construction; Logic and Proof</td></tr>
+<tr><td><a href="18-macros.html">18 · Macros &amp; Metaprogramming</a></td><td>20.5 (Macros)</td><td>Compiler Construction; Foundations of CS (OCaml)</td></tr>
+<tr><td><a href="19-project-structure.html">19 · Crates, Modules &amp; Workspaces</a></td><td>7 Packages, Crates &amp; Modules; 14 More About Cargo</td><td>Further Java/OOP; Compiler Construction; Operating Systems</td></tr>
+<tr><td><a href="20-testing-and-tooling.html">20 · Testing &amp; Tooling</a></td><td>11 Writing Automated Tests; 14 More About Cargo</td><td>Logic and Proof; Algorithms</td></tr>
+<tr><td><a href="21-capstones.html">21 · Capstones (CLI tool &amp; Multithreaded Web Server)</a></td><td>12 I/O Project (CLI); 21 Multithreaded Web Server</td><td>Operating Systems; Computer Networking; Concurrent &amp; Distributed Systems; Algorithms</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> If you read the right-hand column top-to-bottom, it is roughly a dependency-sorted tour of your own degree: OCaml’s type theory and C/C++’s memory model dominate the early rows; Semantics and Logic-and-Proof underwrite the ownership and trait machinery; Concurrent &amp; Distributed Systems and Operating Systems carry the back half. The thesis of <a href="00-orientation.html">module 00</a> — <em>an ML type system bolted onto a C++ memory model</em> — is literally visible as the shape of this table.</p>
+</blockquote>
+<h2 id="if-you-came-from-the-official-book-heres-what-moved-and-why"><a class="header" href="#if-you-came-from-the-official-book-heres-what-moved-and-why">If you came from the official book, here’s what moved and why</a></h2>
+<p>If you have read, or are cross-referencing, the official book, these are the structural deviations worth knowing about so a row above doesn’t surprise you:</p>
+<ul>
+<li><strong>Ownership unified into one Part II (official 4 + 10.3 + 15).</strong> The official book treats ownership (ch. 4), lifetimes (ch. 10.3), and smart pointers (ch. 15) as three unrelated topics hundreds of pages apart. They are one idea — an <em>affine, region-checked memory model</em>. <a href="02-ownership-and-moves.html">Modules 02–05</a> teach moves, borrows, lifetimes-as-regions, and slices as a single contiguous theory; <a href="15-smart-pointers.html">module 15</a> is its sequel, deferred only because it needs traits.</li>
+<li><strong>Pattern matching merged (official 6 + 18 → <a href="07-enums-and-pattern-matching.html">module 07</a>).</strong> The official book introduces <code>match</code> in ch. 6 and finishes the pattern grammar (refutability, guards, bindings, <code>@</code>, slice patterns) in ch. 18 — twelve chapters later. For a reader who already knows OCaml’s <code>match</code>, splitting this is pure friction; we teach the whole grammar once, next to the sum types it deconstructs.</li>
+<li><strong>Chapter 3 compressed into <a href="01-language-delta.html">the Language Delta</a>.</strong> The official ch. 1–3 spend three chapters on installation, a guessing game, and variables/types/control flow. You do not need to be told what a <code>for</code> loop is. We collapse all of it into one chapter written as a <em>diff</em> against C and OCaml, keeping only what is genuinely Rust-specific (expression-orientation, shadowing, the integer-overflow contract, <code>let else</code>, exhaustive <code>match</code> as control flow).</li>
+<li><strong>Lifetimes pulled forward (official 10.3 → <a href="04-lifetimes.html">module 04</a>).</strong> The official book hides lifetimes inside the generics chapter, after structs, enums, collections, and error handling. But lifetimes <em>are</em> the formalisation of the borrow rules in <a href="03-references-and-borrowing.html">module 03</a>; leaving them late means every earlier borrow error is unexplained. We teach them immediately, framed as the <strong>regions</strong> from Semantics of Programming Languages.</li>
+<li><strong>Traits unified and split from generics where it helps (official 10 + 20.2–20.3).</strong> Core generics-and-traits live in <a href="08-generics-and-traits.html">module 08</a>; the advanced trait machinery the official book parks in ch. 20 (associated types, GATs-adjacent patterns, <code>dyn</code> upcasting, the newtype/<code>Deref</code> idioms, never type, sized-ness) gets its own <a href="17-advanced-traits-and-types.html">module 17</a> rather than being smuggled into the introduction.</li>
+<li><strong>Smart pointers placed <em>after</em> traits, not before concurrency (official 15 → <a href="15-smart-pointers.html">module 15</a>).</strong> <code>Box</code>, <code>Rc</code>/<code>Arc</code>, <code>RefCell</code>, and <code>Deref</code>/<code>Drop</code> are <em>trait-defined</em> abstractions over the memory model. They cannot be explained before <a href="08-generics-and-traits.html">traits (08)</a>, and <code>RefCell</code>’s “aliasing-XOR-mutability, checked at runtime” only makes sense once the compile-time rule from <a href="03-references-and-borrowing.html">module 03</a> is fully internalised — so they sit at the head of the systems-programming Part VI, feeding directly into <a href="16-unsafe-and-ffi.html">unsafe (16)</a>.</li>
+<li><strong>OOP and dynamic dispatch promoted out of “advanced” (official 17 → <a href="09-trait-objects-and-oop.html">module 09</a>).</strong> Trait objects and <code>dyn</code> dispatch belong beside static dispatch as the <em>other half</em> of the same monomorphisation-versus-vtable trade-off, so they follow generics immediately rather than waiting for a late “OOP” chapter.</li>
+</ul>
+<h2 id="reading-paths"><a class="header" href="#reading-paths">Reading paths</a></h2>
+<p><strong>Fast track</strong> (you want fluency in a fortnight): read <a href="00-orientation.html">00</a>–<a href="01-language-delta.html">01</a> for the framing, then <em>all</em> of Part II (<a href="02-ownership-and-moves.html">02</a>–<a href="05-slices-and-duality.html">05</a>) — it is non-negotiable and load-bearing — then <a href="06-structs-and-methods.html">06</a>–<a href="09-trait-objects-and-oop.html">09</a> for the type system, <a href="11-error-handling.html">11</a>–<a href="12-closures-and-iterators.html">12</a> for the idioms that pervade real code, and <a href="13-fearless-concurrency.html">13</a>; skim <a href="10-collections.html">10</a> as reference and treat <a href="14-async.html">14</a>–<a href="20-testing-and-tooling.html">20</a> as need-driven lookups, returning for the <a href="21-capstones.html">capstones (21)</a> once the borrow checker has stopped surprising you. <strong>Complete path</strong>: read straight through 00→21 in book order — the sequence is dependency-sorted, each Part assumes the last, and the capstones are written to integrate every preceding module, so they reward (and reveal gaps in) a full read.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="21-capstones.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="21-capstones.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

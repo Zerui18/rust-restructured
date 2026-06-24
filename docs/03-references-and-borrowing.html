@@ -1,0 +1,482 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>References &amp; Borrowing - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="3-references--borrowing"><a class="header" href="#3-references--borrowing">3. References &amp; Borrowing</a></h1>
+<p><a href="02-ownership-and-moves.html">Ownership</a> gave us a destructive default: passing a value by value <em>moves</em> it, and the source name is invalidated. That is exactly right for transferring responsibility for a resource, and exactly wrong for the overwhelmingly common case where a function just wants to <em>look at</em> — or <em>temporarily mutate</em> — a value it has no intention of keeping. Threading ownership in and then back out by return value (the tuple-juggling you saw at the end of module 02) is intolerable as a calling convention.</p>
+<p>The fix is <strong>borrowing</strong>: creating a <em>reference</em> to a value without taking ownership of it. A reference is a non-owning pointer. Crucially, Rust attaches a static discipline to references — <em>aliasing XOR mutability</em> — that turns the reference type into a machine-checked proof of two distinct safety properties at once: freedom from data races and freedom from iterator invalidation. This is the chapter where Rust stops looking like a careful C++ and starts looking like nothing you have used before.</p>
+<h2 id="references-are-pointers-with-a-verb-attached"><a class="header" href="#references-are-pointers-with-a-verb-attached">References are pointers with a verb attached</a></h2>
+<p>You write <code>&amp;x</code> to borrow <code>x</code> and <code>&amp;mut x</code> to borrow it mutably. The types are <code>&amp;T</code> and <code>&amp;mut T</code>. The dual operation is dereference, <code>*r</code>, though method calls and field access auto-deref so you rarely write the star.</p>
+<pre class="playground"><code class="language-rust">fn length(s: &amp;String) -&gt; usize {
+    s.len() // auto-deref: (*s).len()
+} // s drops here, but the String it points at does NOT — s never owned it
+
+fn main() {
+    let owner = String::from("borrow me");
+    let n = length(&amp;owner);          // lend, don't give
+    println!("{owner} has length {n}"); // owner still valid: never moved
+}</code></pre>
+<p>The function signature <code>s: &amp;String</code> is a <em>contract</em>: “I will read your <code>String</code>, I will not keep it, give it back when I’m done.” When <code>s</code> goes out of scope at the closing brace, only the reference is dropped — there is nothing to free, because the reference is not the owner. That single fact is what eliminates the return-the-value-back dance.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> A <code>&amp;T</code> is morally a C++ <code>const T&amp;</code> and a <code>&amp;mut T</code> is a <code>T&amp;</code>. The analogy is <em>load-bearing only for the data layout</em> — both are just addresses, identical to a <code>const T*</code> / <code>T*</code> at the ABI level (a non-null, aligned, dereferenceable pointer). It breaks down completely on guarantees. A C++ <code>T&amp;</code> promises nothing: you can have a dozen mutable references to the same object live at once, alias them through raw pointers, and read one while writing another. Rust’s references carry a compiler-enforced exclusivity invariant that C++ references do not have, do not check, and cannot express. Equally: a <code>&amp;T</code> is <em>not</em> a Swift <code>inout</code> (that is closer to <code>&amp;mut</code>), and it is <em>not</em> an OCaml <code>ref</code> cell (that is a heap-allocated mutable box, i.e. interior mutability — see <a href="15-smart-pointers.html">smart pointers</a>).</p>
+</blockquote>
+<h2 id="the-law-aliasing-xor-mutability"><a class="header" href="#the-law-aliasing-xor-mutability">The law: aliasing XOR mutability</a></h2>
+<p>Here is the entire rule, and you should memorise it verbatim:</p>
+<blockquote>
+<p>At any point in the program, for any given value, you may have <strong>either</strong> any number of shared references <code>&amp;T</code> <strong>or</strong> exactly one mutable reference <code>&amp;mut T</code> — <strong>never both, and never two <code>&amp;mut</code>.</strong></p>
+</blockquote>
+<p>That is why <code>&amp;T</code> is also called a <em>shared</em> reference and <code>&amp;mut T</code> an <em>exclusive</em> reference; those names describe the invariant better than “immutable/mutable” do. The borrow checker rejects any program in which the regions of a <code>&amp;mut</code> and <em>any</em> other live borrow of the same value overlap.</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    let mut s = String::from("data");
+
+    let a = &amp;s;          // shared borrow #1 — fine
+    let b = &amp;s;          // shared borrow #2 — fine, readers don't conflict
+    println!("{a} {b}"); // both used here
+
+    let m = &amp;mut s;      // exclusive borrow — fine, a and b are dead now
+    m.push('!');
+    println!("{m}");
+}</code></pre>
+<p>Two attempts that violate the law, with the exact diagnostics:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut s = String::from("data");
+let r1 = &amp;mut s;
+let r2 = &amp;mut s;        // error[E0499]: cannot borrow `s` as mutable more than once at a time
+println!("{r1} {r2}");
+<span class="boring">}</span></code></pre>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut s = String::from("data");
+let r = &amp;s;             // immutable borrow
+let m = &amp;mut s;         // error[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable
+println!("{r} {m}");
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> From <em>Concurrent and Distributed Systems</em>: a <strong>data race</strong> is concurrent access to a shared location where at least one access is a write and there is no synchronisation. The aliasing-XOR-mutability law is precisely the negation of that definition applied at every program point, including single-threaded ones. If only shared references are live, every access is a read — no race. If a <code>&amp;mut</code> is live, the law guarantees it is the <em>only</em> path to that value — no aliasing, so no race. Rust lifts a runtime concurrency hazard into a static invariant of the type system. We will see in <a href="13-fearless-concurrency.html">fearless concurrency</a> that this is not an analogy but the actual mechanism: the <code>Send</code>/<code>Sync</code> traits build directly on the fact that <code>&amp;mut T</code> is unaliased, so “no data races at compile time” is a <em>theorem</em>, not a slogan.</p>
+</blockquote>
+<p>The same law also kills <strong>iterator invalidation</strong> — a single-threaded bug that has nothing to do with concurrency. In C++, <code>v.push_back(x)</code> may reallocate the backing buffer and dangle every outstanding iterator and pointer into <code>v</code>; the standard says it’s UB and the compiler says nothing. Rust forbids it structurally:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut v = vec![1, 2, 3];
+let first = &amp;v[0];   // shared borrow of v's contents
+v.push(4);           // error[E0502]: push needs &amp;mut v, but v is borrowed immutably
+println!("{first}");
+<span class="boring">}</span></code></pre>
+<p><code>Vec::push</code> has signature <code>fn push(&amp;mut self, _)</code>, so calling it requires a <code>&amp;mut v</code>. But <code>first</code> is a live <code>&amp;v[0]</code>. Mutable-while-shared is illegal, so the program does not compile — the very same rule, the very same error code, defending against a completely different failure mode. <em>Aliasing XOR mutability</em> is the single invariant from which both data-race-freedom and pointer-stability fall out.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Because a live <code>&amp;mut T</code> is provably the <em>only</em> live access path to its referent, rustc can hand LLVM the <code>noalias</code> attribute on <code>&amp;mut</code> parameters — the equivalent of decorating every <code>&amp;mut</code> argument with C’s <code>restrict</code>, but soundly and automatically. The optimiser may keep the pointee in a register across calls, reorder loads/stores around it, and skip reloads, because no other pointer can touch that memory. Hand-written C earns <code>restrict</code> only where the programmer swears an aliasing oath the compiler cannot verify; Rust earns it everywhere <code>&amp;mut</code> appears, for free, with a proof.</p>
+</blockquote>
+<h2 id="non-lexical-lifetimes-a-borrow-ends-at-its-last-use"><a class="header" href="#non-lexical-lifetimes-a-borrow-ends-at-its-last-use">Non-lexical lifetimes: a borrow ends at its last use</a></h2>
+<p>When does a borrow’s region <em>end</em>? Not at the closing brace of the enclosing scope — at the <strong>last point the reference is actually used</strong>. The borrow checker is a dataflow analysis over the control-flow graph, and a borrow is “live” only along paths between its creation and its final use. This refinement is called <strong>non-lexical lifetimes</strong> (NLL), and it is why the first example above compiled.</p>
+<p>Watch the difference. Lexically, <code>r</code> exists until the end of <code>main</code>, which would overlap the <code>&amp;mut</code>. Under NLL, <code>r</code>’s region ends at the <code>println!</code>:</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    let mut s = String::from("hi");
+    let r = &amp;s;
+    println!("{r}");   // last use of r — its borrow region ENDS here
+    let m = &amp;mut s;    // OK: no live shared borrow overlaps this
+    m.push('!');
+    println!("{m}");
+}</code></pre>
+<p>Reorder so the uses interleave and it breaks, because now the regions genuinely overlap:</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    let mut s = String::from("hi");
+    let r = &amp;s;
+    let m = &amp;mut s;    // error[E0502]: r is still live...
+    println!("{r} {m}"); // ...because r is used HERE, after m's creation
+}</code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is exactly the dataflow framework from <em>Compiler Construction</em> and the <em>region</em> discipline from <em>Semantics of Programming Languages</em>. Each borrow is assigned a <em>region</em> (a set of CFG points) constrained so the borrow’s region covers every path from its introduction to each use. The checker proves the program well-typed iff no two regions violate the aliasing-XOR-mutability constraint where they overlap. “Last use” is just liveness analysis: a borrow is dead once it is no longer live in the standard backward-flow sense. The earlier, purely lexical checker (pre-2018) was a strictly weaker approximation that rejected sound programs; NLL is the same soundness theorem with a tighter region inference.</p>
+</blockquote>
+<h2 id="shared-references-are-copy-mut-is-not"><a class="header" href="#shared-references-are-copy-mut-is-not">Shared references are <code>Copy</code>; <code>&amp;mut</code> is not</a></h2>
+<p>A <code>&amp;T</code> is <code>Copy</code> — duplicating an address is harmless precisely because all you can do through it is read, and unlimited readers are fine. So passing or assigning a <code>&amp;T</code> copies the pointer and leaves the original usable.</p>
+<p>A <code>&amp;mut T</code> is emphatically <strong>not</strong> <code>Copy</code>. If it were, you could trivially manufacture two exclusive references to the same value, demolishing the law. Assigning or passing a <code>&amp;mut</code> therefore <em>moves</em> it:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut x = 5;
+let r = &amp;mut x;
+let r2 = r;          // MOVE, not copy
+*r2 += 1;
+println!("{}", *r);  // error[E0382]: borrow of moved value: `r`
+<span class="boring">}</span></code></pre>
+<p>This looks like a problem for the everyday case of threading a <code>&amp;mut</code> through a chain of function calls — if every pass moved it away, you could only use it once. The escape hatch is <strong>reborrowing</strong>.</p>
+<h2 id="reborrowing-lending-out-a-loan"><a class="header" href="#reborrowing-lending-out-a-loan">Reborrowing: lending out a loan</a></h2>
+<p>When you pass a <code>&amp;mut</code> somewhere, the compiler does not move your reference; it <em>reborrows</em> through it, implicitly forming <code>&amp;mut *r</code> — a fresh, shorter-lived exclusive borrow derived from <code>r</code>. The reborrow is exclusive for <em>its</em> region, and while it is alive your original <code>r</code> is frozen (you cannot use <code>r</code> concurrently, which would alias). Once the reborrow’s region ends, <code>r</code> is usable again.</p>
+<pre class="playground"><code class="language-rust">fn bump(n: &amp;mut i32) { *n += 1; }
+
+fn main() {
+    let mut x = 5;
+    let r = &amp;mut x;
+    bump(r);   // reborrow: compiler passes &amp;mut *r; r frozen during the call, alive after
+    bump(r);   // r usable again — used twice despite &amp;mut not being Copy
+    println!("{}", *r);
+}</code></pre>
+<p>The borrow stack discipline (original outlives reborrow, original frozen while reborrow lives) is what keeps reborrowing sound: at every instant there is still exactly one usable exclusive path. You almost never <em>write</em> <code>&amp;mut *r</code> explicitly — coercion inserts it at call sites and assignments — but knowing it is happening explains why <code>&amp;mut</code> “works like a copy in practice” without being <code>Copy</code>.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> A reference is a single machine word (a thin pointer) for <code>Sized</code> referents; <code>&amp;T</code> and <code>&amp;mut T</code> have identical runtime representation — the distinction is purely static, erased before codegen. (References to unsized types like <code>&amp;[T]</code> and <code>&amp;str</code> are <em>fat</em> pointers carrying a length — see <a href="05-slices-and-duality.html">slices</a>.) “Reborrow” is not a runtime operation: no instruction is emitted, no pointer is copied beyond the ordinary argument pass. It is a bookkeeping entry in the borrow checker’s region graph that says “this new borrow is nested inside that old one.”</p>
+</blockquote>
+<h2 id="dangling-references-are-unrepresentable"><a class="header" href="#dangling-references-are-unrepresentable">Dangling references are unrepresentable</a></h2>
+<p>A reference, by definition of the law plus liveness, can never outlive its referent. The classic C footgun — return the address of a stack local, deallocate the frame, hold a pointer into freed memory — is rejected at the type level:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn dangle() -&gt; &amp;String {   // error[E0106]: missing lifetime specifier
+    let s = String::from("local");
+    &amp;s                     // s is dropped at the closing brace; this would dangle
+}
+<span class="boring">}</span></code></pre>
+<p>The compiler’s reasoning: the return type is a borrowed <code>&amp;String</code>, but it can only borrow from something that outlives the call, and the only candidate is <code>s</code>, which dies when the function returns. There is no valid lender, so the program is ill-typed. The fix is to return the value by ownership — <em>move it out</em> — so the caller owns it and nothing is freed:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn no_dangle() -&gt; String {
+    String::from("local")  // ownership moves to the caller; no deallocation
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> The error <code>E0106: missing lifetime specifier</code> is one of the first walls every newcomer hits, and the message is initially baffling because it points at lifetimes rather than at the dangling pointer. The compiler genuinely cannot tell <em>which</em> input the output should borrow from (here: none), so it demands you name the relationship explicitly. When you see E0106 on a function that returns a reference built from a local, the diagnosis is almost always “you meant to return an owned value” — drop the <code>&amp;</code> from the return type. When you <em>did</em> mean to return a borrow of an input, you need to annotate the connection. Both roads lead to <a href="04-lifetimes.html">lifetimes</a>, which is the entire subject of the next module; for now, internalise only that dangling is <em>impossible</em>, not merely <em>discouraged</em>.</p>
+</blockquote>
+<h2 id="self-mut-self-self-the-three-receivers"><a class="header" href="#self-mut-self-self-the-three-receivers"><code>&amp;self</code>, <code>&amp;mut self</code>, <code>self</code>: the three receivers</a></h2>
+<p>Methods make the borrow choice part of the API. The receiver is written in shorthand, but it is just an ordinary parameter of one of three forms, and the choice tells callers exactly what the method does to the value:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Receiver</th><th>Full form</th><th>Meaning</th><th>Caller cost</th></tr>
+</thead>
+<tbody>
+<tr><td><code>&amp;self</code></td><td><code>self: &amp;Self</code></td><td>reads the value</td><td>shared borrow, value stays usable</td></tr>
+<tr><td><code>&amp;mut self</code></td><td><code>self: &amp;mut Self</code></td><td>mutates the value in place</td><td>exclusive borrow, value stays usable</td></tr>
+<tr><td><code>self</code></td><td><code>self: Self</code></td><td><strong>consumes</strong> the value</td><td>move; value invalidated at call site</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="playground"><code class="language-rust">struct Counter { n: u32 }
+
+impl Counter {
+    fn value(&amp;self) -&gt; u32 { self.n }        // reads
+    fn bump(&amp;mut self) { self.n += 1; }      // mutates in place
+    fn into_inner(self) -&gt; u32 { self.n }    // consumes, returns the field
+}
+
+fn main() {
+    let mut c = Counter { n: 0 };
+    c.bump();                       // needs &amp;mut c — c must be `mut`
+    println!("{}", c.value());      // needs &amp;c — fine after the &amp;mut ended (NLL)
+    let final_value = c.into_inner(); // moves c away
+    // c is now gone; using it here would be E0382 use-after-move
+    println!("{final_value}");
+}</code></pre>
+<p>The same aliasing law governs receivers, which is why you cannot call a <code>&amp;mut self</code> method on a value you are simultaneously borrowing immutably — that is the <code>Vec::push</code> case from earlier, dressed as method-call syntax. <code>self</code> (by-value) is reserved for builder-style consuming transforms and conversions (<code>into_*</code>); reach for it only when the operation logically destroys or transforms-away the original. We cover defining these in <a href="06-structs-and-methods.html">structs and methods</a>.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is C++’s <code>const</code>/non-<code>const</code>/by-value member function distinction (<code>u32 value() const</code>, <code>void bump()</code>, <code>u32 into_inner() &amp;&amp;</code>), and the parallel is unusually tight — <code>&amp;self</code> ≈ <code>const</code>-qualified, <code>self</code> ≈ rvalue-ref-qualified <code>&amp;&amp;</code> consuming method. Where it breaks: a C++ non-<code>const</code> method gives you no exclusivity, so two callers can interleave mutations through aliasing references with no diagnostic; and <code>const</code> in C++ is shallow and castable-away (<code>const_cast</code>), whereas <code>&amp;self</code> exclusivity is enforced globally and cannot be subverted in safe code. Also note <code>self</code>-by-value <em>moves</em> and statically poisons the caller’s binding — there is no C++ equivalent of the compiler then <em>forbidding</em> later use of the moved-from object.</p>
+</blockquote>
+<h2 id="a-subtlety-borrows-can-be-disjoint"><a class="header" href="#a-subtlety-borrows-can-be-disjoint">A subtlety: borrows can be disjoint</a></h2>
+<p>The law applies <em>per value</em>, and the borrow checker understands that distinct fields of a struct are distinct values. So you can hold two <code>&amp;mut</code> into <em>different</em> fields simultaneously — there is no aliasing, hence no conflict:</p>
+<pre class="playground"><code class="language-rust">struct Pair { left: i32, right: i32 }
+
+fn main() {
+    let mut p = Pair { left: 1, right: 2 };
+    let a = &amp;mut p.left;
+    let b = &amp;mut p.right;  // OK: disjoint fields, no overlap
+    *a += 10;
+    *b += 20;
+    println!("{} {}", p.left, p.right);
+}</code></pre>
+<p>This <em>disjoint-field</em> (or “split”) borrowing is essential in practice and is why you structure data so that independently-mutated state lives in separate fields. The checker’s field-sensitivity is limited, though: it does not look <em>through</em> function calls or indices, so splitting a slice into two mutable halves needs the explicit <code>split_at_mut</code> helper (covered in <a href="05-slices-and-duality.html">slices</a>), and splitting across a method boundary sometimes forces a refactor. When the disjointness is real but the checker can’t see it, that is the signal you may need such a helper — not a sign the code is unsound.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li>A reference is a non-owning pointer; <code>&amp;T</code> shares (read-only, <code>Copy</code>), <code>&amp;mut T</code> is exclusive (read-write, <em>moves</em> and reborrows). Dropping a reference frees nothing.</li>
+<li>The one law: at any program point a value has <strong>either</strong> N shared borrows <strong>or</strong> one exclusive borrow, never both. Memorise it as <em>aliasing XOR mutability</em>.</li>
+<li>That single invariant statically proves <em>both</em> data-race-freedom (no aliased writes) <em>and</em> iterator-invalidation-freedom (no mutation under an outstanding read) — and lets rustc emit <code>noalias</code> on every <code>&amp;mut</code>.</li>
+<li>Borrows are non-lexical: a borrow’s region runs from creation to its <strong>last use</strong>, computed by dataflow/liveness over the CFG, not by lexical scope.</li>
+<li>A reference can never outlive its referent, so dangling is unrepresentable; returning a borrow of a local is the E0106 error, fixed by returning an owned value (or annotating a <a href="04-lifetimes.html">lifetime</a>).</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Predict the exact error code before compiling, then check:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut s = String::from("x");
+let r = &amp;s;
+s.push('y');
+println!("{r}");
+<span class="boring">}</span></code></pre>
+<p>Explain in one sentence why <code>push</code> is the offending call, naming its receiver type.</p>
+</li>
+<li>
+<p>The following <em>fails</em> lexically but you can make it compile by moving exactly one line, changing nothing else. Do it, and state which NLL property your edit relies on.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut v = vec![10, 20];
+let head = &amp;v[0];
+v.push(30);
+println!("{head}");
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p>Write a function <code>swap_fields(p: &amp;mut Pair)</code> for the <code>Pair</code> struct above that swaps <code>left</code> and <code>right</code> in place. Then explain why you do <em>not</em> need two <code>&amp;mut</code> borrows to do it, and what would happen to the disjoint-field example if you tried to call <code>swap_fields(&amp;mut p)</code> while <code>a</code> (a <code>&amp;mut p.left</code>) was still live.</p>
+</li>
+<li>
+<p>(★) <code>&amp;mut T</code> is not <code>Copy</code>, yet this compiles and prints <code>7</code>. Explain precisely, in terms of reborrowing and which binding is “frozen” when, why it is sound:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn add(n: &amp;mut i32, k: i32) { *n += k; }
+let mut x = 0;
+let r = &amp;mut x;
+add(r, 3);
+add(r, 4);
+println!("{}", *r);
+<span class="boring">}</span></code></pre>
+<p>Then change the second call to <code>let r2 = r; add(r2, 4);</code> and explain why <em>that</em> moves while the call form did not.</p>
+</li>
+<li>
+<p>(★) Without using <code>unsafe</code>, write a function that <em>attempts</em> to return a reference to a <code>String</code> it computes internally, observe the E0106 error, and then produce <strong>two</strong> different fixes: one that returns an owned <code>String</code>, and one that takes the storage as a <code>&amp;mut</code> out-parameter and returns <code>()</code>. Argue which design you would ship and why, referencing the cost model from <a href="02-ownership-and-moves.html">ownership</a>.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="02-ownership-and-moves.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="04-lifetimes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="02-ownership-and-moves.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="04-lifetimes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

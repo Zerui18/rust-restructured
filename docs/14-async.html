@@ -1,0 +1,582 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Asynchronous Rust - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="14-asynchronous-rust"><a class="header" href="#14-asynchronous-rust">14. Asynchronous Rust</a></h1>
+<p>In <a href="13-fearless-concurrency.html">Fearless Concurrency</a> you got <em>preemptive</em> concurrency: <code>std::thread::spawn</code> hands the OS a stack and a closure, and the kernel scheduler decides — at arbitrary instruction boundaries, driven by a timer interrupt — when to suspend one thread and resume another. Correct and, in Rust, statically race-free, but with a fixed cost: each thread carries its own kernel stack (megabytes of reserved virtual address space plus a kernel control block), and every switch crosses into the kernel and trashes the cache working set (CompArch/OS: TLB, cache). Spawn ten thousand of them to hold ten thousand mostly-idle sockets and you pay for ten thousand stacks to do almost nothing.</p>
+<p>Async is the <em>cooperative</em> alternative. One OS thread, or a small pool, runs an in-process scheduler multiplexing thousands of logical tasks. A task yields only at points <em>you</em> marked, and the whole machine is built so the compiler still proves memory- and data-race-safety statically. This is the tool for <strong>I/O-bound, high-connection-count</strong> work — the multithreaded web server in the <a href="21-capstones.html">capstones</a> chapter, or any network service holding thousands of slow, mostly-waiting TCP connections (Computer Networking). It is <em>not</em> a speedup for CPU-bound work; for that, use threads, or both together.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is the cooperative-vs-preemptive scheduling distinction from Concurrent and Distributed Systems, lifted into a language feature. OS threads are preemptively scheduled by the kernel; async tasks are cooperatively scheduled by a user-space runtime. Cooperative scheduling has lower switching cost (no syscall, no kernel stack) but demands that tasks <em>voluntarily</em> yield — a task that never yields starves all others sharing its thread, exactly the failure mode of cooperative kernels of the 1990s.</p>
+</blockquote>
+<h2 id="the-core-mechanism-asyncawait-compiles-to-a-state-machine"><a class="header" href="#the-core-mechanism-asyncawait-compiles-to-a-state-machine">The core mechanism: <code>async</code>/<code>.await</code> compiles to a state machine</a></h2>
+<p>The single most important fact in this chapter, and what makes Rust’s async model different from almost every other language’s: an <code>async fn</code> or <code>async</code> block does not <em>run</em> anything. It compiles to an anonymous struct — a <strong>state machine</strong> — implementing the <code>Future</code> trait. Calling the function just <em>constructs</em> that struct. Nothing executes until something polls it.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::future::Future;
+
+async fn fetch_len(url: &amp;str) -&gt; usize {
+    let body = download(url).await;   // suspension point 1
+    let processed = transform(body).await; // suspension point 2
+    processed.len()
+}
+<span class="boring">}</span></code></pre>
+<p><code>fetch_len</code> desugars to roughly a function returning <code>impl Future&lt;Output = usize&gt;</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn fetch_len(url: &amp;str) -&gt; impl Future&lt;Output = usize&gt; {
+    async move {
+        let body = download(url).await;
+        let processed = transform(body).await;
+        processed.len()
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>The <code>async move { ... }</code> block is itself compiled into a hidden enum-like state machine. Conceptually:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Sketch of what rustc generates — you never write this.
+enum FetchLen&lt;'a&gt; {
+    Start { url: &amp;'a str },
+    AwaitingDownload { fut: DownloadFut },          // paused at .await #1
+    AwaitingTransform { fut: TransformFut },         // paused at .await #2
+    Done,
+}
+<span class="boring">}</span></code></pre>
+<p>Each <code>.await</code> is a possible suspension point. By liveness analysis across those points, the compiler computes exactly which locals are still live at each one and stores precisely those in the corresponding variant. This is a <strong>continuation-passing-style transform</strong>: it carves the linear body into segments delimited by <code>.await</code>, and the variant you are “in” <em>is</em> the saved continuation.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> This is the CPS transformation from Compiler Construction, materialised as a data structure instead of a closure. Where a CPS compiler heap-allocates a closure capturing the live environment at each yield, rustc lays out a <em>flat enum</em> whose largest variant bounds the whole future’s size — no per-suspension allocation. The liveness analysis deciding what each variant stores is the same dataflow analysis you saw for register allocation, run over <code>.await</code> boundaries instead of basic blocks.</p>
+</blockquote>
+<h3 id="the-future-trait"><a class="header" href="#the-future-trait">The <code>Future</code> trait</a></h3>
+<p>A future is anything implementing this:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Future {
+    type Output;
+    fn poll(self: Pin&lt;&amp;mut Self&gt;, cx: &amp;mut Context&lt;'_&gt;) -&gt; Poll&lt;Self::Output&gt;;
+}
+
+pub enum Poll&lt;T&gt; {
+    Ready(T),
+    Pending,
+}
+<span class="boring">}</span></code></pre>
+<p><code>poll</code> is the heart of it. The runtime calls <code>poll</code>; the state machine runs forward from its current state until it hits an <code>.await</code> whose inner future returns <code>Pending</code>, whereupon this future <em>also</em> returns <code>Pending</code>, recording which state it stopped in. The next <code>poll</code> resumes from that state. When it runs off the end, it returns <code>Ready(value)</code>.</p>
+<p><code>.await</code> itself desugars, in spirit, to a poll-or-yield loop:</p>
+<pre><code class="language-text">loop {
+    match inner_future.poll(cx) {
+        Ready(v)  =&gt; break v,          // got the value, continue past the .await
+        Pending   =&gt; return Pending,   // yield: bubble Pending up to OUR caller
+    }
+}
+</code></pre>
+<p>The crucial line is <code>Pending =&gt; return Pending</code>. When an inner future isn’t ready, control doesn’t block — it returns all the way up through every enclosing future to the runtime, which is then free to poll a <em>different</em> task. That bubbling-up is the cooperative yield. Everything <em>between</em> two <code>.await</code> points runs straight through, synchronously.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> A <code>Future</code> is morally a reified continuation — like CPS-converting an OCaml function by hand, except the compiler does it and packs the environment into a struct. The <code>poll</code> signature <code>Poll&lt;T&gt;</code> from <code>&amp;mut self</code> should also remind you of <code>Iterator::next(&amp;mut self) -&gt; Option&lt;T&gt;</code>: both pull-based, both driven by repeated calls, both threading state through <code>&amp;mut self</code>. <code>for</code> desugars to <code>Iterator</code>; <code>.await</code>/<code>async</code> desugars to <code>Future</code>. The analogy breaks at <em>who drives</em>: you drive an iterator with a loop you wrote; a runtime drives a future, and only re-polls when told it <em>might</em> now progress (the waker, below) — it does not spin.</p>
+</blockquote>
+<h3 id="futures-are-inert-until-polled--unlike-js-promises"><a class="header" href="#futures-are-inert-until-polled--unlike-js-promises">Futures are inert until polled — unlike JS Promises</a></h3>
+<p>If you come from TypeScript, internalise this now. A JavaScript <code>Promise</code> is <strong>eager</strong>: calling an <code>async function</code> starts its body executing up to the first <code>await</code>, scheduling work on the event loop <em>whether or not anyone ever <code>.then</code>s it</em>. A Rust future is <strong>lazy</strong>: calling an <code>async fn</code> runs <em>zero</em> of its body, handing you an inert state machine in its <code>Start</code> state. Nothing happens until a runtime polls it — because you <code>.await</code>ed it, or handed it to the runtime to drive.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let fut = fetch_len("https://example.com"); // NOTHING has happened. No request sent.
+// ... fut is just a value. You could drop it here and no I/O ever occurs.
+let n = fut.await;                            // NOW it runs (when the surrounding task is polled).
+<span class="boring">}</span></code></pre>
+<p>The compiler enforces awareness of this: an unused future raises a <code>#[must_use]</code> warning, because constructing a future and never awaiting it is almost always a bug — the dead giveaway of a TS habit applied to Rust.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> <code>warning: unused implementer of </code>Future<code> that must be used</code> — <code>note: futures do nothing unless you </code>.await<code> or poll them</code>. You wrote <code>something_async();</code> expecting a fire-and-forget side effect, as you would in JS. In Rust that line constructs a future and immediately drops it, doing nothing. The fix: <code>.await</code> it, or hand it to the runtime with <code>spawn</code> (below) if you genuinely want it to run independently.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Laziness is what makes Rust async zero-cost and allocation-free in the common case. A future is a value of statically known size (its largest state-machine variant), so an <code>async fn</code> awaiting other <code>async fn</code>s composes their state machines <em>by inlining the inner enum as a field of an outer variant</em>. A whole leaf-to-root call tree can collapse into one flat struct on the caller’s stack — no heap, no per-<code>await</code> allocation. Eager models like JS <em>must</em> heap-allocate and schedule a promise object per call; Rust pays nothing until you opt into spawning.</p>
+</blockquote>
+<h2 id="runtimes-rust-ships-none"><a class="header" href="#runtimes-rust-ships-none">Runtimes: Rust ships none</a></h2>
+<p>The standard library defines <code>Future</code>, <code>Poll</code>, <code>Context</code>, <code>Waker</code>, and <code>Pin</code>, but <em>no executor</em>: no built-in event loop, no <code>tokio</code>-equivalent in <code>std</code>, and <code>fn main</code> cannot be <code>async</code>:</p>
+<pre class="playground"><code class="language-rust">async fn main() { /* ... */ }
+// error[E0752]: `main` function is not allowed to be `async`</code></pre>
+<p>This is deliberate. A runtime makes hard, workload-specific tradeoffs: number of OS threads, work-stealing vs single-threaded, timer granularity, I/O backend (epoll/kqueue/io_uring), whether it allocates at all. A 64-core web server and a heap-less microcontroller want opposite runtimes, so Rust makes the executor <em>pluggable</em>: you pick a crate. <a href="https://tokio.rs"><code>tokio</code></a> dominates server-side; <code>smol</code> is minimal; <code>embassy</code> targets embedded. You bridge sync <code>main</code> to async with <code>block_on</code>:</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    // The #[tokio::main] macro expands to roughly this:
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    runtime.block_on(async {
+        let n = fetch_len("https://example.com").await;
+        println!("{n}");
+    });
+}</code></pre>
+<p><code>block_on</code> is the boundary between the synchronous and asynchronous worlds: it parks the current OS thread and drives the given future (plus any tasks spawned onto the runtime) to completion. Everything <em>inside</em> avoids blocking; the thread calling <code>block_on</code> <em>does</em> block, by design — the one place you choose to bridge worlds.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> When <code>poll</code> returns <code>Pending</code>, how does the runtime know when to retry? It does <em>not</em> busy-poll. The <code>Context</code> passed to <code>poll</code> carries a <code>Waker</code>. A leaf future (say, a socket read) stashes a clone of the waker with the OS event source: “wake me when this fd is readable” registered with epoll/kqueue. On kernel readiness the reactor calls <code>waker.wake()</code>, pushing the owning task back onto the run queue. The loop: poll → <code>Pending</code> + waker registered → thread sleeps in <code>epoll_wait</code> → readiness → wake → re-poll. The waker is what makes laziness efficient rather than a spin-loop.</p>
+</blockquote>
+<h2 id="composing-futures-join-select-and-spawning-tasks"><a class="header" href="#composing-futures-join-select-and-spawning-tasks">Composing futures: <code>join</code>, <code>select</code>, and spawning tasks</a></h2>
+<p>Several ways to make multiple futures progress, differing in <em>who owns the concurrency</em> and <em>what “done” means</em>.</p>
+<p><strong><code>join</code> / <code>join!</code> — wait for all.</strong> Produces a single future that polls each child and completes when <em>all</em> complete, yielding a tuple of outputs.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use tokio::join;
+async fn run() {
+    let (a, b) = join!(fetch_len("https://a.com"), fetch_len("https://b.com"));
+    println!("{a} {b}");
+}
+<span class="boring">}</span></code></pre>
+<p>Both children run <em>concurrently within the same task</em> — when one returns <code>Pending</code>, the join polls the other. No threads, no spawning. Use <code>join_all</code> for a runtime-sized <code>Vec</code> of futures (with a Pin caveat, below).</p>
+<p><strong><code>select!</code> — race; take the first.</strong> Polls multiple futures and completes as soon as <em>one</em> is ready, returning its result and (typically) dropping the others.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use tokio::select;
+async fn race() {
+    select! {
+        r = fetch_len("https://fast.com")  =&gt; println!("fast won: {r}"),
+        r = fetch_len("https://slow.com")  =&gt; println!("slow won: {r}"),
+    }
+}
+<span class="boring">}</span></code></pre>
+<p><code>select</code> builds <strong>timeouts</strong> with no special machinery — race the real future against a sleep:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn timeout&lt;F: Future&gt;(work: F, limit: Duration) -&gt; Result&lt;F::Output, Duration&gt; {
+    select! {
+        out = work               =&gt; Ok(out),
+        _   = tokio::time::sleep(limit) =&gt; Err(limit),
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>A timeout is <em>just composition</em>: two futures, first to finish wins. That is the payoff of futures being first-class values — <code>timeout</code>, <code>retry</code>, <code>throttle</code> are ordinary functions over futures, not built-in keywords.</p>
+<p><strong><code>spawn</code> — hand a task to the runtime to drive independently.</strong> <code>join!</code> and <code>select!</code> keep everything in <em>one</em> task; the futures share that task’s poll budget and cannot outlive the <code>join!</code>. <code>tokio::spawn</code> is different: it submits a future as a <em>new top-level task</em> the executor schedules independently, possibly on another OS thread (tokio’s default runtime is multithreaded and <strong>work-stealing</strong>). It returns a <code>JoinHandle</code>, itself a future you <code>.await</code> for the result.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn run() {
+    let handle = tokio::spawn(async {
+        do_background_work().await
+    });
+    // ... do other things concurrently ...
+    let result = handle.await.unwrap(); // JoinHandle::Output is Result&lt;T, JoinError&gt;
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>join!</code> is like interleaving two coroutines on the <em>same</em> thread yourself — structured, scoped, no shared-thread escape. <code>tokio::spawn</code> is like <code>std::thread::spawn</code> from <a href="13-fearless-concurrency.html">chapter 13</a>: fire-it-and-get-a-handle, may land on a different OS thread, hence requires <code>Send</code> (next section). The analogy to threads breaks on <em>cost and number</em>: spawning a task is a small heap box plus a queue push (microseconds, kilobytes), so 100,000 tasks is routine where 100,000 threads is not.</p>
+</blockquote>
+<h3 id="tasks-vs-threads-vs-futures-the-mn-picture"><a class="header" href="#tasks-vs-threads-vs-futures-the-mn-picture">Tasks vs threads vs futures: the M:N picture</a></h3>
+<p>Three nested units of concurrency:</p>
+<ul>
+<li>A <strong>future</strong> is the finest grain — one state machine, one unit of <em>cooperative</em> progress, possibly containing a tree of child futures. Concurrency <em>within</em> a task lives here, via <code>join!</code>/<code>select!</code>.</li>
+<li>A <strong>task</strong> is a top-level future the runtime <em>owns and schedules</em> — the unit on the executor’s run queue. Concurrency <em>between</em> tasks lives here.</li>
+<li>A <strong>thread</strong> is an OS-scheduled execution resource; the runtime runs a pool and multiplexes many tasks onto few threads.</li>
+</ul>
+<p>This is an <strong>M:N model</strong>: M tasks scheduled onto N OS threads (N ≈ core count). Work-stealing lets an idle worker steal tasks from a busy worker’s queue, balancing load transparently. A task can migrate between threads at <code>.await</code> points — precisely why spawned futures must be <code>Send</code>.</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> M:N user-level threading is the green-threads / user-level-scheduling design from Concurrent and Distributed Systems. The classic green-thread problem — one blocking syscall stalls the whole scheduler thread — is dodged because async futures <em>never</em> make a blocking syscall at an <code>.await</code>; they register a waker and yield. For genuinely blocking work, <code>spawn_blocking</code> moves it to a dedicated thread pool so it can’t stall the cooperative scheduler.</p>
+</blockquote>
+<h2 id="the-starvation-trap-only-await-yields"><a class="header" href="#the-starvation-trap-only-await-yields">The starvation trap: only <code>.await</code> yields</a></h2>
+<p>Cooperative scheduling has a sharp edge. <strong>A task yields control <em>only</em> at an <code>.await</code> point.</strong> Everything between <code>.await</code>s runs to completion with no preemption. So a future doing a long CPU-bound stretch — or worse, calling a <em>blocking</em> synchronous API like <code>std::thread::sleep</code> or a synchronous file read — without awaiting will <strong>starve</strong> every other task sharing its thread. The runtime cannot preempt it; there is no timer interrupt in user space.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn greedy() {
+    for chunk in huge_dataset() {
+        crunch(chunk);            // CPU-bound, no .await — NOTHING ELSE RUNS on this thread
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>To stay cooperative inside a long loop, hand control back explicitly with <code>tokio::task::yield_now().await</code> after each chunk — a future that just yields once:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn polite() {
+    for chunk in huge_dataset() {
+        crunch(chunk);
+        tokio::task::yield_now().await;  // "nothing to wait for, but let others run"
+    }
+}
+<span class="boring">}</span></code></pre>
+<p><code>yield_now</code> returns <code>Pending</code> exactly once (re-queuing its waker immediately) then <code>Ready</code> — a pure yield with no waiting, unlike <code>sleep</code>. But yielding isn’t free, and on a multithreaded work-stealing runtime a CPU loop on one worker doesn’t block <em>other</em> workers. The honest rule: don’t do unbounded blocking or CPU work inside an <code>async fn</code>. Move CPU-bound work to threads (<code>spawn_blocking</code> or a <code>rayon</code> pool) and reserve async for I/O-bound waiting.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> The most common real bug: calling <code>std::thread::sleep(d)</code> instead of <code>tokio::time::sleep(d).await</code> inside async code. <code>std::thread::sleep</code> blocks the <em>OS thread</em>, freezing every task multiplexed onto it — and there’s no compiler error, just mysterious latency. Worse on a single-threaded runtime, where it deadlocks anything the frozen tasks were supposed to feed. Fix: use the runtime’s async timer (<code>tokio::time::sleep</code>) which yields; for unavoidable blocking calls (legacy sync libraries, synchronous file I/O), wrap them in <code>tokio::task::spawn_blocking</code>.</p>
+</blockquote>
+<h2 id="send-across-await-points"><a class="header" href="#send-across-await-points"><code>Send</code> across <code>.await</code> points</a></h2>
+<p>A spawned task may move between worker threads, parking its live state — the state-machine struct — across <code>.await</code>. So everything held <em>across</em> an <code>.await</code> must be <code>Send</code>, since it may be resumed on a different thread. This is the same <code>Send</code>/<code>Sync</code> story from <a href="13-fearless-concurrency.html">Fearless Concurrency</a>, now applied to whatever the compiler stored in the future’s variants.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::rc::Rc;
+async fn bad() {
+    let local = Rc::new(5);          // Rc is !Send
+    do_io().await;                   // &lt;-- `local` is live across this .await
+    println!("{}", local);
+}
+// tokio::spawn(bad()) =&gt;
+// error: future cannot be sent between threads safely
+//   the trait `Send` is not implemented for `Rc&lt;i32&gt;`
+//   note: future is not `Send` as this value is used across an await
+<span class="boring">}</span></code></pre>
+<p>The compiler tracks, per <code>.await</code>, exactly which locals are live (the liveness analysis from the desugaring). If a <code>!Send</code> value is live across an <code>.await</code>, the whole future is <code>!Send</code> and can’t be spawned on a multithreaded runtime. The fix is usually to make the value <code>Send</code> (<code>Arc</code> not <code>Rc</code>) — or, tellingly, to <em>not hold it across the await</em>: drop it in an inner scope first, and the future stays <code>Send</code>.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn good() {
+    {
+        let local = Rc::new(5);
+        println!("{}", local);       // used and dropped BEFORE the await
+    }                                // `local` no longer live here
+    do_io().await;                   // nothing !Send is live across this point
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> “Held across an <code>.await</code>” is a dataflow notion, not a lexical one. The compiler asks: at each suspension point, is this variable in the live set? A value constructed, used, and dropped <em>between</em> two awaits never appears in any variant, so it never affects <code>Send</code>-ness. That is why the inner-scope trick works: ending the scope kills the liveness, so the variable isn’t stored in the variant straddling the next <code>.await</code>.</p>
+</blockquote>
+<h2 id="streams-asynchronous-iterators"><a class="header" href="#streams-asynchronous-iterators">Streams: asynchronous iterators</a></h2>
+<p>A <code>Future</code> resolves to <em>one</em> value. Many async sources produce a <em>sequence</em> over time — incoming packets, lines from an async read, channel messages. That is a <strong><code>Stream</code></strong>: the async analogue of <code>Iterator</code>, and exactly the merge of the two traits you know:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// From Iterator: a sequence, next() -&gt; Option&lt;Item&gt;.
+// From Future:   readiness over time, poll() -&gt; Poll&lt;Output&gt;.
+// Stream merges them:
+trait Stream {
+    type Item;
+    fn poll_next(self: Pin&lt;&amp;mut Self&gt;, cx: &amp;mut Context&lt;'_&gt;) -&gt; Poll&lt;Option&lt;Self::Item&gt;&gt;;
+}
+<span class="boring">}</span></code></pre>
+<p><code>poll_next</code> returns <code>Poll&lt;Option&lt;Item&gt;&gt;</code>: the outer <code>Poll</code> says “ready or come back later” (the <code>Future</code> part); the inner <code>Option</code> says “another item, or end-of-stream <code>None</code>” (the <code>Iterator</code> part). As of this writing <code>Stream</code> lives in the <code>futures</code> crate, not <code>std</code> (stabilisation is in progress), but the ecosystem agrees on this shape.</p>
+<p>You rarely call <code>poll_next</code> directly. Just as the <code>Iterator</code> combinators live on <code>Iterator</code>, the async combinators (<code>.next()</code>, <code>.map</code>, <code>.filter</code>, <code>.take</code>) live on a separate <strong><code>StreamExt</code></strong> extension trait — <code>Ext</code> is the community idiom for “convenience layer over a minimal core trait.” You must bring it into scope:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use tokio_stream::StreamExt;   // &lt;-- forgetting this is the usual first error
+
+async fn consume(mut stream: impl Stream&lt;Item = i32&gt; + Unpin) {
+    while let Some(value) = stream.next().await {  // async pull
+        println!("{value}");
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>Note the loop shape: <code>while let Some(v) = stream.next().await</code>, not <code>for v in stream</code>. Rust has no <code>for await</code> syntax (yet); <code>while let</code> over <code>.next().await</code> is the idiom. Each iteration hits an <code>.await</code>, so each is a cooperative yield point — a stream consumer interleaves naturally with other tasks.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> <code>error[E0599]: no method named </code>next<code> found for ...</code>, <code>StreamExt is not in scope</code>. You have a <code>Stream</code> but called <code>.next()</code> without <code>use futures::StreamExt;</code> (or the runtime’s re-export, <code>tokio_stream::StreamExt</code>). The method-providing trait must be imported — the same in-scope rule as any extension trait, in spirit identical to needing <code>Iterator</code> in scope.</p>
+</blockquote>
+<h2 id="pin-and-unpin-the-self-referential-future-problem"><a class="header" href="#pin-and-unpin-the-self-referential-future-problem">Pin and Unpin: the self-referential-future problem</a></h2>
+<p>This is the part everyone finds strange, so let’s be precise about <em>why</em> it has to exist. Recall the state machine. Between two <code>.await</code> points your code can take a reference into a local that is <em>also</em> stored in the future:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn selfref() {
+    let buf = [0u8; 1024];
+    let slice = &amp;buf[..];      // `slice` borrows `buf`
+    do_io(slice).await;        // both `buf` AND `slice` are live across this .await
+}
+<span class="boring">}</span></code></pre>
+<p>Both <code>buf</code> and <code>slice</code> must be saved in the state-machine variant straddling that <code>.await</code>, but <code>slice</code> points <em>into</em> <code>buf</code>, and both now live in the <em>same</em> struct. The future is <strong>self-referential</strong>: a field holds a pointer to another field of the same struct.</p>
+<p>Self-referential structs are catastrophic to <em>move</em>. A move in Rust is a bitwise copy of bytes to a new address (recall <a href="02-ownership-and-moves.html">moves</a>), and Rust does <strong>not</strong> fix up internal pointers. After the move, <code>slice</code> still holds the <em>old</em> address of <code>buf</code>, now garbage — dereferencing it is a use-after-free. This is exactly why the borrow checker normally forbids moving a value while a reference into it is live; but here the reference is <em>inside</em> the value being moved, so the usual rule can’t apply.</p>
+<p>The fix is <strong><code>Pin</code></strong>. <code>Pin&lt;P&gt;</code> wraps a pointer <code>P</code> (<code>&amp;mut T</code>, <code>Box&lt;T&gt;</code>, …) and statically guarantees the <em>pointee</em> never moves again until dropped. Look back at the trait: <code>poll</code> takes <code>self: Pin&lt;&amp;mut Self&gt;</code>, not <code>&amp;mut self</code>. That is the whole point — to poll a future (and drive its self-references forward) you must first pin it, promising it won’t move out from under its own pointers. A pinned future has a stable address, so its self-references stay valid. Pinning the <em>pointer</em> is fine: you can move a <code>Pin&lt;Box&lt;Fut&gt;&gt;</code> freely, because moving the <code>Box</code> doesn’t move the heap allocation the <code>Fut</code> lives in. What’s pinned is the pointee at its address.</p>
+<p><strong><code>Unpin</code></strong> is the escape hatch: an auto-trait (like <code>Send</code>) the compiler implements for every type <em>safe to move even when pinned</em> — i.e. without internal self-references. <code>i32</code>, <code>String</code>, <code>Vec&lt;T&gt;</code>, ordinary structs: all <code>Unpin</code>. For an <code>Unpin</code> type, <code>Pin</code> is a no-op wrapper — you can freely get <code>&amp;mut T</code> back out. The only <code>!Unpin</code> types are ones that genuinely can’t move after pinning: compiler-generated self-referential futures, and a few hand-built types opting out with <code>PhantomPinned</code>. Mental rule: <strong><code>Unpin</code> is the normal case; <code>!Unpin</code> is the rare self-referential case; pinning only constrains you when the type is <code>!Unpin</code>.</strong></p>
+<p>Why doesn’t <code>.await</code> force <code>Pin</code> everywhere? Because awaiting a future <em>pins it implicitly</em> — the <code>.await</code> machinery pins it in place (on the current stack frame) before polling. You only meet <code>Pin</code>/<code>Unpin</code> in errors when you handle a future <em>as a value</em> without awaiting it directly:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let futures: Vec&lt;Box&lt;dyn Future&lt;Output = ()&gt;&gt;&gt; = vec![Box::new(a), Box::new(b)];
+trpl::join_all(futures).await;
+// error[E0277]: `dyn Future&lt;Output = ()&gt;` cannot be unpinned
+//   the trait `Unpin` is not implemented for `dyn Future&lt;Output = ()&gt;`
+//   = note: consider using the `pin!` macro / `Box::pin`
+<span class="boring">}</span></code></pre>
+<p><code>join_all</code> needs to poll each future, so it needs each pinned. A bare <code>dyn Future</code> isn’t <code>Unpin</code>, so you must pin them first — <code>Box::pin(a)</code> gives <code>Pin&lt;Box&lt;dyn Future&gt;&gt;</code>, or the <code>std::pin::pin!</code> macro pins on the stack:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::pin::pin;
+let a = pin!(async { /* ... */ });
+let b = pin!(async { /* ... */ });
+let futures: Vec&lt;Pin&lt;&amp;mut dyn Future&lt;Output = ()&gt;&gt;&gt; = vec![a, b];
+trpl::join_all(futures).await;
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <code>Pin</code> is a <em>type-system encoding of an address-stability invariant</em> — Curry-Howard flavour from Logic and Proof. The invariant “this value’s address never changes after pinning” can’t be checked at runtime, so it’s lifted into a type whose API makes violating it impossible in safe code (you can’t get <code>&amp;mut T</code> out of <code>Pin&lt;&amp;mut T&gt;</code> unless <code>T: Unpin</code>). The proof obligation discharged when you <em>do</em> go through <code>unsafe</code> (a manual <code>Future</code> impl) is precisely “I uphold the pin contract.”</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Why not have the compiler patch internal pointers on every move, like a moving GC? Because that taxes <em>every</em> move of <em>every</em> type to fix a problem only self-referential types have, and Rust’s moves are meant to be trivial <code>memcpy</code>s with no hidden code. <code>Pin</code> instead makes the <em>minority</em> (self-referential futures) bear the cost via a restrictive API, while <code>Unpin</code> exempts the overwhelming majority at zero cost.</p>
+</blockquote>
+<h2 id="async-in-traits-the-current-status"><a class="header" href="#async-in-traits-the-current-status"><code>async</code> in traits: the current status</a></h2>
+<p>Until recently you could not write <code>async fn</code> in a trait at all: the desugared return type is an <em>anonymous, per-implementation</em> future, with no way to name it in the trait. As of Rust 1.75, <strong><code>async fn</code> in traits (“AFIT”) is stable</strong> for the common case:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>trait Fetcher {
+    async fn fetch(&amp;self, url: &amp;str) -&gt; String;   // stable since 1.75
+}
+<span class="boring">}</span></code></pre>
+<p>This desugars to <code>fn fetch(&amp;self, url: &amp;str) -&gt; impl Future&lt;Output = String&gt;</code> — return-position <code>impl Trait</code> in a trait. The remaining sharp edge: there is no clean built-in way to require, <em>from the trait definition</em>, that the returned future be <code>Send</code>, which matters when implementors must be usable with <code>tokio::spawn</code>. The community workaround for public, dyn-compatible, <code>Send</code>-requiring async traits is the <a href="https://docs.rs/async-trait"><code>async-trait</code></a> macro, which rewrites each method to return a boxed <code>Pin&lt;Box&lt;dyn Future + Send&gt;&gt;</code> (one heap allocation per call), sidestepping both naming and dyn-compatibility — at that allocation cost. For internal traits where you control the types, native AFIT is preferred. This area is still in motion; check current docs.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> Native <code>async fn</code> in traits is <em>not yet <code>dyn</code>-compatible</em> in general — you cannot always make <code>dyn Fetcher</code> from a trait with <code>async fn</code> methods, because the return type is an opaque <code>impl Future</code> whose size isn’t known for the vtable (recall the object-safety constraints in <a href="09-trait-objects-and-oop.html">trait objects</a>). If you need dynamic dispatch over an async trait, reach for <code>#[async_trait]</code>, which boxes the future to give the vtable a uniform pointer-sized return type.</p>
+</blockquote>
+<h2 id="when-to-use-async--an-honest-map"><a class="header" href="#when-to-use-async--an-honest-map">When to use async — an honest map</a></h2>
+<p>Async is not free and not always the answer:</p>
+<ul>
+<li><strong>I/O-bound, many concurrent waits</strong> (servers, proxies, scrapers, anything holding thousands of mostly-idle connections): async wins decisively — one small state machine per connection instead of one OS stack.</li>
+<li><strong>CPU-bound, parallelisable</strong> (image processing, numerical kernels): use threads (<code>rayon</code>, a thread pool). Async gives you <em>nothing</em> here — it structures concurrency, it is not a parallelism primitive, and CPU work in an <code>async fn</code> just starves the scheduler.</li>
+<li><strong>Both</strong>: combine them. Encode video on a dedicated thread pool, notify the async network layer via a channel. <code>tokio::spawn_blocking</code> exists precisely to bridge blocking/CPU work into an async program without stalling the executor.</li>
+</ul>
+<p>The costs of going async: a steeper type-level curve (<code>Pin</code>, <code>Send</code>-across-await, lifetimes in futures), longer compiles and larger binaries (every distinct future is a monomorphised state machine), worse backtraces (the stack is a state machine, not a real stack), and the ever-present starvation footgun. The reward, when the workload fits, is C10k-and-beyond on a handful of threads with statically-guaranteed data-race freedom — something thread-per-connection cannot afford.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li><code>async fn</code>/<code>async {}</code> compile to an anonymous <strong>state machine</strong> implementing <code>Future</code>; <code>.await</code> carves the body at suspension points (a compiler CPS transform). <code>.await</code> = “poll the inner future; if <code>Pending</code>, register the waker and yield <code>Pending</code> up to the runtime.”</li>
+<li>Futures are <strong>lazy/inert</strong>: calling an <code>async fn</code> runs none of its body and allocates nothing; only polling runs it. The opposite of eager JS Promises, and the source of zero-cost composition.</li>
+<li>Rust ships <strong>no runtime</strong> — the executor is a pluggable crate (<code>tokio</code> etc.) matched to the workload, from 64-core servers to heapless microcontrollers. <code>block_on</code> is where you cross from sync to async.</li>
+<li>Three nested units in an <strong>M:N</strong> model: futures (concurrency <em>within</em> a task via <code>join!</code>/<code>select!</code>), tasks (scheduled by the runtime, <code>spawn</code>), threads (the few OS threads tasks multiplex onto, work-stealing). Async yields <strong>only</strong> at <code>.await</code>, so blocking/CPU code between awaits <em>starves</em> the scheduler.</li>
+<li><code>Pin</code>/<code>Unpin</code> exist because state machines can become <strong>self-referential</strong> and Rust moves don’t fix internal pointers; <code>Pin</code> guarantees address stability so <code>poll</code> is sound, <code>Unpin</code> (the normal case) exempts non-self-referential types. Spawning needs <code>Send</code>, decided by what’s live <em>across</em> an <code>.await</code>.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Write an <code>async fn</code> that constructs a future with <code>let f = some_async_call();</code>, never <code>.await</code>s it, and returns. Predict the compiler diagnostic, then confirm it. Explain in one sentence why this is a warning and not an error, and why the equivalent JS code <em>would</em> perform the side effect.</p>
+</li>
+<li>
+<p>Build a <code>retry</code> combinator: <code>async fn retry&lt;F, Fut, T, E&gt;(mut make: F, attempts: u32) -&gt; Result&lt;T, E&gt;</code> where <code>F: FnMut() -&gt; Fut</code> and <code>Fut: Future&lt;Output = Result&lt;T, E&gt;&gt;</code>. It calls <code>make()</code> to get a fresh future each attempt (why must you re-call <code>make</code> rather than <code>.await</code> the same future twice — what does the note about polling-after-<code>Ready</code> say?), awaits it, and retries on <code>Err</code> up to <code>attempts</code> times.</p>
+</li>
+<li>
+<p>Take the <code>bad()</code>/<code>good()</code> <code>Rc</code>-across-await example. Without changing <code>Rc</code> to <code>Arc</code>, make the future <code>Send</code>-spawnable purely by restructuring scopes. Then explain, in terms of the state-machine variant straddling the <code>.await</code>, exactly <em>why</em> your version is <code>Send</code> and the original is not.</p>
+</li>
+<li>
+<p>You have a <code>tokio</code> runtime and inside an <code>async fn</code> you write <code>std::thread::sleep(Duration::from_secs(1));</code> in a loop that’s supposed to run concurrently with another task via <code>join!</code>. Describe the observed behaviour, why there is <em>no</em> compiler error, and give two distinct correct fixes (one if the sleep is a real wait, one general one for an unavoidable blocking call).</p>
+</li>
+<li>
+<p>(★) Hand-write a type <code>Countdown { remaining: u32 }</code> that implements <code>Future&lt;Output = ()&gt;</code> directly (no <code>async</code>): each <code>poll</code> decrements <code>remaining</code>, and returns <code>Pending</code> (after re-waking via <code>cx.waker().wake_by_ref()</code>) until it hits zero, then <code>Ready(())</code>. Then explain why <code>Countdown</code> is <code>Unpin</code> even though it implements <code>Future</code> by hand, whereas a compiler-generated <code>async {}</code> future generally is not.</p>
+</li>
+<li>
+<p>(★) <code>trpl::join_all(vec![Box::new(fut_a), Box::new(fut_b)])</code> fails with <code>the trait Unpin is not implemented for dyn Future</code>. Explain the error in terms of what <code>join_all</code> must do to each future, why <code>await</code>ing a single future directly does <em>not</em> trigger this, and fix it two ways: with <code>Box::pin</code> and with the <code>std::pin::pin!</code> macro. State the difference in <em>where</em> each pins the future (heap vs stack) and when you’d prefer each.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="13-fearless-concurrency.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="15-smart-pointers.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="13-fearless-concurrency.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="15-smart-pointers.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

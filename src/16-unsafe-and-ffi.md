@@ -1,0 +1,235 @@
+# 16. Unsafe Rust, FFI & the Memory Model
+
+Everything you have read so far has been *safe Rust*: a language whose type checker proves, statically, the absence of use-after-free, double-free, data races, and out-of-bounds access. That proof is the whole product. But the proof rests on a checker that is — and must be — *conservative*. A sound static analysis rejects every unsafe program and, as a price, also rejects some sound programs it simply cannot reason about. `Vec`'s growth, `split_at_mut`'s non-overlapping borrows, a hand-rolled doubly-linked list, calling `malloc`, talking to an MMIO register at a fixed address — all sound, all unprovable by the borrow checker.
+
+`unsafe` is the escape hatch for exactly these cases, and it is far narrower than its name suggests. The single most important sentence in this chapter:
+
+> **`unsafe` does not turn off the borrow checker.** It unlocks exactly five operations the checker cannot verify, and leaves *every other* check fully on.
+
+The right mental model comes straight from Logic and Proof and Semantics. Safe Rust is a system in which the compiler *discharges* the memory-safety proof obligation for you. `unsafe` is you writing, in effect, `// trust me: I have a proof`. You take on an obligation the checker handed back because it could not close it. Get the proof right and your code is as sound as any safe code — `Vec` and `Box` are nothing but unsafe code wearing a correct proof. Get it wrong and you have a bug of exactly the C/C++ flavour you came to Rust to escape.
+
+## The five superpowers (and nothing else)
+
+Inside an `unsafe` block (or an `unsafe fn` body, via an inner `unsafe` block) you gain the ability to:
+
+1. **Dereference a raw pointer** (`*const T`, `*mut T`).
+2. **Call an `unsafe fn`** (including any function declared in an `extern` block).
+3. **Implement an `unsafe trait`** (e.g. `Send`, `Sync`).
+4. **Access or modify a mutable `static`**.
+5. **Read a field of a `union`**.
+
+That is the complete list. There is no sixth. Crucially, the following are *still checked* inside `unsafe`:
+
+```rust
+unsafe {
+    let x = 5;
+    let r = &mut x;   // error[E0596]: cannot borrow `x` as mutable — still checked
+}
+```
+
+Ownership, borrowing, lifetimes, `Sized`, exhaustiveness, type checking — all unaffected. If you write `&mut` to immutable data inside `unsafe`, you still get the same error you would outside it. `unsafe` is not a mode; it is a five-item capability grant.
+
+> **🦀 From your toolbox →** This is unlike C, where there is no boundary at all: *every* pointer deref is "unsafe" and the language never tells you. It is closer to Haskell's `unsafePerformIO` or Swift's `Unsafe...Pointer` family — a syntactically marked island where a specific invariant is your responsibility. The analogy to C++'s `reinterpret_cast` breaks down because C++ gives you no list of exactly which operations became newly dangerous; in Rust the grep-able `unsafe` keyword *is* the audit trail.
+
+> **🎓 Tripos link →** In Semantics of Programming Languages, *soundness* is the theorem "well-typed programs do not go wrong" — progress + preservation. Safe Rust's type system is sound *by construction*: the safety proof is part of type checking. An `unsafe` block is a point where the meta-theorem's premise is locally assumed rather than proved. The whole-program soundness theorem then holds **only if** every `unsafe` block's hand-discharged obligation is actually valid. One wrong `unsafe` and the theorem is false for the entire program — soundness is not local.
+
+## Undefined behaviour: the same beast as in C
+
+What exactly are you promising not to do? You are promising not to cause **undefined behaviour (UB)**. This is the identical concept from your C and C++ course: a precondition the language assumes the program never violates, and on whose violation the compiler is licensed to do *anything* — including miscompile code far away from the violation, because the optimiser reasoned under an assumption you broke.
+
+Rust's UB list (the [Reference's full list](https://doc.rust-lang.org/reference/behavior-considered-undefined.html) is authoritative) includes:
+
+- **Dereferencing a dangling, null, or unaligned pointer** — same as C.
+- **Reading uninitialised memory**, or producing an *invalid value* for a type: a `bool` that is not `0`/`1`, a `char` outside the Unicode scalar range, a `&T`/`&mut T` that is null or dangling, an enum with an out-of-range discriminant. Producing such a value is instant UB even if you never "use" it.
+- **Out-of-bounds access** via raw pointer arithmetic (`.add`, `.offset`).
+- **Data races** — concurrent unsynchronised access where at least one side writes.
+- **Breaking the aliasing rules** — having a live `&mut T` while any other pointer reads or writes the same memory (see the memory model below). This is the one with no C equivalent and the one that bites hardest.
+
+The asymmetry with C: in safe Rust *none* of these are reachable; inside `unsafe` all of them are. The optimiser is *more* aggressive than a typical C compiler because `&mut T` carries a no-aliasing guarantee (below), so UB here can produce stranger results than the equivalent C bug.
+
+> **⚠️ Pitfall →** A common cargo-cult error is `let x: bool = unsafe { std::mem::transmute(2u8) };`. This compiles. It is instant UB — `2` is not a valid `bool` — and the optimiser may now assume `x` is simultaneously `true` and `false` in different branches. The fix is never to construct invalid values; use `2u8 != 0` for an explicit conversion. `transmute` is the single most dangerous function in the language and almost always the wrong tool.
+
+## Raw pointers: C pointers, re-typed
+
+Raw pointers are the heart of the first superpower. `*const T` and `*mut T` are *exactly* C's `const T*` and `T*`: a machine word holding an address, with no guarantees. Specifically they may be null, may dangle, may alias each other and references freely, are not bound by lifetimes, and run no destructor when dropped.
+
+You can *create* them in completely safe code — only *dereferencing* requires `unsafe`:
+
+```rust
+let mut count = 7i32;
+let p_const: *const i32 = &raw const count; // raw borrow operators (1.82+)
+let p_mut:   *mut i32   = &raw mut count;
+
+unsafe {
+    println!("{}", *p_const);  // deref: superpower #1
+    *p_mut = 9;
+}
+assert_eq!(count, 9);
+```
+
+The `&raw const` / `&raw mut` operators are the modern, correct way to take a raw pointer: they produce a pointer *without* first creating an intermediate reference, which matters because forming even a transient `&mut` to a place you are about to alias is itself UB under the aliasing model. (The old `&v as *const _` form silently creates that reference.) You can also conjure a pointer from an integer — `let p = 0xdead_beef_usize as *const i32;` — legal to write, UB to dereference, because nothing guarantees anything lives there.
+
+The asterisk in `*const T` is part of the *type name*, not a dereference; `*p_const` is the deref. You can hold a `*const` and a `*mut` to one location and write through one while reading the other — the compiler will not stop you, and you will have hand-built a data race. That freedom is the point: it lets you express patterns the borrow checker rejects.
+
+> **⚙️ Under the hood →** A `*const T`/`*mut T` is one pointer-sized word for `Sized` `T`, byte-identical to a C pointer — this is why FFI works with zero marshalling. A *fat* raw pointer `*const [T]` or `*const dyn Trait` is two words (pointer + length, or pointer + vtable), exactly like the `&[T]`/`&dyn` fat references from [slices](05-slices-and-duality.md) and [trait objects](09-trait-objects-and-oop.md). `&T as *const T` is a no-op at the machine level — references and raw pointers have identical representation; the only difference is the static guarantees the type carries.
+
+## The safe/unsafe boundary: soundness as the contract
+
+The professional use of `unsafe` is never to sprinkle it at call sites. It is to **encapsulate** a minimal unsafe core behind a *sound safe API*. The canonical example is `slice::split_at_mut`, which hands back two mutable sub-slices of one slice — provably non-overlapping, but the borrow checker only sees "two `&mut` from the same `values`" and refuses ([references](03-references-and-borrowing.md)):
+
+```rust
+use std::slice;
+
+fn split_at_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {
+    let len = values.len();
+    let ptr = values.as_mut_ptr();
+    assert!(mid <= len);                       // the proof's precondition
+    // SAFETY: `mid <= len`, so both ranges lie within the original
+    // allocation and `[0, mid)` is disjoint from `[mid, len)`. The two
+    // resulting &mut slices therefore never alias.
+    unsafe {
+        (
+            slice::from_raw_parts_mut(ptr, mid),
+            slice::from_raw_parts_mut(ptr.add(mid), len - mid),
+        )
+    }
+}
+```
+
+The function is *not* marked `unsafe`: its signature is callable from safe code, and **no input can make it cause UB**. That property is the definition of **soundness** for a safe abstraction. The `assert!` is load-bearing — it converts the precondition into a checked panic, so the only path into the `unsafe` block is one where the proof holds. `from_raw_parts_mut` and `.add` are themselves `unsafe fn`s whose contracts ("valid for `len` elements", "offset stays in-bounds") this function discharges.
+
+The inverse — a safe-looking function that *can* be driven to UB by some safe caller — is **unsound**, and an unsound abstraction is a *bug*, full stop, even if it never misbehaves in your tests. `Vec`, `Box`, `Rc`, `Mutex`, `String` are all this pattern: a tiny audited `unsafe` core, wrapped so no safe caller can ever trigger UB. You have run on unsafe code the entire book; it was sound, so you never noticed.
+
+> **🦀 From your toolbox →** This is the same discipline as a C++ class with a class invariant maintained by every method (RAII, your C++ course): private raw members, public methods that preserve the invariant. The difference Rust adds is the *enforced boundary*: the `unsafe` keyword marks precisely where the invariant is hand-maintained, so an auditor greps for `unsafe` and reads only those sites. In C++ the invariant-maintaining code and the merely-correct code are visually identical.
+
+> **⚙️ Under the hood →** `unsafe fn` and a safe fn containing an `unsafe` block are *different contracts*. An `unsafe fn` pushes the proof obligation onto its **caller** (the caller's `unsafe` block is the promise). A safe fn that internally uses `unsafe` keeps the obligation **inside itself** and discharges it for all callers. `split_at_mut` is the latter; `from_raw_parts_mut` is the former. Choosing which to write is choosing where the proof obligation lives.
+
+## Mutable statics and unsafe traits
+
+A `static` is a global with a fixed address (unlike a `const`, which the compiler may inline and duplicate at each use). An immutable `static` is fine and safe to read. A `static mut` is global *mutable* state, and reading or writing it is superpower #4 — because nothing stops two threads touching it concurrently, i.e. a data race:
+
+```rust
+static mut TICKS: u64 = 0;
+
+/// SAFETY: caller must guarantee no concurrent access from another thread.
+unsafe fn tick() {
+    unsafe { TICKS += 1; }
+}
+```
+
+Modern Rust additionally *denies by default* taking a reference to a `static mut` (the `static_mut_refs` lint) — even the invisible `&` inside `println!("{TICKS}")` — because a `&mut` to a global is an aliasing landmine; you must go through a raw pointer, `*(&raw const TICKS)`. The idiom is to avoid `static mut` entirely and reach for the [thread-safe primitives](13-fearless-concurrency.md) (`AtomicU64`, `Mutex`, `OnceLock`) which encode the synchronisation in the type and stay in safe code.
+
+Superpower #3, the **`unsafe trait`**, you already met. A trait is `unsafe` when implementing it asserts an invariant the compiler cannot check. The marquee examples are `Send`/`Sync` from [concurrency](13-fearless-concurrency.md): auto-derived structurally, but if you build a type around a raw pointer (`!Send`/`!Sync`) and *know* your synchronisation makes it thread-safe, you assert it with `unsafe impl Send for MyType {}` — promising the data-race-freedom theorem the auto-derivation refused. A wrong `unsafe impl Send` manufactures UB from entirely safe-looking downstream code.
+
+## FFI: the C ABI boundary
+
+The original reason `unsafe` exists is that the hardware and the rest of the software universe are written in C. **FFI** (Foreign Function Interface) is how Rust calls C and C calls Rust, through the `extern` keyword.
+
+### Calling C from Rust
+
+```rust
+unsafe extern "C" {
+    // libc's abs; the "C" selects the C ABI (calling convention).
+    fn abs(input: i32) -> i32;
+
+    // No memory-safety preconditions, so we can mark it `safe`:
+    safe fn strlen(s: *const std::ffi::c_char) -> usize;
+}
+
+fn main() {
+    let n = unsafe { abs(-42) }; // declared-unsafe by default
+    println!("{n}");
+}
+```
+
+The `"C"` string is the **ABI**: it tells rustc to use C's calling convention (argument registers, stack layout) at the assembly level. The whole `extern` block is `unsafe` because the foreign side does not obey Rust's rules and rustc cannot check it — so by default every declared function is `unsafe` to call. The 2024-edition refinement is the `safe` keyword: a function with genuinely no memory-safety preconditions may be written `safe fn`, and callers skip the `unsafe` block. `safe` does not *make* it safe; it is *your promise* that it is, and you own the consequences if wrong.
+
+### Calling Rust from C
+
+The other direction exports a Rust function under the C ABI with an un-mangled name:
+
+```rust
+#[unsafe(no_mangle)]
+pub extern "C" fn rust_add(a: i32, b: i32) -> i32 {
+    a + b
+}
+```
+
+`extern "C"` gives it the C calling convention. `#[unsafe(no_mangle)]` (the `unsafe(...)` wrapper is 2024-edition syntax) suppresses name mangling so the symbol is literally `rust_add` and C's linker can find it — mangling is the compiler rewriting names to encode types/modules for overloading and monomorphisation, from Compiler Construction; C cannot parse the mangled form. The `unsafe(...)` wrapper is there because un-mangled symbols can *collide* across libraries, and avoiding collisions is now your responsibility. Compile as a `cdylib`/`staticlib`, declare `int rust_add(int, int);` on the C side, link, done.
+
+### Layout, structs, and strings across the boundary
+
+C only understands C layout. Rust's default `struct` layout is **unspecified** — the compiler may reorder fields to minimise padding — so a struct shared with C must be annotated `#[repr(C)]` to force C's declaration-order, C-padding layout:
+
+```rust
+#[repr(C)]
+pub struct Point { pub x: f64, pub y: f64 } // matches `struct Point { double x, y; }`
+```
+
+Strings are the classic trap: Rust's `&str`/`String` are UTF-8 with a length and *no terminating NUL*; C strings are NUL-terminated `char*` with no length. They are not interchangeable. Cross the boundary with `std::ffi::CString` (owns a NUL-terminated buffer, to send *to* C) and `CStr` (borrows one, to receive *from* C):
+
+```rust
+use std::ffi::{CString, c_char};
+
+unsafe extern "C" { safe fn puts(s: *const c_char) -> i32; }
+
+let owned = CString::new("hello from rust").unwrap(); // appends the NUL
+puts(owned.as_ptr());                                 // &owned keeps it alive
+// `owned` must outlive the call; if it drops, `as_ptr()` dangles — UB.
+```
+
+**Ownership does not cross FFI automatically.** The `Drop`-based RAII ownership model of [chapter 2](02-ownership-and-moves.md) is a Rust-only fiction; C has no idea your `Box` should be freed by Rust's allocator. The boundary rules, all *your* proof obligation:
+
+- Memory allocated by Rust is freed by Rust (round-trip the pointer back through a Rust `extern "C"` free function via `Box::from_raw`); C memory is freed by C. Mixing allocators is UB.
+- A pointer handed to C must stay valid as long as C may use it — the `CString` trap above is the most common dangling-pointer bug in Rust FFI.
+- `Box::into_raw` *releases* ownership across the boundary (leaking it from Rust's view); `Box::from_raw` *reclaims* it. These are the explicit ownership-transfer verbs FFI forces you to write by hand, because the type system stops at the boundary.
+
+> **🦀 From your toolbox →** `#[repr(C)]` is the equivalent of caring about `struct` layout for a wire protocol or `mmap`'d header in C. The analogy breaks down on *default* layout: in C, declaration order *is* the layout, full stop. In Rust the default is deliberately unspecified so the compiler can pack fields, and you must opt in to the C guarantee. Treat any `struct` that touches FFI, hardware, or a file format without `#[repr(C)]` as a bug.
+
+## The aliasing model: why `&mut` is `noalias`
+
+This is the part with no C analogue, and the reason Rust's optimiser can be more aggressive than C's. Rust guarantees a live `&mut T` is the *unique* path to its referent — no other live reference or pointer may read or write that memory while the `&mut` is usable. rustc tells LLVM this by tagging `&mut` parameters `noalias` (and `&T` `readonly`), the hint C's `restrict` gives but applied *automatically and pervasively*. The optimiser then keeps values in registers and reorders loads/stores across calls, trusting nothing else can observe or clobber that location.
+
+The catch for `unsafe` authors: this guarantee holds for *raw-pointer code too*. If you create a `&mut` and a raw pointer to the same place and write through both while the `&mut` is live, you have violated `noalias` — UB — even though no `&mut`/`&mut` pair ever existed. This is why `&raw mut x` exists: it takes a pointer without ever forming the conflicting reference.
+
+The *formalisation* of "the rules raw pointers must obey to coexist with references" is an active research model. **Stacked Borrows** (Jung et al.) modelled borrows as a per-location stack of permission tags, each access checking and popping the stack; its successor **Tree Borrows** generalises this to a tree to admit more valid patterns. Neither is yet *the* normative spec — but **Miri implements them**, so they are the de-facto operational semantics your unsafe code is tested against today.
+
+> **🎓 Tripos link →** Stacked/Tree Borrows is a small-step **operational semantics** in the exact sense of Semantics of Programming Languages: a state (the per-location borrow stack/tree) and reduction rules that get *stuck* (UB) on an illegal access. It is the operationalisation of the aliasing discipline that the borrow checker enforces statically — the dynamic semantics whose soundness the static type system is meant to guarantee. `&mut`-as-`noalias` is the regions-and-uniqueness story from the lectures, pushed all the way down to the machine.
+
+## Tooling: how to actually trust your unsafe code
+
+The borrow checker is *static* and now stopped helping, so you need dynamic tools that run your program and watch for violations:
+
+- **Miri** (`cargo +nightly miri test`) interprets your program against Rust's abstract machine *and* the Tree-Borrows model. It catches OOB access, use-after-free, invalid values, unaligned access, data races, and aliasing violations no other tool sees, because it knows about `noalias`. On `slice::from_raw_parts_mut(0x1234 as *mut i32, 10000)` it reports a dangling pointer with no provenance.
+- **AddressSanitizer / ThreadSanitizer** (`RUSTFLAGS="-Zsanitizer=address"`, nightly) — the ASan/TSan from your C work, instrumenting the real binary. They catch heap/stack overflows and data races *in machine code*, including across the FFI boundary into C where Miri cannot reach.
+- **`cargo-careful`** runs your tests with extra debug assertions baked into a specially built std.
+
+The decisive limitation: all three are *dynamic*. **If Miri flags your code it is a bug; if Miri is silent your code is not proven correct** — only that the tested paths were clean. Coverage of your unsafe paths is a first-class testing concern, exactly as in C.
+
+> **⚠️ Pitfall →** The cardinal sin is reaching for `unsafe` to silence the borrow checker on safe code — e.g. transmuting `&T` to `&mut T` to "just mutate it". This is *always* UB (it fabricates a second `&mut`/aliasing `&`, breaking `noalias`), even when it appears to work, and the optimiser will eventually miscompile it. The fix is one of: `RefCell`/`Cell`/`Mutex` for interior mutability ([smart pointers](15-smart-pointers.md)), a redesign of ownership, or — if you genuinely need raw pointers — `&raw mut` plus a *written-down* `// SAFETY:` proof and a Miri run. If you cannot articulate the proof in the comment, you do not have one.
+
+## When `unsafe` is justified
+
+`unsafe` is justified, roughly, only when: (1) you are at an FFI/hardware/OS boundary where Rust's guarantees provably do not apply; (2) you implement a data structure whose soundness the borrow checker cannot see (intrusive lists, arenas, lock-free structures) and wrap it in a sound safe API; or (3) you have a *measured* performance need that a checked bound demonstrably costs. The deliverable is always the same: a minimal `unsafe` block, a `// SAFETY:` comment stating the discharged proof, and Miri/sanitizer coverage. Everything else is cargo-culting; the community norm — encoded in lints like `clippy::undocumented_unsafe_blocks` — treats an unexplained `unsafe` as a code smell. The motivation is not pedantry: the entire memory-safety-vulnerability class (CWE-119 buffer overflow, CWE-416 use-after-free) that drives roughly 70% of critical CVEs at Microsoft and Google lives *only* inside unsafe code in a Rust program. Minimising and auditing `unsafe` is the security argument for the language.
+
+## Mental-model recap
+
+- `unsafe` unlocks exactly five superpowers — deref raw pointers, call `unsafe fn`, `unsafe impl`, touch `static mut`, read `union` fields — and **turns off no other check**. Ownership, borrowing, lifetimes, and types are all still enforced inside `unsafe`. It is a capability grant, not a mode switch.
+- The model is proof-theoretic: `unsafe` is you discharging a memory-safety obligation the conservative checker handed back. Soundness is *not local* — one wrong `unsafe` block falsifies the safety theorem for the whole program, and the optimiser (which trusts `&mut` is `noalias`) can miscompile far from the violation.
+- The professional pattern is *encapsulation*: a tiny audited `unsafe` core behind a **sound** safe API — one no safe caller can drive to UB. That is precisely what `Vec`, `Box`, `Rc`, and `split_at_mut` are. An unsound "safe" API is a bug even if it never misbehaves in testing.
+- Raw pointers (`*const T`/`*mut T`) *are* C pointers — no lifetimes, may alias, may dangle, no destructor; create with `&raw const`/`&raw mut`, deref only in `unsafe`. FFI rides the C ABI via `extern "C"`, needs `#[repr(C)]` for shared structs and `CString`/`CStr` for strings, and **ownership does not cross the boundary** — you transfer it by hand with `into_raw`/`from_raw`.
+- The compiler stopped checking, so *you* must: Miri (aliasing + the abstract machine, dynamic), ASan/TSan (the real binary, across FFI), `cargo-careful`. Miri flagging means a bug; Miri silent means *only* "the tested paths were clean", never "proven sound".
+
+## Exercises
+
+1. Write a safe-looking function `fn get(v: &[i32], i: usize) -> i32 { unsafe { *v.as_ptr().add(i) } }` with no bounds check. Argue why this function is **unsound** by exhibiting one safe caller that triggers UB. Then make it sound *without* removing the `unsafe`, and write the `// SAFETY:` comment that justifies it. (The point: unsoundness is a property of the *API*, reachable from safe code, not of the `unsafe` block in isolation.)
+
+2. Take this and run it under `cargo +nightly miri run`: `let r = &mut 0i32; let p = r as *mut i32; *r = 1; unsafe { *p = 2; } println!("{}", *r);`. Predict whether Miri complains *before* running. Explain the verdict in terms of `noalias` and which of the two writes-through-`p` (relative to the live `&mut r`) is the aliasing violation. Then rewrite using `&raw mut` so it is sound.
+
+3. Build a minimal FFI round-trip: a `#[unsafe(no_mangle)] pub extern "C" fn make_buf(n: usize) -> *mut u8` that `Box::into_raw`s a zeroed buffer, and a matching `free_buf(*mut u8, usize)` that reclaims it with `Box::from_raw`. Write down, for each function, the exact precondition the C caller must uphold, and explain what goes wrong if C calls `free_buf` twice or with a mismatched length.
+
+4. Explain, with a concrete field layout, why `#[repr(Rust)]` (the default) makes `struct Header { tag: u8, len: u32 }` unsafe to pass to C, and what `#[repr(C)]` changes. Predict the size and field offsets under each `repr` and verify with `std::mem::{size_of, offset_of}`.
+
+5. (★) Implement an `unsafe impl Send for MyCell` for a type wrapping a `*mut T`, in two scenarios: one where the impl is *sound* (state an invariant — e.g. it is only ever accessed behind an external `Mutex`) and one where it is *unsound*. For the unsound one, write a two-thread program that exhibits a real data race, and confirm `cargo +nightly miri test` detects it. Articulate precisely which theorem the auto-derivation refused to prove and which you (wrongly) asserted.
+
+6. (★) The function `fn alias(x: &mut i32) -> (&i32, &mut i32)` cannot be written in safe Rust — explain why in one sentence using aliasing-XOR-mutability. Now attempt it with raw pointers and `transmute`/`from_raw`. Determine whether *any* implementation can be sound, and if not, prove it: exhibit the UB and name the rule (`noalias`) it violates. (The lesson: `unsafe` lets you write *unprovable-but-true* things, not *false* things — there is no sound proof here to discharge.)

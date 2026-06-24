@@ -1,0 +1,612 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Smart Pointers &amp; Interior Mutability - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="15-smart-pointers--interior-mutability"><a class="header" href="#15-smart-pointers--interior-mutability">15. Smart Pointers &amp; Interior Mutability</a></h1>
+<p>A <em>smart pointer</em> is a struct that owns the data it points to, behaves like a pointer (you dereference it with <code>*</code>), and runs custom code when it dies. You know the idea cold: a smart pointer is to a raw pointer what C++’s <code>std::unique_ptr&lt;T&gt;</code> and <code>std::shared_ptr&lt;T&gt;</code> are to <code>T*</code> — RAII, with ownership of a resource tied to a stack object’s lifetime and the destructor releasing it.</p>
+<p>What is <em>genuinely new</em> in Rust is not the pattern but how cleanly it composes with the type system. A reference (<code>&amp;T</code>, <a href="03-references-and-borrowing.html">borrowing</a>) borrows; a smart pointer typically <em>owns</em>. Two traits make a struct “smart”:</p>
+<ul>
+<li><code>Deref</code> (and <code>DerefMut</code>) — lets <code>*p</code> and method calls see through the wrapper to the inner <code>T</code>. This is the autoderef machinery from <a href="06-structs-and-methods.html">method resolution</a>.</li>
+<li><code>Drop</code> — the destructor, the deterministic cleanup hook from <a href="02-ownership-and-moves.html">ownership</a>.</li>
+</ul>
+<p>This chapter covers the four you will actually reach for — <code>Box&lt;T&gt;</code>, <code>Rc&lt;T&gt;</code>, <code>RefCell&lt;T&gt;</code>, <code>Weak&lt;T&gt;</code> — and the pattern that ties them together: <em>interior mutability</em>, the controlled escape hatch from Rust’s aliasing-XOR-mutability rule. The headline insight: <strong><code>RefCell</code> and <code>Rc</code> do not weaken the borrow rules; they move enforcement from compile time to run time.</strong> You trade a static guarantee for a dynamic one — paying in panics and atomic increments, not in undefined behaviour.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> The C++ map is almost one-to-one: <code>Box&lt;T&gt;</code> ≈ <code>unique_ptr&lt;T&gt;</code>, <code>Rc&lt;T&gt;</code> ≈ <code>shared_ptr&lt;T&gt;</code> (but non-atomic), <code>Arc&lt;T&gt;</code> ≈ <code>shared_ptr&lt;T&gt;</code> (atomic), <code>Weak&lt;T&gt;</code> ≈ <code>weak_ptr&lt;T&gt;</code>, <code>RefCell&lt;T&gt;</code> ≈ a member marked <code>mutable</code> <em>plus</em> a runtime borrow flag C++ does not give you. Where it breaks down: C++’s <code>mutable</code>/<code>const_cast</code> mutate through a <code>const</code> reference with <strong>zero</strong> checking — you can alias-and-mutate freely and the UB is on you. <code>RefCell</code> checks the aliasing rule dynamically and <em>panics</em> rather than silently corrupting.</p>
+</blockquote>
+<h2 id="boxt-one-owner-on-the-heap"><a class="header" href="#boxt-one-owner-on-the-heap"><code>Box&lt;T&gt;</code>: one owner, on the heap</a></h2>
+<p><code>Box&lt;T&gt;</code> is the minimal smart pointer: it heap-allocates a <code>T</code>, stores the pointer on the stack, owns the allocation, and frees it on drop. No reference count, no runtime check — same cost model as <code>unique_ptr&lt;T&gt;</code>.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let boxed: Box&lt;i32&gt; = Box::new(42);
+println!("{}", *boxed); // 42 — deref reads through to the heap
+// boxed dropped here: heap allocation freed
+<span class="boring">}</span></code></pre>
+<p>A bare <code>Box&lt;i32&gt;</code> is almost never useful — a plain <code>i32</code> lives on the stack and is faster. You reach for <code>Box&lt;T&gt;</code> for three reasons:</p>
+<ol>
+<li><strong>Recursive types</strong> that would otherwise have infinite size.</li>
+<li><strong>Trait objects</strong> — <code>Box&lt;dyn Trait&gt;</code>, owning a value by its behaviour rather than its concrete type (see <a href="09-trait-objects-and-oop.html">trait objects</a>).</li>
+<li><strong>Cheap moves of large values</strong> — moving a <code>Box&lt;[u8; 1_000_000]&gt;</code> copies 8 bytes (the pointer), not a megabyte.</li>
+</ol>
+<h3 id="recursive-types-the-sizing-problem"><a class="header" href="#recursive-types-the-sizing-problem">Recursive types: the sizing problem</a></h3>
+<p>Consider a binary-tree node, the kind of sum type you wrote constantly in OCaml:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>enum Tree {
+    Leaf(i32),
+    Branch(Tree, Tree), // does NOT compile
+}
+<span class="boring">}</span></code></pre>
+<p>The compiler must compute <code>size_of::&lt;Tree&gt;()</code> at compile time to lay the type out (monomorphisation needs concrete sizes). <code>Branch</code> contains two <code>Tree</code>s — the size equation <code>size(Tree) = size(i32) + 2 * size(Tree) + tag</code> has no finite solution.</p>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> This is <code>error[E0072]: recursive type \</code>Tree` has infinite size<code>. rustc even suggests the fix: "insert some indirection (e.g., a </code>Box<code>, </code>Rc<code>, or </code>&amp;`)“. The point of indirection is that a pointer has a <em>fixed</em> size (8 bytes on a 64-bit target) regardless of what it points at. Box the recursive field:</p>
+</blockquote>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>enum Tree {
+    Leaf(i32),
+    Branch(Box&lt;Tree&gt;, Box&lt;Tree&gt;), // compiles: each Branch is i32-ish + two pointers
+}
+
+let t = Tree::Branch(
+    Box::new(Tree::Leaf(1)),
+    Box::new(Tree::Branch(Box::new(Tree::Leaf(2)), Box::new(Tree::Leaf(3)))),
+);
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> In OCaml every value is uniformly boxed — a variant is a tagged pointer, so recursion is free and you never think about it. Rust unboxes by default: an <code>enum</code> is laid out inline as a tag plus the largest variant, exactly like a tagged union in C. That is why <em>you</em> must insert the indirection. <code>size_of::&lt;Tree&gt;()</code> becomes <code>size_of</code> of the tag plus two <code>usize</code> pointers; the actual subtrees live on the heap, “next to one another” rather than nested inside one another.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Foundations of Computer Science: an OCaml <code>type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree</code> is your <code>Box</code>ed enum, except OCaml’s runtime boxes silently. Compiler Construction: the inability to size a recursive non-indirected type is precisely why every real compiler represents recursive ADTs with pointers in its IR — Rust just makes the indirection a visible, named choice in the source.</p>
+</blockquote>
+<h2 id="deref-and-deref-coercion-making-a-wrapper-transparent"><a class="header" href="#deref-and-deref-coercion-making-a-wrapper-transparent"><code>Deref</code> and deref coercion: making a wrapper transparent</a></h2>
+<p>What makes <code>Box&lt;T&gt;</code> feel like a <code>T</code> rather than an opaque struct? The <code>Deref</code> trait. Implementing it lets you customise the unary <code>*</code> operator.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::ops::Deref;
+
+struct Holder&lt;T&gt;(T);
+
+impl&lt;T&gt; Deref for Holder&lt;T&gt; {
+    type Target = T;
+    fn deref(&amp;self) -&gt; &amp;T {
+        &amp;self.0
+    }
+}
+
+let h = Holder(7);
+assert_eq!(*h, 7);
+<span class="boring">}</span></code></pre>
+<p><code>deref</code> returns a <em>reference</em> (<code>&amp;T</code>), not the value — returning <code>T</code> by value would move the inner data out of <code>self</code>, which you almost never want. So <code>*h</code> expands to <code>*(h.deref())</code>: call <code>deref</code> to get <code>&amp;T</code>, then apply the built-in dereference. The substitution fires exactly once per <code>*</code>, so it terminates — <code>*h</code> here lands on an <code>i32</code> and stops.</p>
+<p><code>Deref</code> matters far beyond <code>*</code> because of <strong>deref coercion</strong>: when you pass <code>&amp;Wrapper</code> where the function wants <code>&amp;Target</code>, the compiler silently inserts as many <code>deref</code> calls as needed to bridge the gap. The canonical case is <code>String → str</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn greet(name: &amp;str) {
+    println!("hi, {name}");
+}
+
+let owned = String::from("ada");
+greet(&amp;owned);  // &amp;String coerced to &amp;str via String: Deref&lt;Target = str&gt;
+<span class="boring">}</span></code></pre>
+<p><code>&amp;owned</code> is <code>&amp;String</code>, but <code>String: Deref&lt;Target = str&gt;</code>, so <code>&amp;String → &amp;str</code> automatically. With a <code>Box&lt;String&gt;</code> it would chain twice: <code>&amp;Box&lt;String&gt; → &amp;String → &amp;str</code>. This is why APIs take <code>&amp;str</code> and <code>&amp;[T]</code> (the borrowed <a href="05-slices-and-duality.html">slice</a> forms) rather than <code>&amp;String</code> and <code>&amp;Vec&lt;T&gt;</code> — callers with the owned form get coerced for free, and callers with a literal <code>&amp;str</code> pay nothing.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> This is the autoderef chain from <a href="06-structs-and-methods.html">method resolution</a>, now generalised to function arguments. C++ has an analogue in <code>operator-&gt;</code> chaining and user-defined conversions, but C++ conversions are a notorious foot-gun (implicit, hard to predict, contribute to overload ambiguity). Rust’s coercion is deliberately narrow: it fires only across <code>Deref</code>/<code>DerefMut</code> impls, only on references, and only to reach a known target type — never to manufacture an arbitrary value.</p>
+</blockquote>
+<p>There are exactly three coercion directions, and the asymmetry is load-bearing:</p>
+<ul>
+<li><code>&amp;T → &amp;U</code> when <code>T: Deref&lt;Target = U&gt;</code></li>
+<li><code>&amp;mut T → &amp;mut U</code> when <code>T: DerefMut&lt;Target = U&gt;</code></li>
+<li><code>&amp;mut T → &amp;U</code> when <code>T: Deref&lt;Target = U&gt;</code></li>
+</ul>
+<p>The missing fourth case — <code>&amp;U → &amp;mut U</code> — is forbidden, not arbitrarily. A <code>&amp;mut</code> is, by the borrow rules, the <em>unique</em> live reference to its data. Going <code>&amp;mut → &amp;</code> is always sound: you demote unique access to shared, dropping a capability. Going <code>&amp; → &amp;mut</code> would require <em>proving</em> the shared reference you hold is the only one, which a <code>&amp;</code>’s type cannot guarantee. So the compiler refuses it.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> Deref coercion is resolved entirely at compile time. The number of <code>deref</code> calls is fixed during type checking and inlined, so a coerced call is identical machine code to the hand-written <code>&amp;(*x)[..]</code> you would otherwise type. Zero runtime penalty — coercion is pure ergonomics, not a dynamic dispatch.</p>
+</blockquote>
+<h2 id="drop-the-destructor"><a class="header" href="#drop-the-destructor"><code>Drop</code>: the destructor</a></h2>
+<p><code>Drop</code> is the cleanup half of RAII. Implement one method, <code>drop(&amp;mut self)</code>, and the compiler inserts a call to it when the value goes out of scope.</p>
+<pre class="playground"><code class="language-rust">struct Connection {
+    id: u32,
+}
+
+impl Drop for Connection {
+    fn drop(&amp;mut self) {
+        println!("closing connection {}", self.id);
+    }
+}
+
+fn main() {
+    let _a = Connection { id: 1 };
+    let _b = Connection { id: 2 };
+} // prints "closing connection 2" then "closing connection 1"</code></pre>
+<p>Values drop in <strong>reverse order of declaration</strong> — <code>_b</code> before <code>_a</code> — because scopes nest like a stack. This matches C++ destructor ordering and the move-aware drop semantics from <a href="02-ownership-and-moves.html">ownership</a>: a value is dropped exactly once, at the end of its final owner’s scope, and a moved-from value is <em>not</em> dropped (the compiler statically tracks that its ownership left).</p>
+<p>Two rules that trip up C++ programmers:</p>
+<ul>
+<li><strong>You cannot call <code>.drop()</code> manually.</strong> <code>c.drop()</code> is <code>error[E0040]: explicit use of destructor method</code>. If Rust let you, it would still run the automatic drop at end of scope, producing a double-free — exactly the bug the ownership system exists to prevent.</li>
+<li><strong>To drop early, use the free function <code>std::mem::drop</code></strong> (in the prelude): <code>drop(c)</code>. It simply takes <code>c</code> <em>by value</em>, moving ownership in, and the value dies at the end of <code>drop</code>’s body. Because ownership moved, the compiler knows not to drop <code>c</code> again at end of scope.</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let c = Connection { id: 3 };
+drop(c);                      // closes now
+// c is moved-out; not dropped again at scope end
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Programming in C and C++: this is RAII and the rule of “the destructor runs once, deterministically, at scope exit”. The delta from C++ is that the <em>move</em> is type-checked — in C++ a moved-from object is left in a valid-but-unspecified state and its destructor still runs; in Rust the moved-from binding is statically dead and has no destructor call at all. There is no “valid but unspecified” zombie state to reason about.</p>
+</blockquote>
+<h2 id="rct-shared-ownership-by-reference-counting"><a class="header" href="#rct-shared-ownership-by-reference-counting"><code>Rc&lt;T&gt;</code>: shared ownership by reference counting</a></h2>
+<p>Single ownership is the common case, but sometimes a value is genuinely owned by several places at once — a node referenced by many edges in a graph, an immutable config shared across subsystems. You cannot express this with <code>Box</code> (one owner) or <code>&amp;</code> (a borrow needs a single owner to outlive it, forcing lifetime gymnastics). <code>Rc&lt;T&gt;</code> — <em>reference counted</em> — keeps a count of owners and frees the data when the count hits zero.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::rc::Rc;
+
+let a = Rc::new(vec![1, 2, 3]);
+let b = Rc::clone(&amp;a);          // count: 1 -&gt; 2, no deep copy
+let c = Rc::clone(&amp;a);          // count: 2 -&gt; 3
+println!("count = {}", Rc::strong_count(&amp;a)); // 3
+// each Rc dropped decrements; allocation freed when count reaches 0
+<span class="boring">}</span></code></pre>
+<p><code>Rc::clone</code> does <strong>not</strong> deep-copy the <code>Vec</code> — it bumps a <code>usize</code> counter and hands back another pointer to the same heap allocation. The idiom is to write <code>Rc::clone(&amp;a)</code> rather than <code>a.clone()</code>, even though both work, precisely <em>because</em> the explicit form signals “this is a cheap refcount bump, not an expensive deep clone” to a reader scanning for performance problems.</p>
+<p>There is no manual decrement — <code>Rc</code>’s own <code>Drop</code> impl decrements as each handle leaves scope. When <code>strong_count</code> reaches 0, the inner value is dropped and the heap freed.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>Rc&lt;T&gt;</code> is <code>std::shared_ptr&lt;T&gt;</code> with one crucial difference: <strong>the count is non-atomic</strong>, so <code>Rc</code> is <em>not</em> <code>Send</code>/<code>Sync</code> and the compiler forbids moving it across threads. <code>shared_ptr</code>’s count is always atomic, so you pay for thread-safety whether you need it or not. Rust splits the choice: <code>Rc&lt;T&gt;</code> for single-threaded (cheap <code>inc</code>/<code>dec</code>), <code>Arc&lt;T&gt;</code> for cross-thread (atomic <code>lock xadd</code>). The API is identical; only the synchronisation cost differs.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Concurrent and Distributed Systems: an atomic increment is a cache-line ping under contention. <code>Rc</code> exists so single-threaded code does not pay that tax. We return to <code>Arc&lt;T&gt;</code> — the thread-safe twin — in <a href="13-fearless-concurrency.html">fearless concurrency</a>, where <code>Send + Sync</code> are the bounds that gate which one you may use.</p>
+</blockquote>
+<p>The critical limitation: <code>Rc&lt;T&gt;</code> gives you <strong>shared, immutable</strong> access. <code>Rc&lt;T&gt;</code> derefs to <code>&amp;T</code>, never <code>&amp;mut T</code>. If you could get <code>&amp;mut T</code> out of one of several <code>Rc</code> handles, you would have a mutable reference aliased by other handles — a data race in the making, exactly the situation the borrow rules forbid. To mutate shared data you must combine <code>Rc</code> with interior mutability, which is the next piece.</p>
+<h2 id="interior-mutability-refcellt-and-the-runtime-borrow-check"><a class="header" href="#interior-mutability-refcellt-and-the-runtime-borrow-check">Interior mutability: <code>RefCell&lt;T&gt;</code> and the runtime borrow check</a></h2>
+<p>Rust’s defining rule, from <a href="03-references-and-borrowing.html">borrowing</a>: at any moment a piece of data has <em>either</em> one <code>&amp;mut</code> <em>or</em> any number of <code>&amp;</code>, never both — aliasing XOR mutability. The borrow checker proves this statically. But static analysis is necessarily conservative (the halting problem guarantees no checker accepts <em>every</em> safe program), so some genuinely-safe programs are rejected.</p>
+<p><em>Interior mutability</em> is the pattern for those programs: a type that lets you mutate its contents through a shared <code>&amp;</code>, with the aliasing rule still enforced — but <strong>dynamically, at run time, by the type itself</strong>. <code>RefCell&lt;T&gt;</code> is the workhorse.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::RefCell;
+
+let cell = RefCell::new(vec![1, 2, 3]);
+
+// no `mut` on `cell` — yet we mutate through a shared borrow:
+cell.borrow_mut().push(4);
+
+let len = cell.borrow().len();
+println!("{len}"); // 4
+<span class="boring">}</span></code></pre>
+<p><code>RefCell&lt;T&gt;</code> owns a single <code>T</code> (like <code>Box</code>, single owner — not multiple like <code>Rc</code>). Instead of <code>&amp;</code> and <code>&amp;mut</code>, you call:</p>
+<ul>
+<li><code>borrow()</code> → <code>Ref&lt;T&gt;</code>, a smart pointer that derefs to <code>&amp;T</code>. Increments an internal “shared borrows active” counter; decrements on drop.</li>
+<li><code>borrow_mut()</code> → <code>RefMut&lt;T&gt;</code>, derefs to <code>&amp;mut T</code>. Marks the cell exclusively borrowed.</li>
+</ul>
+<p>The cell tracks these at run time and enforces the same XOR rule the compiler would: many <code>Ref</code>s, or one <code>RefMut</code>, never both. Violate it and you do not get UB — you get a <strong>panic</strong>.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let cell = RefCell::new(0);
+let r1 = cell.borrow_mut();
+let r2 = cell.borrow_mut(); // PANIC: already borrowed: BorrowMutError
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>⚠️ Pitfall →</strong> This code <em>compiles</em> — the borrow checker cannot see the violation, since both <code>borrow_mut</code> calls are just method calls returning a guard. At run time the second one panics with <code>already borrowed: BorrowMutError</code>. The cure is to scope your guards tightly: let the <code>RefMut</code> from the first call drop (end its statement or open a <code>{ }</code> block) before requesting the second. The bug class here is “I’m holding a guard longer than I think” — the equivalent of forgetting to release a lock.</p>
+</blockquote>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> <code>RefCell</code> is the missing safety net on C++’s <code>mutable</code>. A <code>mutable</code> member lets a <code>const</code> method mutate it — with <em>no</em> aliasing check whatsoever, so you can hand out two mutable aliases and the compiler is silent right up until the data race. <code>RefCell</code> gives you the same “mutate through const” capability but verifies aliasing-XOR-mutability dynamically and fails loudly. The cost: a couple of <code>usize</code> fields and a branch per borrow.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> <code>RefCell&lt;T&gt;</code> is <code>{ borrow_flag: Cell&lt;isize&gt;, value: UnsafeCell&lt;T&gt; }</code>. <code>UnsafeCell&lt;T&gt;</code> is the <em>only</em> legitimate way in Rust to get a <code>*mut T</code> from a <code>&amp;T</code> — it is the primitive that tells the compiler “do not assume the data behind this <code>&amp;</code> is immutable.” <code>borrow()</code>/<code>borrow_mut()</code> are a safe API wrapping <code>unsafe</code> code: they check the flag, hand out the pointer, and the <code>Ref</code>/<code>RefMut</code> guards restore the flag on drop. The “safe outside, unsafe inside” sandwich is exactly how all of <code>std</code>’s sound abstractions over raw memory are built (see <a href="16-unsafe-and-ffi.html">unsafe</a>).</p>
+</blockquote>
+<p>When would you want this? The classic case is a method that must mutate internal state but whose signature must stay <code>&amp;self</code> — for instance implementing a trait whose method is declared <code>fn send(&amp;self, msg: &amp;str)</code>. You cannot change the trait to <code>&amp;mut self</code> to suit one implementation. A mock that records the messages it was asked to send needs to push to a <code>Vec</code> from inside <code>&amp;self</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::RefCell;
+
+trait Logger {
+    fn log(&amp;self, line: &amp;str); // &amp;self is fixed by the interface
+}
+
+struct Capture {
+    lines: RefCell&lt;Vec&lt;String&gt;&gt;,
+}
+
+impl Logger for Capture {
+    fn log(&amp;self, line: &amp;str) {
+        self.lines.borrow_mut().push(line.to_owned()); // mutate through &amp;self
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>This is the standard pattern for test doubles and observers in Rust: the interface is immutable, the implementation needs to mutate, <code>RefCell</code> bridges the two.</p>
+<h3 id="cellt-the-cheaper-sibling"><a class="header" href="#cellt-the-cheaper-sibling"><code>Cell&lt;T&gt;</code>: the cheaper sibling</a></h3>
+<p><code>Cell&lt;T&gt;</code> is interior mutability without handing out references at all. Instead of <code>borrow</code>/<code>borrow_mut</code>, you <code>get()</code> a copy out or <code>set()</code> a whole new value in (or <code>replace</code>/<code>take</code>). Because it never lends a reference into the interior, there is nothing to alias, so it needs <strong>no runtime flag and never panics</strong>.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::Cell;
+
+let counter = Cell::new(0u32);
+counter.set(counter.get() + 1); // get/set, no borrow guards
+<span class="boring">}</span></code></pre>
+<p>Use <code>Cell&lt;T&gt;</code> for small <code>Copy</code> values (counters, flags) where copy-in/copy-out is fine; use <code>RefCell&lt;T&gt;</code> when you need a reference to a non-<code>Copy</code> interior (a <code>Vec</code>, a <code>String</code>) and are willing to pay for the runtime borrow tracking.</p>
+<h2 id="the-rcrefcellt-pattern-shared-and-mutable"><a class="header" href="#the-rcrefcellt-pattern-shared-and-mutable">The <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> pattern: shared <em>and</em> mutable</a></h2>
+<p>Now combine the two. <code>Rc&lt;T&gt;</code> = multiple owners but immutable. <code>RefCell&lt;T&gt;</code> = single owner but mutable through <code>&amp;</code>. Nest them — <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> — and you get <strong>multiple owners of mutable data</strong>, the building block for graphs, adjacency lists, observer registries, and any shared-mutable structure you would have built with <code>shared_ptr&lt;T&gt;</code> in C++.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::RefCell;
+use std::rc::Rc;
+
+let shared = Rc::new(RefCell::new(0));
+
+let owner_a = Rc::clone(&amp;shared);
+let owner_b = Rc::clone(&amp;shared);
+
+*owner_a.borrow_mut() += 10;   // mutate via one handle...
+*owner_b.borrow_mut() += 5;    // ...and another
+
+println!("{}", shared.borrow()); // 15 — all three see the same cell
+<span class="boring">}</span></code></pre>
+<p><code>Rc</code> provides the shared ownership; <code>RefCell</code> provides the mutability the <code>Rc</code> alone would deny you; the runtime borrow check inside <code>RefCell</code> keeps the aliasing rule intact even though three handles point at the same data. Read the type inside-out: “a reference-counted, shared handle to a runtime-borrow-checked mutable <code>T</code>.”</p>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> Logic and Proof / type safety: <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> is a worked example of <em>trading a static invariant for a dynamic one without losing soundness</em>. The compile-time proof “no aliased mutation” is replaced by a runtime check that <em>establishes the same proposition at each borrow</em> and aborts (panics) if it cannot. Safety — no UB, no data race — is preserved; only the <em>time</em> of enforcement and the <em>failure mode</em> (panic vs. compile error) change.</p>
+</blockquote>
+<h2 id="reference-cycles-leak--and-weakt-breaks-them"><a class="header" href="#reference-cycles-leak--and-weakt-breaks-them">Reference cycles leak — and <code>Weak&lt;T&gt;</code> breaks them</a></h2>
+<p>Here is the one guarantee Rust does <strong>not</strong> make: it does not promise the absence of memory leaks. A leak is memory-<em>safe</em> (no dangling, no UB), so it is outside the ownership system’s mandate. <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> gives you the rope to hang yourself: build a cycle of <code>Rc</code>s pointing at each other and the strong counts never reach zero, so the destructors never run.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::RefCell;
+use std::rc::Rc;
+
+struct Node {
+    next: RefCell&lt;Option&lt;Rc&lt;Node&gt;&gt;&gt;,
+}
+
+let a = Rc::new(Node { next: RefCell::new(None) });
+let b = Rc::new(Node { next: RefCell::new(None) });
+
+*a.next.borrow_mut() = Some(Rc::clone(&amp;b)); // a -&gt; b, b's count = 2
+*b.next.borrow_mut() = Some(Rc::clone(&amp;a)); // b -&gt; a, a's count = 2
+// drop a and b at scope end: each count drops 2 -&gt; 1, never 0. LEAKED.
+<span class="boring">}</span></code></pre>
+<p>When <code>a</code> and <code>b</code> go out of scope their <em>local</em> handles drop, taking each count from 2 to 1 — but each node still holds an <code>Rc</code> to the other, so neither hits zero, neither <code>Node</code> is freed, and the two allocations are stranded forever. This is the textbook <code>shared_ptr</code> cycle, and Rust inherits it for the same reason C++ does: reference counting cannot collect cycles.</p>
+<p>The fix is <code>Weak&lt;T&gt;</code> — a <em>non-owning</em> reference, the analogue of <code>std::weak_ptr&lt;T&gt;</code>. A <code>Weak&lt;T&gt;</code> points into an <code>Rc</code>’s allocation but does <strong>not</strong> contribute to the strong count, so it does not keep the value alive. You create one with <code>Rc::downgrade(&amp;rc)</code>. Because the pointee may already be dead, you cannot dereference a <code>Weak</code> directly: you call <code>.upgrade()</code>, which returns <code>Option&lt;Rc&lt;T&gt;&gt;</code> — <code>Some</code> if the value is alive (bumping the strong count while you hold the result), <code>None</code> if it was dropped. The <code>Option</code> is the type system forcing you to handle the dangling case; there is no path to a raw, possibly-dangling pointer.</p>
+<p>The canonical use is a tree where children own nothing upward but need to find their parent. Ownership must point <em>down</em> (a parent owns its children; dropping the parent drops the subtree), so the upward edge must be weak:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::RefCell;
+use std::rc::{Rc, Weak};
+
+struct Node {
+    value: i32,
+    parent: RefCell&lt;Weak&lt;Node&gt;&gt;,      // up: non-owning, breaks the cycle
+    children: RefCell&lt;Vec&lt;Rc&lt;Node&gt;&gt;&gt;, // down: owning
+}
+
+let leaf = Rc::new(Node {
+    value: 3,
+    parent: RefCell::new(Weak::new()),    // no parent yet -&gt; empty Weak
+    children: RefCell::new(vec![]),
+});
+
+let branch = Rc::new(Node {
+    value: 5,
+    parent: RefCell::new(Weak::new()),
+    children: RefCell::new(vec![Rc::clone(&amp;leaf)]), // branch owns leaf
+});
+
+*leaf.parent.borrow_mut() = Rc::downgrade(&amp;branch); // leaf points up, weakly
+
+// leaf -&gt; branch is weak, so:
+//   branch: strong 1, weak 1
+//   leaf:   strong 2 (held by `leaf` + branch.children), weak 0
+assert_eq!(Rc::strong_count(&amp;branch), 1);
+assert_eq!(Rc::weak_count(&amp;branch), 1);
+
+// access the parent safely:
+let parent_value = leaf.parent.borrow().upgrade().map(|p| p.value);
+assert_eq!(parent_value, Some(5));
+<span class="boring">}</span></code></pre>
+<p><code>Rc&lt;T&gt;</code> carries two counts: <code>strong_count</code> (owners — drives deallocation) and <code>weak_count</code> (outstanding <code>Weak</code>s — does <em>not</em>). When <code>branch</code> is dropped its strong count falls to 0 and its <code>Node</code> is freed <em>despite</em> <code>leaf.parent</code> still holding a <code>Weak</code> to it; afterwards <code>leaf.parent.borrow().upgrade()</code> simply returns <code>None</code>. No cycle, no leak, no dangling — the <code>Weak</code> cleanly observes its target’s death.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Exactly the <code>shared_ptr</code>/<code>weak_ptr</code> discipline from C++: make the “back-edge” (child→parent, observer→subject, cache→entry) a <code>weak_ptr</code>/<code>Weak</code> so it does not pin the object alive, and <code>.lock()</code>/<code>.upgrade()</code> it to a real owner only for the duration of use. The difference is that C++’s <code>weak_ptr::lock()</code> returning a null <code>shared_ptr</code> is easy to forget to check; Rust’s <code>upgrade()</code> returns <code>Option&lt;Rc&lt;T&gt;&gt;</code> and the type system <em>forces</em> the <code>None</code> branch.</p>
+</blockquote>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> An <code>Rc&lt;T&gt;</code> allocation is one heap block: <code>{ strong: Cell&lt;usize&gt;, weak: Cell&lt;usize&gt;, value: T }</code>. <code>strong</code> reaching 0 runs <code>T</code>’s destructor and the value’s storage is logically gone; the <em>block itself</em> is freed only once <code>weak</code> also reaches 0 (any live <code>Weak</code> must keep the counts readable so <code>upgrade</code> can check them). <code>Arc&lt;T&gt;</code> is byte-identical except both counts are atomics. This is why a leaked cycle wastes the full <code>T</code> plus both counters — and why a <code>Weak</code>-only “leak” still costs you the two-<code>usize</code> header until the last <code>Weak</code> dies.</p>
+</blockquote>
+<h2 id="when-to-reach-for-which"><a class="header" href="#when-to-reach-for-which">When to reach for which</a></h2>
+<pre><code class="language-text">Need              ┌────────────────────────────────────────────────────────┐
+one owner,        │ Box&lt;T&gt;        unique_ptr; heap; recursive types;        │
+move it cheaply   │               trait objects; cheap large moves          │
+                  ├────────────────────────────────────────────────────────┤
+many owners,      │ Rc&lt;T&gt;         shared_ptr (non-atomic); single-threaded; │
+read-only         │               immutable access only                    │
+                  ├────────────────────────────────────────────────────────┤
+many owners,      │ Arc&lt;T&gt;        shared_ptr (atomic); cross-thread         │
+across threads    │               (see ch.13)                               │
+                  ├────────────────────────────────────────────────────────┤
+mutate through    │ RefCell&lt;T&gt;    runtime borrow check, panics on violation;│
+a shared &amp;,       │ Cell&lt;T&gt;       Cell for Copy values (no guards, no panic)│
+single thread     │                                                         │
+                  ├────────────────────────────────────────────────────────┤
+shared + mutable  │ Rc&lt;RefCell&lt;T&gt;&gt;  the graph/observer building block       │
+                  ├────────────────────────────────────────────────────────┤
+break a cycle /   │ Weak&lt;T&gt;       non-owning back-edge; .upgrade() -&gt; Option │
+non-owning edge   │                                                         │
+                  └────────────────────────────────────────────────────────┘
+</code></pre>
+<p>Default to plain ownership and <code>&amp;</code>/<code>&amp;mut</code>. Every entry below <code>Box</code> is a step <em>away</em> from compile-time guarantees toward runtime cost or runtime failure — reach for it only when the static model genuinely cannot express what you need, never to silence the borrow checker. A <code>RefCell</code> that panics in production is a borrow-rule violation you shipped; the compile error you “fixed” by wrapping in <code>RefCell</code> was telling you something true.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li>A smart pointer is a struct that <strong>owns</strong> its pointee and implements <code>Deref</code> (acts like a reference) and usually <code>Drop</code> (RAII cleanup). <code>Box</code>/<code>Rc</code>/<code>Arc</code>/<code>RefCell</code> are <code>std</code>’s safe abstractions over heap and ownership.</li>
+<li><code>Box&lt;T&gt;</code> = <code>unique_ptr</code>: single owner, heap, fixed pointer size — the indirection that makes recursive types sizable and trait objects/large moves cheap.</li>
+<li><code>Deref</code> + deref coercion is the autoderef chain extended to function arguments; it is fully compile-time, hence why APIs take <code>&amp;str</code>/<code>&amp;[T]</code>. <code>&amp;U → &amp;mut U</code> is the one coercion that is forbidden, because a <code>&amp;</code> cannot prove it is unique.</li>
+<li><strong>The headline:</strong> <code>Rc</code> + <code>RefCell</code> move borrow-rule enforcement from compile time to run time. <code>RefCell</code> checks aliasing-XOR-mutability dynamically and <em>panics</em> — unlike C++’s <code>mutable</code>/<code>const_cast</code>, which check nothing and risk UB.</li>
+<li>Rust prevents UB, not leaks: <code>Rc</code> cycles leak because strong counts never hit zero. <code>Weak&lt;T&gt;</code> is the non-owning back-edge that breaks them; <code>upgrade()</code> returns <code>Option&lt;Rc&lt;T&gt;&gt;</code> so the dangling case is type-checked away.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>
+<p>Define <code>enum Json { Null, Bool(bool), Num(f64), Arr(Vec&lt;Json&gt;), Obj(Vec&lt;(String, Json)&gt;) }</code>. Does it compile <em>without</em> any <code>Box</code>? Explain precisely why <code>Vec&lt;Json&gt;</code> does <strong>not</strong> trigger <code>E0072</code> even though it is recursive — what is <code>size_of::&lt;Vec&lt;Json&gt;&gt;()</code> and where does the indirection actually live?</p>
+</li>
+<li>
+<p>Write a function <code>fn last(list: &amp;Rc&lt;List&gt;) -&gt; i32</code> over the cons list <code>enum List { Cons(i32, Rc&lt;List&gt;), Nil }</code>. Now try to make it iterative with a <code>let mut cur = list;</code> loop reassigning <code>cur</code> to the tail. You will hit a borrow/lifetime error — diagnose it and fix it without cloning the <code>Rc</code> on every step. (★)</p>
+</li>
+<li>
+<p>The following panics at run time but compiles. Identify the exact panic message and the line, then fix it by adjusting <em>scope</em> only (no new types, no <code>clone</code>):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::RefCell;
+let v = RefCell::new(vec![1, 2, 3]);
+let first = v.borrow();
+v.borrow_mut().push(4);
+println!("{:?}", *first);
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p>You have <code>let data: Rc&lt;RefCell&lt;Vec&lt;i32&gt;&gt;&gt; = Rc::new(RefCell::new(vec![]));</code> shared across two handles. Write code that borrows it mutably in an outer scope and, <em>while that guard is live</em>, calls a helper that also tries to <code>borrow_mut</code>. Explain why the compiler does not catch this and what the runtime behaviour is. How would you restructure to make the conflict a compile error instead?</p>
+</li>
+<li>
+<p>Build a doubly linked list node <code>struct Node { value: i32, next: RefCell&lt;Option&lt;Rc&lt;Node&gt;&gt;&gt;, prev: RefCell&lt;Option&lt;Weak&lt;Node&gt;&gt;&gt; }</code>. Construct three nodes A↔B↔C, then add an <code>impl Drop for Node</code> that prints the value. Confirm by running that all three drop. Now change <code>prev</code> from <code>Weak</code> to <code>Rc</code> and explain, with reference to the strong counts, exactly which nodes leak and why none of them print on drop. (★)</p>
+</li>
+<li>
+<p>Implement a <code>MyRc&lt;T&gt;</code> from scratch using <code>Box</code>, a raw <code>*mut</code>, and a <code>Cell&lt;usize&gt;</code> count (you will need a small <code>unsafe</code> block for the allocation/free). Make <code>clone</code> bump the count and <code>drop</code> decrement-and-maybe-free. Then explain in one paragraph why your <code>MyRc</code> is unsound across threads and what single trait bound the real <code>Rc</code> lacks (and <code>Arc</code> has) that the compiler uses to stop you from sending it between threads.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="14-async.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="16-unsafe-and-ffi.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="14-async.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="16-unsafe-and-ffi.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

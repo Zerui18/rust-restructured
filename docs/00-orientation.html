@@ -1,0 +1,334 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Orientation: the thesis of Rust - Rust, Restructured — A Systems-and-Semantics Path to Mastery</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="The official Rust Book, reordered by conceptual dependency and pitched for an experienced programmer with a Cambridge CST background.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "ayu";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-d91e8076.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9e4376f2.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust, Restructured — A Systems-and-Semantics Path to Mastery</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="0-orientation-the-thesis-of-rust"><a class="header" href="#0-orientation-the-thesis-of-rust">0. Orientation: the thesis of Rust</a></h1>
+<p>You already know how to write fast code (C, C++) and how to write safe code (a GC’d runtime: Java, Swift’s ARC, JavaScript). The industry consensus you grew up with is that these are a trade-off: you pick manual memory management and accept use-after-free, double-free, and data races as the price of control; or you accept a garbage collector — a runtime that periodically traces the heap — and pay with latency, throughput, footprint, and loss of deterministic destruction. Rust’s entire reason to exist is the claim that this trade-off is not fundamental. It is an artifact of weak type systems.</p>
+<h2 id="the-one-sentence-thesis"><a class="header" href="#the-one-sentence-thesis">The one-sentence thesis</a></h2>
+<p><strong>Rust achieves memory safety and data-race freedom at compile time, with no garbage collector and no runtime overhead, by enforcing an affine type discipline (“ownership”), region-checked references (“lifetimes” / “borrowing”), and abstractions that monomorphise away to zero cost.</strong></p>
+<p>Unpack each clause; the rest of this book is just these four ideas pursued relentlessly.</p>
+<p><strong>Affine type discipline.</strong> From <a href="#">Logic and Proof</a> you know linear logic: a linear resource must be used exactly once. Rust uses the <em>affine</em> variant — a value may be used <em>at most</em> once before it is consumed (moved) or goes out of scope. Every value has exactly one <em>owner</em>. When the owner’s binding leaves scope, the value is deterministically destroyed. This is RAII from C++, but promoted from a library convention you opt into (<code>unique_ptr</code>, destructors) to a property the type system enforces on <em>every</em> value. A <code>move</code> in Rust is the default for non-<code>Copy</code> types, and after a move the source binding is statically dead — the compiler refuses to let you read it. There is no <code>std::move</code>-leaves-a-valid-empty-husk subtlety as in C++; the moved-from variable is simply not usable.</p>
+<p><strong>Region-checked references.</strong> You usually don’t want to <em>consume</em> a value to read it. So Rust lets you <em>borrow</em> it, producing a reference whose validity is bounded by a <em>region</em> — a lexical-ish span of the program — called a lifetime. From <a href="#">Semantics of Programming Languages</a> this is exactly region-based memory management formalised by Tofte and Talpin, except Rust <em>infers</em> the regions and uses them only for static checking, not for allocation. The borrow checker enforces one invariant: at any program point, you may have either <em>one</em> mutable reference <em>or</em> any number of shared (immutable) references to a given value, never both. This is the readers-writers lock — but resolved at compile time, with zero runtime cost, and it is precisely what makes data races impossible. We develop this in <a href="03-references-and-borrowing.html">references</a> and <a href="04-lifetimes.html">lifetimes</a>.</p>
+<p><strong>Zero-cost abstractions.</strong> Generics monomorphise (à la C++ templates and as you saw in <a href="#">Compiler Construction</a>): <code>Vec&lt;T&gt;</code> generates specialised machine code per instantiation, no boxing, no type erasure. Traits dispatch statically by default; you opt into dynamic dispatch (a vtable) explicitly with <code>dyn</code>. Iterators, closures, <code>Option</code>, and <code>Result</code> compile down to the same loops and branches you’d write by hand. The slogan, due to Stroustrup and adopted wholesale by Rust: <em>what you don’t use, you don’t pay for; what you do use, you couldn’t hand-code better.</em></p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Think of Rust as “C++ with the parts you keep tripping over removed by the type checker.” RAII, move semantics, monomorphised templates, no GC, deterministic destructors — all present and familiar. What’s new is that the compiler <em>statically proves</em> the lifetime invariants you currently maintain in C++ by discipline, code review, and AddressSanitizer. <strong>Where the analogy breaks:</strong> in C++ a dangling reference or a data race is undefined behaviour the compiler happily emits; in safe Rust it is a compile error. And unlike OCaml’s safety-via-GC, Rust pays no runtime price for that guarantee.</p>
+</blockquote>
+<blockquote>
+<p><strong>🎓 Tripos link →</strong> <em>Programming in C and C++</em> taught you that <code>unique_ptr</code> models unique ownership and that a moved-from <code>unique_ptr</code> is null. Rust takes that exact model and makes it the language’s default semantics for <em>all</em> values, then adds a static checker (the borrow checker) so that the C++ failure modes — using a moved-from object, holding a reference past the owner’s destruction — become type errors rather than latent bugs.</p>
+</blockquote>
+<h2 id="the-central-mental-model-ownership-is-a-tree-borrows-are-a-proof"><a class="header" href="#the-central-mental-model-ownership-is-a-tree-borrows-are-a-proof">The central mental model: ownership is a tree, borrows are a proof</a></h2>
+<p>Commit to this picture now; everything hangs off it.</p>
+<p>Every value is owned by exactly one binding at a time. Composite values own their parts: a <code>Vec&lt;String&gt;</code> owns its heap buffer, which owns each <code>String</code>, which owns <em>its</em> heap buffer. Ownership therefore forms a <strong>tree</strong> (more precisely a forest rooted at stack frames). When a root goes out of scope, destruction recurses down the tree — deterministically, at a statically known program point, with no tracing and no reference counting.</p>
+<p>References (<code>&amp;T</code>, <code>&amp;mut T</code>) are <strong>non-owning</strong> edges that point <em>into</em> this tree. The borrow checker’s job is to prove that no reference outlives the subtree it points at, and that mutable access is exclusive. A program that type-checks comes with a machine-verified proof that it has no dangling pointers and no data races. That is the deal Rust offers: accept the discipline, receive the proof.</p>
+<p>When the tree shape is genuinely insufficient — you need shared ownership, cycles, or a graph — you reach for <a href="15-smart-pointers.html">smart pointers</a> (<code>Rc</code>, <code>RefCell</code>, <code>Arc</code>, <code>Mutex</code>) that move some checks to runtime, or, at the very edge, <a href="16-unsafe-and-ffi.html"><code>unsafe</code></a> where you discharge the proof obligation yourself. But the tree is the default, and idiomatic Rust keeps it that way far longer than your C++ instincts will predict.</p>
+<h2 id="a-glance-at-hello-world"><a class="header" href="#a-glance-at-hello-world">A glance at Hello, World</a></h2>
+<p>You will spend almost no time here; you’ve written <code>main</code> thousands of times.</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    println!("Hello, world!");
+}</code></pre>
+<p>Three things to register and move on:</p>
+<ul>
+<li><code>fn main()</code> is the entry point, as in C. No arguments needed; the OS-level <code>argc/argv</code> are reached through <code>std::env</code>.</li>
+<li><code>println!</code> is a <strong>macro</strong>, not a function — the <code>!</code> is the tell. It is not C’s <code>printf</code>: the format string is parsed and type-checked at compile time, so a mismatch between placeholders and arguments is a compile error, not a runtime format-string vulnerability. Macros are <a href="18-macros.html">their own chapter</a>; for now, <code>!</code> just means “expands to code.”</li>
+<li>Statements end in <code>;</code>. Rust is expression-oriented (a block evaluates to its last expression), so the <code>;</code> is semantically meaningful — it discards a value, turning an expression into a statement. We make this precise in <a href="01-language-delta.html">the language delta</a>.</li>
+</ul>
+<p>Compile directly with <code>rustc main.rs</code> (like invoking <code>clang</code> by hand) and you get a standalone native binary — no interpreter, no VM, no <code>.jar</code>, statically linked against the Rust standard library by default. But nobody invokes <code>rustc</code> directly past this paragraph.</p>
+<h2 id="the-toolchain-at-expert-speed"><a class="header" href="#the-toolchain-at-expert-speed">The toolchain at expert speed</a></h2>
+<p><strong><code>rustup</code></strong> is the toolchain multiplexer — conceptually <code>nvm</code>/<code>pyenv</code>/<code>rbenv</code> for Rust. It installs and switches between <em>toolchains</em> (a toolchain = a <code>rustc</code> + <code>cargo</code> + <code>std</code> of a given channel: <code>stable</code>, <code>beta</code>, <code>nightly</code>, or a pinned version like <code>1.96.0</code>). A directory can pin its toolchain via <code>rust-toolchain.toml</code>. <code>rustup update</code> pulls new releases (stable ships every six weeks); <code>rustup component add</code> fetches <code>clippy</code>, <code>rustfmt</code>, <code>rust-src</code>, etc.; <code>rustup doc</code> opens the <em>offline</em> copy of std and the book in your browser. Target cross-compilation (<code>rustup target add aarch64-unknown-linux-gnu</code>) lives here too.</p>
+<p><strong><code>cargo</code></strong> is build system <em>and</em> package manager in one — <code>make</code> + a dependency resolver + a test runner, with conventions instead of configuration. A project (a <em>package</em>) has a <code>Cargo.toml</code> manifest (TOML: name, version, <code>edition</code>, <code>[dependencies]</code>) and a <code>Cargo.lock</code> (the resolved, exact-version dependency graph — commit it for binaries, conventionally not for libraries). Source lives in <code>src/</code>; build artifacts in <code>target/</code>. The commands you will actually live in:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Command</th><th>What it does</th><th>Analogy</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cargo new &lt;name&gt;</code></td><td>Scaffold package (<code>Cargo.toml</code>, <code>src/main.rs</code>, git init)</td><td>—</td></tr>
+<tr><td><code>cargo check</code></td><td>Type-check + borrow-check, <strong>emit no binary</strong></td><td>the fast inner loop</td></tr>
+<tr><td><code>cargo build</code></td><td>Compile to <code>target/debug/</code> (unoptimised + debuginfo)</td><td><code>make</code></td></tr>
+<tr><td><code>cargo build --release</code></td><td>Optimised build to <code>target/release/</code></td><td><code>make</code> with <code>-O</code></td></tr>
+<tr><td><code>cargo run</code></td><td><code>build</code> then execute (rebuilds only if stale)</td><td>—</td></tr>
+<tr><td><code>cargo test</code></td><td>Build and run all tests (see <a href="20-testing-and-tooling.html">testing</a>)</td><td>—</td></tr>
+<tr><td><code>cargo clippy</code></td><td>Lint: hundreds of idiom/correctness/perf lints</td><td>a Rust-aware linter</td></tr>
+<tr><td><code>cargo fmt</code></td><td>Canonical formatting (rustfmt)</td><td><code>clang-format</code>, but there is one true style</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>cargo check</code> is the command you run on every save: it does all the analysis that catches your bugs (type, borrow, lifetime) and <em>skips</em> codegen and linking, so it returns in a fraction of <code>build</code>’s time. Reserve <code>build</code>/<code>run</code> for when you actually want to execute.</p>
+<blockquote>
+<p><strong>⚙️ Under the hood →</strong> The debug/release split is two <em>profiles</em>. Debug is <code>opt-level = 0</code> with debuginfo and overflow checks on, so it <em>panics on integer overflow</em> rather than wrapping. Release is <code>opt-level = 3</code> with overflow checks off (wrapping in release is defined two’s-complement, not UB). The semantics difference is deliberate: it surfaces bugs in development without costing a branch in production. Benchmark only release builds — a debug binary can be 10–50× slower and will mislead you completely.</p>
+</blockquote>
+<h3 id="editions-what-they-are-and-are-not"><a class="header" href="#editions-what-they-are-and-are-not">Editions: what they are and are not</a></h3>
+<p><code>Cargo.toml</code> carries an <code>edition</code> key — <code>2015</code>, <code>2018</code>, <code>2021</code>, or <code>2024</code>. An <strong>edition is an opt-in set of source-language changes</strong> (new keywords, changed defaults, syntax) scoped per-crate. It is emphatically <strong>not</strong> a new compiler, not a new standard library version, and not a fork of the language.</p>
+<p>The non-obvious property — and the whole point — is that editions <strong>interoperate freely</strong>: a 2024-edition crate can depend on a 2015-edition crate and vice versa, because the compiler understands all editions simultaneously and lowers them to one common internal representation before type-checking. Editions exist so Rust can make <em>otherwise-breaking</em> changes (e.g. promoting <code>async</code>/<code>await</code>/<code>dyn</code> to keywords, changing closure-capture rules) without a Python-2-to-3 ecosystem schism: your old crate keeps compiling on its declared edition forever, and <code>cargo fix --edition</code> mechanically migrates you when you choose. Stability is a first-class promise — code that compiles today compiles on every future stable <code>rustc</code>. Start new work on 2024 (the <code>cargo new</code> default on current toolchains) and don’t think about it again.</p>
+<blockquote>
+<p><strong>🦀 From your toolbox →</strong> Editions are closest to a C/C++ language standard (<code>-std=c++17</code> vs <code>c++20</code>) <em>selected per translation unit but link-compatible across the whole program</em> — which C++ does <strong>not</strong> guarantee (mixing ABIs/standards across object files is fraught). Java has no analogue: a <code>--release 8</code> flag changes the bytecode target globally, not a per-file source dialect that freely intermixes. The “old code never breaks, new syntax is opt-in, everything still links” combination is the genuinely novel bit.</p>
+</blockquote>
+<p><strong><code>rust-analyzer</code></strong> is the LSP language server: go-to-definition, inline type hints (essential, since Rust infers most types), and the exact borrow-checker errors <em>inline as you type</em> rather than after a build. Install it before you write line one. <strong>docs.rs</strong> auto-builds and hosts API docs for every published crate from its doc-comments; <strong>crates.io</strong> is the registry <code>cargo add</code> pulls from; <code>cargo doc --open</code> builds the same docs for your own crate locally.</p>
+<h2 id="how-to-read-this-book-and-why-it-is-ordered-this-way"><a class="header" href="#how-to-read-this-book-and-why-it-is-ordered-this-way">How to read this book, and why it is ordered this way</a></h2>
+<p>This is a re-ordering of <em>The Rust Programming Language</em> for someone who already knows systems programming and type theory — you. We front-load the one thing that is genuinely new and hard, then let everything else fall out of it.</p>
+<p>The spine is the ownership model. <a href="02-ownership-and-moves.html">Ownership &amp; moves</a> → <a href="03-references-and-borrowing.html">references &amp; borrowing</a> → <a href="04-lifetimes.html">lifetimes as regions</a> → <a href="05-slices-and-duality.html">slices</a> form an unbroken argument; read them in order and do not skip ahead, because <em>every later chapter assumes you have internalised the borrow checker</em>. Collections, error handling, closures, and concurrency are not separate features — they are ownership applied to a domain. Fearless <a href="13-fearless-concurrency.html">concurrency</a>, Rust’s headline result, is <em>literally just</em> the borrow-checker invariant (one writer xor many readers) reinterpreted across threads via the <code>Send</code>/<code>Sync</code> traits; it costs nothing extra to learn once ownership is solid.</p>
+<p>After the spine come the abstraction tools (<a href="06-structs-and-methods.html">structs</a>, <a href="07-enums-and-pattern-matching.html">enums &amp; pattern matching</a>, <a href="08-generics-and-traits.html">generics &amp; traits</a>, <a href="09-trait-objects-and-oop.html">trait objects</a>), which will feel like OCaml sum types and Java interfaces with sharper edges, then the standard library and the systems-level escape hatches (<a href="15-smart-pointers.html">smart pointers</a>, <a href="16-unsafe-and-ffi.html">unsafe &amp; FFI</a>), then <a href="17-advanced-traits-and-types.html">advanced traits</a>, <a href="18-macros.html">macros</a>, <a href="19-project-structure.html">project structure</a>, <a href="20-testing-and-tooling.html">tooling</a>, and two <a href="21-capstones.html">capstones</a>. Read the four callout types as signal, not decoration: <strong>🦀 From your toolbox</strong> anchors a new idea to something you already know (and tells you where the analogy lies to you); <strong>⚙️ Under the hood</strong> is what <code>rustc</code> actually emits; <strong>⚠️ Pitfall</strong> is the exact compiler error you <em>will</em> hit and the idiomatic fix; <strong>🎓 Tripos link</strong> ties back to your courses.</p>
+<h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
+<ul>
+<li>The thesis: memory safety and data-race freedom <strong>at compile time, with no GC and no runtime cost</strong>, via affine ownership + region-checked borrowing + zero-cost abstractions. Memorise this sentence; the whole book is its proof.</li>
+<li>Ownership forms a <strong>tree</strong>; values are destroyed deterministically when the owning binding leaves scope (RAII, enforced by the type system, not by convention). References are non-owning edges, and the borrow checker proves none of them dangle.</li>
+<li>The borrow-checker invariant — <strong>one mutable xor many shared references</strong> — is simultaneously what prevents use-after-free <em>and</em> what prevents data races. They are the same rule.</li>
+<li><code>cargo check</code> is your inner loop (analysis, no codegen); <code>--release</code> is the only build worth benchmarking; debug builds panic on integer overflow by design.</li>
+<li>An <strong>edition</strong> is a per-crate, freely-interoperable source dialect — <em>not</em> a new compiler or std — so Rust evolves syntax without ever breaking old code.</li>
+</ul>
+<h2 id="exercises"><a class="header" href="#exercises">Exercises</a></h2>
+<ol>
+<li>Run <code>cargo new orientation &amp;&amp; cd orientation</code>, then <code>cargo check</code>, <code>cargo build</code>, and <code>cargo run</code>. Observe which produce output under <code>target/</code> and which don’t; explain from the table above <em>why</em> <code>check</code> is faster than <code>build</code>.</li>
+<li>Open <code>Cargo.toml</code>, change <code>edition = "2024"</code> to <code>edition = "2015"</code>, and add a binding named <code>dyn</code> (e.g. <code>let dyn = 5;</code>) in <code>main</code>. Build under each edition and explain the differing results in terms of “an edition is an opt-in set of source-language changes” — specifically, when did <code>dyn</code> become a reserved keyword?</li>
+<li>Write a <code>main</code> that computes <code>let x: u8 = 255; let y = x + 1;</code> and run it with <code>cargo run</code> and then <code>cargo run --release</code>. Explain the two different behaviours using the <strong>⚙️ Under the hood</strong> note on profiles. Which behaviour would you <em>want</em> in a security-critical context, and why does Rust make development the strict one?</li>
+<li>(★) Without writing any Rust, predict precisely which of these C++ bug categories the borrow checker rejects <em>at compile time</em> and which it cannot (and would need <code>unsafe</code> or a runtime smart pointer to even express): (a) returning a pointer to a local stack variable; (b) two threads writing the same <code>int</code> without a lock; (c) a reference-counted cycle that leaks; (d) iterator invalidation from <code>push_back</code> during a range-for. For each, name the chapter in this book where the relevant machinery appears.</li>
+<li>(★) <code>rustup doc --std</code> opens the offline standard-library docs. Find the page for <code>std::mem::drop</code> and for <code>Drop</code>. From the signatures and prose alone, articulate how “destruction recurses down the ownership tree” is realised — what does <code>drop(x)</code> do that letting <code>x</code> fall out of scope does not, and why is it sound to call it early?</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="preface.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="01-language-delta.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="preface.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="01-language-delta.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

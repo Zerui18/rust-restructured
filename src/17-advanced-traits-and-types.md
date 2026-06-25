@@ -21,8 +21,6 @@ The rule of thumb: **associated type when the implementor determines the type as
 
 > **🦀 From your toolbox →** Think of a Java interface where the result type is *fixed per implementing class* rather than chosen by each caller. If you declared `interface Iterator<Item>`, the same class could implement both `Iterator<String>` and `Iterator<Integer>`, and at each call site you'd have to say which one you meant. Rust's associated type behaves like an interface that builds the element type *into* the implementation — one class, one element type, no annotation needed at the call site. Swift's `protocol Iterator { associatedtype Element; ... }` is the direct cousin: an `associatedtype` is exactly this "output type the conformer fills in." OCaml's nearest echo is a module signature with an abstract `type t` that each module fills in with a concrete type — but you wire OCaml modules together by hand, whereas Rust picks the impl for you during trait resolution, so the analogy stops there.
 
-> **🎓 Tripos link →** *Semantics of Programming Languages.* The intuition worth keeping: an associated type is a *type-level lookup* — given the implementor, the compiler reads off one fixed answer for `Self::Item`. The rule that there is only ever one `impl Iterator for Counter` (coherence) is what makes that lookup yield a single answer instead of several, which is precisely why `counter.next()` needs no hint about which iterator you meant.
-
 ### Associated constants
 
 The same idea extends to constants. A trait may declare a `const` that each impl supplies, available as `Self::NAME`:
@@ -203,8 +201,6 @@ If the inner field is private (in its own module), the *only* way to obtain a `V
 
 > **⚙️ Under the hood →** A single-field tuple struct has *identical layout* to its field; the wrapper is erased. `Meters(3.0)` is one `f64` in a register. This is why the pattern is free — newtypes are a compile-time fiction. If you want the wrapper to forward the inner type's methods, implement `Deref` ([smart pointers](15-smart-pointers.md)); if you want only a subset, write just those.
 
-> **🎓 Tripos link →** *Semantics of Programming Languages.* The plain idea: you are deliberately drawing an abstraction boundary on top of a representation that is byte-for-byte identical, and asking the type checker to police it. Because the only way to make a `Validated` is to go through `validate`, holding one is itself evidence that the check ran at construction time — the type *is* the proof, and nothing downstream has to re-verify it.
-
 ## Type aliases vs newtypes: same bits, opposite meaning
 
 A `type` alias is *not* a new type — it is a synonym, fully transparent to the type checker.
@@ -281,8 +277,6 @@ announce(&42);                      // T = i32, sized, also fine
 `?Sized` is the *only* `?Trait` relaxation in the language — it exists solely because `Sized` is the one bound applied by default.
 
 > **🦀 From your toolbox →** In Java, Swift, and Python you never think about this because objects always live behind a reference and the runtime tracks their layout; the "pointer" is implicit and uniform. The closest hands-on touch is C: if you want to hand around a chunk of bytes whose length isn't fixed, you carry a pointer *plus* a separate length (`{char* ptr; size_t len}`) by hand, and it's on you to keep them in sync. A Rust `&[T]` *is* exactly that pair, except the compiler bundles and tracks the length for you so you can't desync them or read past the end. `&dyn Trait` is the same trick with a method-table pointer instead of a length. The bridge from a plain C pointer breaks down because a C pointer is always just an address — there's no language-level idea of "this pointee has no fixed size."
-
-> **🎓 Tripos link →** *Operating Systems / Computer Architecture.* `Sized` is the type-system shadow of a very concrete question from those courses: how many bytes does this value take in a stack frame? A `str` or `[T]` has no fixed answer until runtime, so it cannot be a plain stack local — you store it elsewhere and keep a pointer-plus-length to it, exactly the layout you'd hand-roll for variable-length data. Rust lifts that bookkeeping into the type checker, so getting it wrong is a compile error rather than a read off the end of a buffer.
 
 ## Function pointers vs closures
 

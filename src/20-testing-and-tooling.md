@@ -133,8 +133,6 @@ One sharp edge: you cannot combine `#[should_panic]` with a `Result`-returning t
 cargo test -- --test-threads=1   # one at a time; deterministic, slower
 ```
 
-> **🎓 Tripos link →** This is exactly the *Concurrent & Distributed Systems* shared-mutable-state hazard. The test runner gives you N threads with no implicit synchronisation; two tests touching `./fixture.db` is a data race at the filesystem level even though the Rust borrow checker, which only reasons about in-process memory, says nothing about it. The idiomatic resolution mirrors the course's advice: eliminate the sharing (give each test its own resource) rather than reach for a global lock. A global lock reintroduces serialisation and can deadlock if a test panics while holding it.
-
 **Output capture.** By default the runner captures `stdout`/`stderr` of *passing* tests and shows them only for failures (so a green run is quiet). To see prints from passing tests too:
 
 ```bash
@@ -307,8 +305,6 @@ The dials that matter:
 - **`lto`** (link-time optimisation) — `false` / `"thin"` / `true` (fat). Lets the optimiser inline and specialise *across* crate boundaries, which monomorphisation otherwise can't reach once a dependency is compiled separately. Slower link, faster binary.
 - **`codegen-units`** — rustc splits a crate into N units compiled in parallel; fewer units means better cross-function optimisation but less parallelism. `release` defaults to `16`; setting `1` squeezes out more performance at the cost of compile time.
 - **`panic = "abort"`** — replaces stack-unwinding with immediate `abort`, removing landing-pad code and unwind tables. Smaller and slightly faster, but `std::panic::catch_unwind` no longer works and `#[should_panic]`/the test harness rely on unwinding, so tests force unwinding regardless.
-
-> **🎓 Tripos link →** *Compiler Construction*: `codegen-units` and `lto` are knobs on exactly the inlining/specialisation trade-off you studied. Monomorphisation (covered in [generics & traits](08-generics-and-traits.md)) generates a concrete copy per type instantiation; with separate compilation, the copies in a dependency crate are opaque to your crate's optimiser. `lto = "thin"` re-opens those boundaries at link time so the inliner can act across them — the price is that more code is in scope for the optimiser, hence the slower link.
 
 ### Features and conditional compilation
 

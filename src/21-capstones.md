@@ -116,8 +116,6 @@ fn main() {
 
 Add it with `cargo add clap --features derive`. `Cli::parse()` reads `env::args_os()`, validates, and on failure prints a usage message to stderr and exits with code 2 — the conventional "usage error" code. The `value_delimiter = ','` attribute even reproduces our `parse_fields` for free. The derive macro is ordinary Rust code generated at compile time (see [chapter 18](18-macros.md)) and compiled like anything else: there is no reflection at runtime. Contrast Java, where annotation-driven frameworks like Spring or Jackson read annotations via reflection while the program is running; `clap` has done all of that work before `main` ever starts.
 
-> **🎓 Tripos link →** `clap`'s derive is a hands-on Compiler Construction exercise. The `#[derive(Parser)]` macro reads the struct's tokens as input and *writes out* a parser as output — a source-to-source translation running inside `rustc`. The struct is effectively a tiny grammar; the generated code is the recogniser. You wrote argument and grammar parsers by hand in that course; here the macro writes one for you, and the compiler then type-checks it against the very struct that described the grammar.
-
 > **🔧 In practice →** You're shipping a backup CLI and a teammate asks for `backup --dest ./snap --exclude '*.tmp' --exclude node_modules --dry-run -vvv`. With a hand-rolled loop you now own `--help`, repeated `--exclude`, the count-the-`v`s verbosity flag, and "did they pass a value?" checks — a day of fiddly bugs. With `clap` it's a struct:
 > ```rust
 > #[derive(Parser)]
@@ -282,8 +280,6 @@ fn main() {
 }
 ```
 
-> **🎓 Tripos link →** This is the Berkeley sockets model from Computer Networking, named in Rust types: `bind` is `bind(2)`, `incoming()` wraps `accept(2)`, and a `TcpStream` is a connected socket file descriptor. The difference from a C socket program is that the descriptor is *owned*: when `stream` is dropped at the end of the loop body, Rust calls `close(2)` for you — no leaked descriptors, no double-close. It is the same scope-tied cleanup as the file-handle locking above, now applied to a kernel resource: the destructor that runs at the end of the block closes the socket, the way Swift's `deinit` or a C++ destructor frees what it owns.
-
 ### Step 2: parse a request, route, respond
 
 An HTTP request begins with a request line: `GET /path HTTP/1.1\r\n`, followed by headers and a blank line. For a minimal server we read just the first line, route on it, and write back a status line, a `Content-Length` header, a blank line, and a body. `TcpStream` implements `Read` and `Write`; wrapping it in a `BufReader` gives us `.lines()`.
@@ -444,8 +440,6 @@ while let Ok(job) = receiver.lock().unwrap().recv() {
 ```
 
 the guard's lifetime extends across the entire `while let` body (a `while let` holds its scrutinee's temporaries for the loop body), so a worker holds the mutex *while executing the job*, and the pool degrades to one-at-a-time — the very serialisation we set out to kill. The borrow checker won't flag this; it is a correctness bug hiding in a lifetime rule. The `match`/`break` form drops the guard at the `;`, then runs the job unlocked.
-
-> **🎓 Tripos link →** This is the message-passing model from Concurrent & Distributed Systems realised with ownership. The channel `send` *moves* the `Job` from main to worker — there is no shared mutable job, so no data race on it; transferring ownership *is* the synchronisation. The `Arc<Mutex<Receiver>>` is the one genuinely shared resource, and the `Mutex` serialises access to *dequeueing* (taking a job off the queue, which must happen one worker at a time) while leaving job *execution* fully parallel. Holding the lock only across `recv` is the course's "keep the critical section as small as possible" rule — here it comes down to exactly where you put a semicolon.
 
 > **⚙️ Under the hood →** `Arc<T>` is a pointer to a heap allocation carrying `T` plus two atomic counters (strong/weak). `Arc::clone` is an atomic increment, not a deep copy — all four workers point at the *same* `Mutex<Receiver>`. `Rc` would be faster (non-atomic refcount) but is `!Send`, so it cannot cross the `thread::spawn` boundary; the compiler rejects it. That `!Send`-ness is the type system encoding "this refcount is not safe to touch from two threads," the data-race-freedom proof from [chapter 13](13-fearless-concurrency.md) discharged structurally.
 

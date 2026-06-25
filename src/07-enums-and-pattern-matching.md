@@ -99,8 +99,6 @@ This exhaustiveness check is the single most valuable property of `match`: the c
 
 > **🔧 In practice →** You add a new payment method to an e-commerce backend — a `PaymentMethod::ApplePay` variant alongside `Card` and `BankTransfer`. Without exhaustive `match`, you'd grep for every place that handles payment methods and hope you found them all. With it, you just add the variant and recompile: every `match` that hasn't been taught about `ApplePay` lights up red — the refund calculator, the receipt formatter, the fraud check. The compiler hands you a to-do list of exactly the sites that need updating, and you can't ship until they're all handled.
 
-> **🎓 Foundations of CS link →** This is the same machinery as OCaml's "this pattern-matching is not exhaustive" warning you met in Foundations, promoted from a warning to a hard error. The intuition is simple: the compiler checks that your arms, taken together, cover every possible value of the type, with no value left unhandled. Because there is no value that falls through the bottom, a `match` always produces a result — which is what lets it safely be an expression.
-
 ### Binding, catch-alls, and `_`
 
 Arms can bind parts of the scrutinee to names (that is how `r`, `w`, and `h` above came into scope). To make a `match` exhaustive without enumerating everything, end with a catch-all:
@@ -247,8 +245,6 @@ help: you might want to use `let else` to handle the variant that isn't matched
 ```
 
 The `let` form must always succeed because there is nowhere to put the failure. The compiler even points you at the fix: `let ... else`.
-
-> **🎓 Plain-language insight →** Refutability is just exhaustiveness seen from the other side. An irrefutable pattern is one that covers the *whole* type on its own — it can never fail to match, so it needs no second arm. `let PATTERN = EXPR;` is allowed only when `PATTERN` is irrefutable, because a plain `let` has nowhere to send a value that didn't match. The moment a pattern *could* fail, the compiler insists you use a form that has a "didn't match" branch (`if let`, `while let`, `let ... else`).
 
 ## The conditional family: `if let`, `let ... else`, `while let`, `matches!`
 

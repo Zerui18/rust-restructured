@@ -82,8 +82,6 @@ println!("{word}");             // borrow still live here
 
 > **⚠️ Pitfall →** The above is `error[E0502]: cannot borrow `line` as mutable because it is also borrowed as immutable`. `String::clear` needs `&mut self`, but `word` holds a live `&` into the same string, and the [borrowing](03-references-and-borrowing.md) rules forbid a mutable and an immutable borrow coexisting. The fix is not a workaround — it is the point. The compiler has proved that mutating the string while a view into it is alive would invalidate the view, exactly the bug the index version hid. Finish using `word` first, or compute an owned `String` if you genuinely need to outlive the source.
 
-> **🎓 Tripos link →** The intuition here connects to *Semantics of Programming Languages*: a value's type can be made strong enough to carry an invariant the program must respect. The index-returning version type-checks but the type was too weak — it said "this is a number", not "this number is only valid while *that* string is unchanged". The slice strengthens the type until "it compiles" implies "the view is still valid", so the `clear()` call becomes a compile error rather than a silent bug. That is the type system doing real work, not ceremony — the same lifetime/region reasoning you saw in [lifetimes](04-lifetimes.md), now applied to a pointer into the *middle* of a value.
-
 ## The owned/borrowed pair
 
 `String` and `&str` are not two unrelated string types; they are the **owning** and **borrowing** halves of one design. This split is the central idea of the chapter, so make it explicit:
@@ -167,8 +165,6 @@ let bad  = &s[0..1];   // panics: byte index 1 is inside 'З' (bytes 0..2)
 ```
 
 > **⚠️ Pitfall →** `byte index 1 is not a char boundary; it is inside 'З' (bytes 0..2)`. Byte-range slicing is the one string operation that trades a compile error for a runtime panic, because the validity depends on data the compiler cannot see. Treat raw byte-range slicing of arbitrary (possibly non-ASCII) text as a code smell. Prefer boundary-aware iterators: `s.char_indices()` gives you `(byte_offset, char)` pairs whose offsets are guaranteed valid, or `split`/`find`/`splitn` which return sub-`&str`s on correct boundaries by construction.
-
-> **🎓 Tripos link →** From *Compiler Construction* / lexing: UTF-8 is a prefix-free variable-length code where a byte's high bits classify it as ASCII (`0xxxxxxx`), a continuation byte (`10xxxxxx`), or a leading byte of a 2/3/4-byte sequence (`110/1110/11110...`). "Is this a char boundary" is just "this byte is not a continuation byte" — an O(1) local check, which is why `s.is_char_boundary(i)` exists and why the panic message can name the exact multibyte scalar you cut into. The self-synchronising property of UTF-8 is precisely what lets slices stay cheap.
 
 ## Slicing syntax and slice patterns
 

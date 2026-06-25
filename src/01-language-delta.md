@@ -213,8 +213,6 @@ let y = {
 
 The semicolon is the pivotal piece of punctuation in Rust, and it does the opposite of what it does in C. A trailing semicolon **discards** the value and turns the expression into a statement whose value is `()`. Drop the semicolon and the expression's value becomes the block's value. This rule unifies `let x = { … }` with function return below.
 
-> **🎓 Tripos link →** *Semantics of Programming Languages* — the intuition, no formalism. Read a block top to bottom: each line that ends in a semicolon is run for its effect and then thrown away (its value becomes `()`); the final line, if you leave the semicolon off, *is* the block's value. That's the whole rule. If you've used OCaml, it's the `e1; e2` sequencing you already know — run `e1` for effect, hand back `e2` — just generalised to a stack of statements followed by one tail expression. The mental model to carry: **semicolon = "and then discard"; no semicolon on the last line = "this is the answer."**
-
 ### Functions return their tail expression
 
 There is no `return` keyword on the happy path. The body is a block; the function returns the block's trailing (semicolon-less) expression. The return type follows `->`:
@@ -337,8 +335,6 @@ let label = match n {
     _ => "large",        // the wildcard; required here for exhaustiveness
 };
 ```
-
-> **🎓 Tripos link →** *Foundations of Computer Science.* This is OCaml's `match … with`, exhaustiveness check and all — and it's the close cousin of Swift's `switch`, which also forces you to handle every case (or write `default`). The false friend is Java's / C's `switch`: it falls through unless you `break`, makes no promise that you covered every case, and works only on a handful of types. Rust's `match` insists that *some* arm fires for every possible value — the wildcard `_` is how you say "everything else." Forget a variant of an `enum` and you get a compile error, not a silent fall-through to nothing. The plain takeaway: the compiler turns "did I handle every case?" from a code-review worry into a guarantee.
 
 ## Comments and a note on `println!`
 

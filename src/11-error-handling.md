@@ -43,8 +43,6 @@ Set `RUST_BACKTRACE=1` to get the call stack. Read it top-down and stop at the f
 > ```
 > `abort` produces smaller binaries and is mandatory in some contexts (e.g. a panic crossing an `extern "C"` boundary is UB unless aborting — see [unsafe and FFI](16-unsafe-and-ffi.md)). With unwinding, a panic in a spawned thread kills only that thread; the parent observes it via the `JoinHandle` ([fearless concurrency](13-fearless-concurrency.md)).
 
-> **🎓 Tripos link →** Unwinding-and-running-destructors is the same scope-exit cleanup story you meet in *Operating Systems* when you reason about who frees a resource and when. The intent here is narrow, though: Rust unwinding is a best-effort cleanup on the way to thread death, *not* a recover-and-continue mechanism. `std::panic::catch_unwind` exists, but it is for FFI boundaries and thread-pool isolation, not for `try`/`catch`-style logic — do not reach for it the way you would reach for a `catch` block in Java or Swift.
-
 `unwrap` and `expect` (below) are the most common ways `panic!` shows up in real code. The rule for when a panic is *correct* is the subject of the final section.
 
 ## Track two: `Result<T, E>` for recoverable failure
@@ -145,8 +143,6 @@ The `?` after a `Result` means: if `Ok(v)`, evaluate to `v` and continue; if `Er
 > }
 > ```
 > Without `?` this is a staircase of `match`es that buries the one line that actually does work. With it, the error path is invisible until it fires — which is exactly when you want to think about it.
-
-> **🎓 Tripos link →** Think of `?` as the early-return rewrite you would do by hand, made into syntax: the compiler expands `v?` into either "the value inside `v`" or "return the error now." That is the same kind of mechanical source-to-source transformation a compiler performs in *Compiler Construction* when it lowers a high-level construct into simpler control flow. Rust gives this one pattern — short-circuit on failure — its own operator because it is so pervasive.
 
 ### `?` is not *just* early-return — it calls `From::from`
 
@@ -298,8 +294,6 @@ fn load(path: &str) -> Result<String, ConfigError> {
 > }
 > ```
 > Each `?` quietly converts a different upstream error into your one declared type. Callers match on `ConfigError` and never see the plumbing. (For the `parse()?` line to compile you would add `impl From<std::num::ParseIntError> for ConfigError` mapping it into a suitable variant.)
-
-> **🎓 Tripos link →** This is the same algebraic-data-type-plus-pattern-matching style you met in *Foundations of Computer Science* with OCaml variants: an error is a value of a sum type, and handling it is an exhaustive `match`. The compiler's exhaustiveness check on `match self` in your `Display` impl is the same coverage guarantee that flags a forgotten case — add a fourth variant and forget to handle it, and you get a compile error, not a silent fall-through.
 
 > **⚙️ Under the hood →** `Box<dyn Error>` is a fat pointer — data pointer plus vtable pointer — exactly the trait-object layout from [trait objects and OOP](09-trait-objects-and-oop.md). It heap-allocates and dynamically dispatches `Display`/`Debug`/`source`. A concrete enum like `ConfigError` is stack-sized (the largest variant plus a tag), monomorphised, statically dispatched, and exhaustively matchable by callers. The trade-off: `Box<dyn Error>` is maximally flexible and ergonomic but erases the type, so callers cannot match on *which* error; a concrete enum is recoverable-by-variant but couples callers to your error taxonomy. Libraries lean concrete; applications lean boxed.
 

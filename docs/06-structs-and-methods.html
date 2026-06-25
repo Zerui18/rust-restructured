@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -178,9 +178,6 @@
                     <main>
                         <h1 id="6-structs--methods"><a class="header" href="#6-structs--methods">6. Structs &amp; Methods</a></h1>
 <p>A <code>struct</code> is Rust’s <strong>product type</strong>: a labelled bundle of its field types, exactly the records you built in OCaml, the <code>struct</code>s you wrote in C, the classes-without-methods you’d write in Java or Swift. Nothing here will surprise you syntactically. What is worth your attention is the <em>seams</em> — the places where Rust’s design diverges from Java and Swift in ways that fall directly out of <a href="02-ownership-and-moves.html">ownership</a> and <a href="03-references-and-borrowing.html">borrowing</a>. There are three: structs own their fields (so construction and update <em>move</em>), behaviour lives in detached <code>impl</code> blocks rather than inside the type, and the method receiver <code>self</code> is just a borrow whose form (<code>&amp;</code>, <code>&amp;mut</code>, by-value) <em>is</em> the access discipline. Get those three and the rest is notation.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Foundations of Computer Science</em>: a struct is the dual of an enum. Enums are “one of these” types (one variant active at a time); structs are “all of these together” types (every field present at once). Together with <a href="07-enums-and-pattern-matching.html">enums</a> they are the OCaml variant-and-record pair you already know — Rust just gives the record half named fields and the variant half <a href="07-enums-and-pattern-matching.html">pattern matching</a>. The count of possible values multiplies: a struct of a <code>bool</code> and a <code>u8</code> can be in <code>2 × 256</code> distinct states.</p>
-</blockquote>
 <h2 id="the-three-shapes-of-struct"><a class="header" href="#the-three-shapes-of-struct">The three shapes of struct</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -254,9 +251,6 @@ println!("{}", a.token); // error[E0382]: borrow of moved value: `a.token`
 }
 <span class="boring">}</span></code></pre>
 <p>The compiler insists you write <code>struct Session&lt;'a&gt; { token: &amp;'a str }</code>, tying the struct’s validity to the borrowed data. That is correct and sometimes what you want, but it infects every use site with a lifetime parameter. The default, idiomatic choice for an owning data type is owned fields (<code>String</code>, <code>Vec&lt;T&gt;</code>, <code>Box&lt;T&gt;</code>) so the instance owns all its data and outlives nothing external. We treat the <code>&lt;'a&gt;</code> machinery properly in <a href="04-lifetimes.html">lifetimes</a>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Semantics of Programming Languages</em>, taken purely as intuition: the lifetime parameter <code>'a</code> is a label for “the stretch of program during which the borrowed data is guaranteed to be alive.” Writing <code>Session&lt;'a&gt;</code> says <em>this struct must not outlive the thing it points at</em> — if the <code>String</code> you borrowed from is dropped, any <code>Session&lt;'a&gt;</code> still holding a reference to it would be dangling, so the compiler forbids it. Owned fields are the simple case where the struct points at nothing external, so no such label is needed.</p>
-</blockquote>
 <h2 id="impl-behaviour-detached-from-data"><a class="header" href="#impl-behaviour-detached-from-data"><code>impl</code>: behaviour, detached from data</a></h2>
 <p>Here is the deepest break from Java and Swift: <strong>data and behaviour are declared separately.</strong> The struct definition lists fields and nothing else; methods live in an <code>impl</code> block.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -318,9 +312,6 @@ impl Rect {
 <p>So <code>area(&amp;self)</code> borrows shared, <code>scale(&amp;mut self)</code> borrows exclusively (and therefore requires the caller’s binding be <code>mut</code> and not otherwise borrowed), and <code>into_pair(self)</code> <em>consumes</em> the <code>Rect</code>: after <code>r.into_pair()</code>, <code>r</code> is moved and gone. By-value <code>self</code> is rare and deliberate — it is for transformations where the old value should not survive (note the <code>into_</code> naming convention signalling consumption). All the borrow-checker rules carry over unchanged: you cannot call <code>&amp;mut self</code> while a shared borrow of the instance is live, because that would violate aliasing-XOR-mutation (at most one mutable borrow, or any number of shared ones, never both).</p>
 <blockquote>
 <p><strong>🔧 In practice →</strong> the receiver choice is a real API-design decision you make constantly. A method that <em>reports</em> something takes <code>&amp;self</code> (<code>config.is_valid()</code>, <code>cart.total()</code>) so callers keep using the value. A method that <em>updates in place</em> takes <code>&amp;mut self</code> (<code>cart.add_item(x)</code>, <code>buffer.clear()</code>). And <code>self</code> by value is how you build deliberate “this object is now consumed” conversions: a <code>Request</code> that you finalise into a <code>PreparedRequest</code>, or a file handle’s <code>into_raw_fd()</code> that hands off ownership so you can’t accidentally use the old wrapper afterwards. Picking <code>self</code> over <code>&amp;mut self</code> is you telling every caller “after this call, the old value is gone” — and the compiler enforces it for free.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Concurrent and Distributed Systems</em>, as intuition only: <code>&amp;mut self</code> is the compile-time analogue of grabbing an exclusive lock on the instance for the duration of the call — but there is no actual lock and no runtime cost, because the type system checks the “no other access while I’m writing” rule <em>before the program ever runs</em>. <code>&amp;self</code> is the shared-read case (many readers, no writer). This is exactly the discipline that makes data races impossible, which is why <a href="13-fearless-concurrency.html">fearless concurrency</a> works.</p>
 </blockquote>
 <h3 id="autoref--autoderef-at-the-call-site"><a class="header" href="#autoref--autoderef-at-the-call-site">Autoref / autoderef at the call site</a></h3>
 <p>You never write <code>(&amp;r).area()</code> or <code>(&amp;mut r).scale(2)</code>. Rust’s <strong>automatic referencing and dereferencing</strong> inserts the needed <code>&amp;</code>, <code>&amp;mut</code>, or <code>*</code> to make the receiver match the method signature:</p>

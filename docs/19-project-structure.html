@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -228,9 +228,6 @@ mod billing {
         └── post
 </code></pre>
 <p>The vocabulary mirrors a filesystem and is worth fixing: <code>invoices</code> and <code>ledger</code> are <strong>siblings</strong> (defined in the same parent); <code>invoices</code> is a <strong>child</strong> of <code>billing</code>; <code>billing</code> is the <strong>parent</strong> of <code>invoices</code>. The whole tree is rooted at <code>crate</code>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> In <em>Foundations of Computer Science</em> you used OCaml modules to bundle a type with the operations over it (the classic <code>Stack</code> / <code>Queue</code> ADT presentation). A Rust module serves the identical <em>organisational</em> role, but the encapsulation mechanism is the mirror image: OCaml hides a representation by <em>omitting</em> it from an <code>.mli</code> signature (you list what to export), whereas Rust hides items by <em>default privacy</em> and selectively <em>exposes</em> them with <code>pub</code> (everything is private until you annotate it). Same goal — abstraction boundaries the compiler enforces — opposite default.</p>
-</blockquote>
 <h2 id="modules-are-not-files"><a class="header" href="#modules-are-not-files">Modules are not files</a></h2>
 <p>This is where intuition from Python and C alike can mislead you. In Python, the file <em>is</em> the module, one-to-one; in C, <code>#include "foo.h"</code> is <em>textual substitution</em> — the file’s bytes get pasted into whoever includes it. In Rust, <strong>the module tree is logical and exists independently of how it is spread across files.</strong> The line</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -340,9 +337,6 @@ impl Money {
 <span class="boring">}</span></code></pre>
 <p>A caller in another module <em>cannot</em> write <code>Money { cents: -1 }</code> to sneak in a bad value, and you stay free to change the representation later (split into <code>dollars</code> + <code>cents</code>, switch to a bigint) without breaking a single line of their code. Reach for a private field whenever “the only valid way to build/modify this is through my functions.”</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the same encapsulation guarantee you reasoned about informally in <em>Further Java</em>. The plain-language version of the property the compiler maintains: a client outside the module can never <em>observe</em> or <em>depend on</em> a private field, so you may change <code>balance_cents</code> — its type, its layout, even split it into two fields — and every program that previously compiled against your module still compiles and behaves the same. The boundary is checked once, at compile time, not policed at runtime.</p>
-</blockquote>
 <h3 id="finer-grained-visibility"><a class="header" href="#finer-grained-visibility">Finer-grained visibility</a></h3>
 <p><code>pub</code> means “public to anyone who can reach the path,” including other crates. Often you want narrower scopes. Rust offers a small ladder:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -449,9 +443,6 @@ let n = rand::thread_rng().gen_range(1..=100);
 <span class="boring">}</span></code></pre>
 <p>The standard library <code>std</code> is special only in that it ships with the toolchain, so it needs no <code>Cargo.toml</code> entry — but it is otherwise an ordinary external crate: you still write <code>use std::collections::HashMap;</code>, an absolute path rooted at the crate <code>std</code>.</p>
 <p><strong>The prelude</strong> is why you never <code>use std::option::Option;</code>. The standard library defines a small set of ubiquitous items — <code>Option</code>, <code>Result</code>, <code>Vec</code>, <code>String</code>, <code>Box</code>, <code>Clone</code>, <code>Iterator</code>, <code>drop</code>, and so on — in <code>std::prelude</code>, and the compiler glob-imports it into <em>every</em> module automatically: the prelude pattern applied by the language itself. Crates can ship their own opt-in prelude (<code>use some_crate::prelude::*;</code>) for the same purpose — one glob bringing the crate’s most-used traits into scope, which matters because trait methods are only callable when the trait is in scope (see <a href="08-generics-and-traits.html">generics &amp; traits</a>).</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> The automatic prelude is the language pre-loading the set of names every module starts with. Rather than each module beginning with an empty slate of available names, the compiler arranges for the prelude’s items to already be in scope everywhere — which is why bare <code>Option</code> resolves without any <code>use</code>. A crate prelude is the same idea at library scale: a curated bundle of names you opt into so the common case needs no explicit imports.</p>
-</blockquote>
 <h2 id="workspaces-many-crates-one-build"><a class="header" href="#workspaces-many-crates-one-build">Workspaces: many crates, one build</a></h2>
 <p>A single library crate is the right granularity for a long time. You split into multiple crates when you have a concrete reason:</p>
 <ul>
@@ -489,9 +480,6 @@ cargo test -p domain     # test only `domain`
 <p><strong>⚙️ Under the hood →</strong> The single shared <code>target/</code> is the load-bearing design choice. If each member had its own <code>target/</code>, then <code>app</code> depending on <code>domain</code> would force a <em>separate</em> compilation of <code>domain</code> into <code>app</code>’s target — every dependent re-compiling every dependency. One shared output directory means <code>domain</code> is built <strong>once</strong> and its artifact reused by all dependents, which is exactly the build-graph deduplication that makes large workspaces tractable.</p>
 </blockquote>
 <p>The shared <strong><code>Cargo.lock</code></strong> is the other half: every member resolves against <em>one</em> unified dependency graph, so if both <code>domain</code> and <code>storage</code> depend on <code>rand</code>, they get the <em>same</em> resolved version, recorded once, downloaded once. The members are therefore mutually compatible — you cannot accidentally link two copies of a shared dependency at incompatible versions (Cargo resolves to as few versions as semver allows). A frequent surprise on the flip side: a dependency declared in <code>domain/Cargo.toml</code> is <strong>not</strong> usable from <code>storage</code> — each member lists its own <code>[dependencies]</code>. The lockfile unifies <em>versions</em>, not <em>visibility</em>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> A workspace’s build is a DAG of crates: each crate is a node that can be compiled only after the crates it depends on are built. That is the dependency-ordered compilation you saw in <em>Compiler Construction</em> — Cargo topologically sorts the graph and schedules the nodes, building independent branches in parallel. The single <code>target/</code> acts as a cache over that graph: a node is recompiled only when its inputs (its own source, or an upstream artifact) have changed.</p>
-</blockquote>
 <h2 id="mental-model-recap"><a class="header" href="#mental-model-recap">Mental-model recap</a></h2>
 <ul>
 <li><strong>Crate = compilation unit</strong> (one module tree → one binary or one library). <strong>Package = Cargo unit</strong> (a <code>Cargo.toml</code> bundling ≤1 library + N binaries). <strong>Module = in-crate namespace and the privacy boundary.</strong> Keep the three distinct.</li>

@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -382,9 +382,6 @@ for entry in log_lines {
 }
 <span class="boring">}</span></code></pre>
 <p>Reach for <code>entry</code> whenever the shape is “look it up; if it’s there update it, if not seed a default” — counters, multimaps, memoisation caches, dedup-with-tally. The naive <code>if map.contains_key(k) { ... } else { ... }</code> does two lookups and fights the borrow checker; <code>entry</code> does one of each.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems.</em> The reason <code>entry</code> “plays nicely with the borrow checker” is the same reason you prefer a single atomic update over a separate read-then-write: it collapses two steps into one. <code>get</code>-then-<code>insert</code> reads the map, then comes back later to write it — two separate touches the borrow checker has to reconcile across a gap, just as a lock-read-then-lock-write leaves a window where another thread could interleave. <code>entry</code> holds one mutable handle for the whole read-modify-write, which is both easier to prove sound and a single hash probe instead of two.</p>
 </blockquote>
 <h3 id="eq-hash-and-the-hashing-function"><a class="header" href="#eq-hash-and-the-hashing-function"><code>Eq</code>, <code>Hash</code>, and the hashing function</a></h3>
 <p>A type may be a <code>HashMap</code> key only if it implements both <code>Hash</code> and <code>Eq</code> (<a href="08-generics-and-traits.html">traits</a>), and the two must agree: <code>a == b</code> must imply <code>hash(a) == hash(b)</code>. For your own structs, <code>#[derive(Hash, Eq, PartialEq)]</code> gives the field-wise implementations, which is almost always what you want. Floating-point types are <em>not</em> <code>Eq</code> (because of <code>NaN</code>), so <code>f64</code> cannot be a key without a wrapper.</p>

@@ -22,7 +22,7 @@ Everything in this book is a corollary of that sentence. When a rule seems arbit
 
 ## House style — the recurring callouts
 
-Throughout, you will see five kinds of margin-notes. Learn to read them:
+Throughout, you will see four kinds of margin-notes. Learn to read them:
 
 > **🦀 From your toolbox →** maps a Rust feature to its closest analogue in a language you already know (a Swift `enum` or `protocol`, a Java `interface`, Python's reference counting, …) — *and names where the analogy breaks down*.
 
@@ -31,8 +31,6 @@ Throughout, you will see five kinds of margin-notes. Learn to read them:
 > **⚠️ Pitfall →** the specific error the borrow checker (or type checker) will throw, why, and the idiomatic fix. Learning Rust *is* learning to predict these.
 
 > **🔧 In practice →** a concrete, real-world situation where the feature earns its keep — when and why you'd actually reach for it in real code, with a small realistic sketch.
-
-> **🎓 Tripos link →** where a concept connects, in plain terms, to a course you've already done (Compiler Construction, Concurrent & Distributed Systems, Operating Systems, …) — the intuition, not the theorems.
 
 Each module ends with a **Mental-model recap** (the three or four sentences worth memorising) and a few **Exercises** that push past the chapter — applying the idea to new situations rather than rehearsing it.
 

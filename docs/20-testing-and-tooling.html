@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -290,9 +290,6 @@ fn config_round_trips() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt;
 <p><strong>Parallel by default.</strong> Tests run concurrently on a thread pool. This is fast but it imposes a discipline: tests must not share mutable external state — no two tests writing the same file, mutating the same env var, or binding the same fixed port — or they race. The fix is either to make each test self-contained (unique temp paths, ephemeral ports) or to serialise:</p>
 <pre><code class="language-bash">cargo test -- --test-threads=1   # one at a time; deterministic, slower
 </code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is exactly the <em>Concurrent &amp; Distributed Systems</em> shared-mutable-state hazard. The test runner gives you N threads with no implicit synchronisation; two tests touching <code>./fixture.db</code> is a data race at the filesystem level even though the Rust borrow checker, which only reasons about in-process memory, says nothing about it. The idiomatic resolution mirrors the course’s advice: eliminate the sharing (give each test its own resource) rather than reach for a global lock. A global lock reintroduces serialisation and can deadlock if a test panics while holding it.</p>
-</blockquote>
 <p><strong>Output capture.</strong> By default the runner captures <code>stdout</code>/<code>stderr</code> of <em>passing</em> tests and shows them only for failures (so a green run is quiet). To see prints from passing tests too:</p>
 <pre><code class="language-bash">cargo test -- --show-output      # show captured stdout of passing tests
 cargo test -- --nocapture        # don't capture at all (interleaves with parallel runs)
@@ -434,9 +431,6 @@ strip = "symbols"   # drop symbols from the binary
 <li><strong><code>codegen-units</code></strong> — rustc splits a crate into N units compiled in parallel; fewer units means better cross-function optimisation but less parallelism. <code>release</code> defaults to <code>16</code>; setting <code>1</code> squeezes out more performance at the cost of compile time.</li>
 <li><strong><code>panic = "abort"</code></strong> — replaces stack-unwinding with immediate <code>abort</code>, removing landing-pad code and unwind tables. Smaller and slightly faster, but <code>std::panic::catch_unwind</code> no longer works and <code>#[should_panic]</code>/the test harness rely on unwinding, so tests force unwinding regardless.</li>
 </ul>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Compiler Construction</em>: <code>codegen-units</code> and <code>lto</code> are knobs on exactly the inlining/specialisation trade-off you studied. Monomorphisation (covered in <a href="08-generics-and-traits.html">generics &amp; traits</a>) generates a concrete copy per type instantiation; with separate compilation, the copies in a dependency crate are opaque to your crate’s optimiser. <code>lto = "thin"</code> re-opens those boundaries at link time so the inliner can act across them — the price is that more code is in scope for the optimiser, hence the slower link.</p>
-</blockquote>
 <h3 id="features-and-conditional-compilation"><a class="header" href="#features-and-conditional-compilation">Features and conditional compilation</a></h3>
 <p><code>#[cfg(...)]</code> compiles code conditionally on a flag, target attribute, or <em>feature</em>. Features are named, optional capabilities declared in <code>Cargo.toml</code> that let downstream users opt into functionality (and the dependencies it pulls in):</p>
 <pre><code class="language-toml">[features]

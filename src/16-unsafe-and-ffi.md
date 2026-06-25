@@ -196,8 +196,6 @@ The catch for `unsafe` authors: this guarantee holds for *raw-pointer code too*.
 
 There is an ongoing research effort to write down precisely *the rules raw pointers must obey to coexist with references*. **Stacked Borrows** (Jung et al.) modelled borrows as a per-location stack of permission tags, each access checking and popping the stack; its successor **Tree Borrows** generalises this to a tree to admit more valid patterns. Neither is yet *the* official, normative spec — but **Miri implements them**, so they are the de-facto rulebook your unsafe code is tested against today.
 
-> **🎓 Tripos link →** The mental picture from Semantics of Programming Languages is useful here, stated plainly: Stacked/Tree Borrows is a step-by-step machine that tracks, for each memory location, which pointers are currently allowed to touch it, and *gets stuck* the moment an access breaks the rules — that "stuck" state is exactly UB. It is the runtime side of the same aliasing discipline the borrow checker enforces at compile time. `&mut`-as-`noalias` — "while this mutable reference is live, nothing else may read or write here" — is that discipline pushed all the way down to the machine.
-
 ## Tooling: how to actually trust your unsafe code
 
 The borrow checker is *static* and now stopped helping, so you need dynamic tools that run your program and watch for violations:

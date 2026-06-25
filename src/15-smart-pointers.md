@@ -58,8 +58,6 @@ let t = Tree::Branch(
 
 > **🔧 In practice →** You hit this the first time you model a real recursive shape — a JSON value, an expression tree for a small interpreter, a linked list. Say you're writing a tiny calculator and parse `2 * (3 + 4)` into an AST: `enum Expr { Num(f64), Add(Box<Expr>, Box<Expr>), Mul(Box<Expr>, Box<Expr>) }`. The `Box` on each operand is what lets `Mul` hold an `Add` hold two `Num`s without the type being infinitely large, and `Box::new` is where each subtree gets its own heap slot. Drop the root and the whole tree frees itself bottom-up.
 
-> **🎓 Tripos link →** Foundations of Computer Science: the OCaml `type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree` you wrote there is your `Box`ed enum — OCaml's runtime just does the boxing silently. Compiler Construction: the inability to size a recursive non-indirected type is exactly why every real compiler stores recursive ADTs as pointers in its intermediate representation. Rust makes that indirection a visible, named choice in the source instead of a runtime default.
-
 ## `Deref` and deref coercion: making a wrapper transparent
 
 What makes `Box<T>` feel like a `T` rather than an opaque struct? The `Deref` trait. Implementing it lets you customise the unary `*` operator.
@@ -143,8 +141,6 @@ drop(c);                      // closes now
 // c is moved-out; not dropped again at scope end
 ```
 
-> **🎓 Tripos link →** Programming in C and C++: this is RAII and the rule of "the destructor runs once, deterministically, at scope exit". The delta from C++ is that the *move* is type-checked — in C++ a moved-from object is left in a valid-but-unspecified state and its destructor still runs; in Rust the moved-from binding is statically dead and has no destructor call at all. There is no "valid but unspecified" leftover object to reason about.
-
 ## `Rc<T>`: shared ownership by reference counting
 
 Single ownership is the common case, but sometimes a value is genuinely owned by several places at once — a node referenced by many edges in a graph, an immutable config shared across subsystems. You cannot express this with `Box` (one owner) or `&` (a borrow needs a single owner to outlive it, forcing lifetime gymnastics). `Rc<T>` — *reference counted* — keeps a count of owners and frees the data when the count hits zero.
@@ -164,8 +160,6 @@ println!("count = {}", Rc::strong_count(&a)); // 3
 There is no manual decrement — `Rc`'s own `Drop` impl decrements as each handle leaves scope. When `strong_count` reaches 0, the inner value is dropped and the heap freed.
 
 > **🦀 From your toolbox →** This *is* Swift's ARC and Python's reference counting, with the bookkeeping made visible. In Swift you never write the retain/release calls; in Python the interpreter bumps the count on every assignment. `Rc` makes you say `Rc::clone` to bump it, which is the point — sharing becomes a deliberate, greppable act. One crucial difference from both: **`Rc`'s count is non-atomic**, so the compiler forbids moving it across threads (`Rc` is not `Send`/`Sync`). Swift's ARC and Python's GIL-protected count are always thread-safe-ish, paying that cost everywhere. Rust splits the choice: `Rc<T>` for single-threaded (a cheap increment), `Arc<T>` for cross-thread (an atomic increment). The API is identical; only the synchronisation cost differs.
-
-> **🎓 Tripos link →** Concurrent and Distributed Systems: an atomic increment forces every core to agree on the new count, which under contention bounces a cache line between CPUs. `Rc` exists so single-threaded code does not pay that tax. We return to `Arc<T>` — the thread-safe twin — in [fearless concurrency](13-fearless-concurrency.md), where `Send + Sync` are the bounds that decide which one you may use.
 
 The critical limitation: `Rc<T>` gives you **shared, immutable** access. `Rc<T>` derefs to `&T`, never `&mut T`. If you could get `&mut T` out of one of several `Rc` handles, you would have a mutable reference aliased by other handles — a data race in the making, exactly the situation the borrow rules forbid. To mutate shared data you must combine `Rc` with interior mutability, which is the next piece.
 
@@ -261,8 +255,6 @@ println!("{}", shared.borrow()); // 15 — all three see the same cell
 ```
 
 `Rc` provides the shared ownership; `RefCell` provides the mutability the `Rc` alone would deny you; the runtime borrow check inside `RefCell` keeps the aliasing rule intact even though three handles point at the same data. Read the type inside-out: "a reference-counted, shared handle to a runtime-borrow-checked mutable `T`."
-
-> **🎓 Tripos link →** Type safety, in plain terms: `Rc<RefCell<T>>` is a worked example of *trading a compile-time guarantee for a run-time check without losing safety*. The compiler normally proves "no aliased mutation" before the program runs; here that same fact is checked again at each `borrow`/`borrow_mut`, and the program aborts with a panic if the check fails. Nothing about safety is lost — still no undefined behaviour, still no data race — only the *moment* of checking (run time, not compile time) and the *failure mode* (a clean panic instead of a compile error) change.
 
 ## Reference cycles leak — and `Weak<T>` breaks them
 

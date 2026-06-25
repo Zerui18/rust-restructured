@@ -18,8 +18,6 @@ Now compare to the single-threaded rule you already internalised. Rust's borrow 
 
 The single-threaded rule that prevents iterator invalidation and use-after-free is *structurally the same* rule that prevents data races. The only missing piece is teaching the type system *which* types may cross a thread boundary at all, and which references may be shared across one. That is exactly what `Send` and `Sync` encode, and we get to them at the end.
 
-> **🎓 Tripos link →** In Concurrent & Distributed Systems a data race is undefined behaviour at the memory-model level, and the standard mitigations (locks, message passing) are *disciplines* the programmer must apply correctly and can always forget. Rust's twist is to move that discipline from your head into the type checker: instead of you remembering to lock, the compiler refuses to compile any program that could race. The aliasing-XOR-mutability rule is the single idea doing all the work, and data-race freedom falls out of it as a consequence.
-
 ## Threads: `spawn`, `JoinHandle`, and why `'static`
 
 Rust's standard library uses a 1:1 threading model — one OS thread per `std::thread`, the same processes-and-threads picture from Computer Architecture & Operating Systems. You create one by handing `thread::spawn` a closure:
@@ -197,8 +195,6 @@ The `drop(tx)` is the subtle bit a beginner misses and you should not: the `for 
 > ```
 > Because `send` *moves* the job, there is zero shared mutable state between handler and worker, so no lock and no possibility of the handler accidentally mutating a job the worker is already processing. This is the pattern behind work queues, log/metrics pipelines, and actor-style event loops.
 
-> **🎓 Tripos link →** This is the CSP channel from Concurrent & Distributed Systems made concrete: a `Sender`/`Receiver` pair is exactly a typed channel, `send` is the output `c!v` and `recv` is the input `c?x`. The `mpsc` restriction — many writers, one reader — matches the actor model, where many threads can post to an actor's mailbox but only the actor reads it. Because the message is *moved* rather than copied or shared, there is no aliasing between sender and receiver after the handover, which is precisely the no-shared-state property actors rely on to stay race-free.
-
 ## Shared state: `Mutex<T>` owns its data
 
 Message passing models single ownership flowing through pipes. Sometimes you genuinely want **multiple threads touching one piece of state** — a shared counter, a cache. That is multiple ownership plus mutation, and it is where the lock-versus-data separation in C and Java does its damage.
@@ -322,8 +318,6 @@ Almost everything is `Send + Sync` because almost everything is built from `Send
 - `Arc<T>` is `Send + Sync` *provided* `T: Send + Sync`; `Mutex<T>` is `Sync` whenever `T: Send`, because the lock turns any `Send` payload into something safely shareable.
 
 This is how the data-race-freedom guarantee is actually carried. `spawn`'s `F: Send` bound says "the captured state must be safe to move to another thread," and the compiler checks it the obvious way: `F` is `Send` because each of its fields is, all the way down to primitives which are `Send` by definition. When you wrote `Rc<Mutex<i32>>`, that check *failed* at the `Rc` field: `Rc` is not `Send`, so the closure capturing it is not `Send`, so the program does not compile. The error is concrete — the compiler points at the exact field that breaks the chain.
-
-> **🎓 Tripos link →** The promise here is the same kind of "well-typed programs don't do the bad thing" property you meet informally in Semantics of Programming Languages: a program written entirely in safe Rust cannot have a data race, and `Send`/`Sync` are the type-level conditions that make that hold. They are auto-derived, so you almost never write them yourself — the compiler infers them from a type's fields, the same way type inference (Foundations of CS) spares you from spelling out most types. Implementing them by hand requires `unsafe` (see [chapter 16](16-unsafe-and-ffi.md)): that is you stepping outside the part of the language the compiler can check, and personally promising the safety the compiler can no longer verify for you.
 
 > **⚙️ Under the hood →** `Send`/`Sync` are zero-cost: marker traits compile to nothing, carry no data, and have no vtable. They exist only during type-checking. After monomorphisation (Compiler Construction) they vanish entirely — there is no runtime representation of "this `Vec` is `Send`." The guarantee is paid for once, at compile time, and the generated machine code is identical to what an equivalent correct C program would emit.
 

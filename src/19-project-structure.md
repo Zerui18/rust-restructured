@@ -63,8 +63,6 @@ crate
 
 The vocabulary mirrors a filesystem and is worth fixing: `invoices` and `ledger` are **siblings** (defined in the same parent); `invoices` is a **child** of `billing`; `billing` is the **parent** of `invoices`. The whole tree is rooted at `crate`.
 
-> **🎓 Tripos link →** In *Foundations of Computer Science* you used OCaml modules to bundle a type with the operations over it (the classic `Stack` / `Queue` ADT presentation). A Rust module serves the identical *organisational* role, but the encapsulation mechanism is the mirror image: OCaml hides a representation by *omitting* it from an `.mli` signature (you list what to export), whereas Rust hides items by *default privacy* and selectively *exposes* them with `pub` (everything is private until you annotate it). Same goal — abstraction boundaries the compiler enforces — opposite default.
-
 ## Modules are not files
 
 This is where intuition from Python and C alike can mislead you. In Python, the file *is* the module, one-to-one; in C, `#include "foo.h"` is *textual substitution* — the file's bytes get pasted into whoever includes it. In Rust, **the module tree is logical and exists independently of how it is spread across files.** The line
@@ -177,8 +175,6 @@ Because `balance_cents` is private, external code cannot construct an `Account` 
 > }
 > ```
 > A caller in another module *cannot* write `Money { cents: -1 }` to sneak in a bad value, and you stay free to change the representation later (split into `dollars` + `cents`, switch to a bigint) without breaking a single line of their code. Reach for a private field whenever "the only valid way to build/modify this is through my functions."
-
-> **🎓 Tripos link →** This is the same encapsulation guarantee you reasoned about informally in *Further Java*. The plain-language version of the property the compiler maintains: a client outside the module can never *observe* or *depend on* a private field, so you may change `balance_cents` — its type, its layout, even split it into two fields — and every program that previously compiled against your module still compiles and behaves the same. The boundary is checked once, at compile time, not policed at runtime.
 
 ### Finer-grained visibility
 
@@ -301,8 +297,6 @@ The standard library `std` is special only in that it ships with the toolchain, 
 
 **The prelude** is why you never `use std::option::Option;`. The standard library defines a small set of ubiquitous items — `Option`, `Result`, `Vec`, `String`, `Box`, `Clone`, `Iterator`, `drop`, and so on — in `std::prelude`, and the compiler glob-imports it into *every* module automatically: the prelude pattern applied by the language itself. Crates can ship their own opt-in prelude (`use some_crate::prelude::*;`) for the same purpose — one glob bringing the crate's most-used traits into scope, which matters because trait methods are only callable when the trait is in scope (see [generics & traits](08-generics-and-traits.md)).
 
-> **🎓 Tripos link →** The automatic prelude is the language pre-loading the set of names every module starts with. Rather than each module beginning with an empty slate of available names, the compiler arranges for the prelude's items to already be in scope everywhere — which is why bare `Option` resolves without any `use`. A crate prelude is the same idea at library scale: a curated bundle of names you opt into so the common case needs no explicit imports.
-
 ## Workspaces: many crates, one build
 
 A single library crate is the right granularity for a long time. You split into multiple crates when you have a concrete reason:
@@ -351,8 +345,6 @@ cargo test -p domain     # test only `domain`
 > **⚙️ Under the hood →** The single shared `target/` is the load-bearing design choice. If each member had its own `target/`, then `app` depending on `domain` would force a *separate* compilation of `domain` into `app`'s target — every dependent re-compiling every dependency. One shared output directory means `domain` is built **once** and its artifact reused by all dependents, which is exactly the build-graph deduplication that makes large workspaces tractable.
 
 The shared **`Cargo.lock`** is the other half: every member resolves against *one* unified dependency graph, so if both `domain` and `storage` depend on `rand`, they get the *same* resolved version, recorded once, downloaded once. The members are therefore mutually compatible — you cannot accidentally link two copies of a shared dependency at incompatible versions (Cargo resolves to as few versions as semver allows). A frequent surprise on the flip side: a dependency declared in `domain/Cargo.toml` is **not** usable from `storage` — each member lists its own `[dependencies]`. The lockfile unifies *versions*, not *visibility*.
-
-> **🎓 Tripos link →** A workspace's build is a DAG of crates: each crate is a node that can be compiled only after the crates it depends on are built. That is the dependency-ordered compilation you saw in *Compiler Construction* — Cargo topologically sorts the graph and schedules the nodes, building independent branches in parallel. The single `target/` acts as a cache over that graph: a node is recompiled only when its inputs (its own source, or an upstream artifact) have changed.
 
 ## Mental-model recap
 

@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -180,7 +180,7 @@
 <p>This book is the official <em>Rust Programming Language</em> (21 chapters) reassembled by conceptual dependency rather than beginner ramp. Two consequences follow, and this appendix indexes both:</p>
 <ol>
 <li><strong>Where is the “for everyone” version?</strong> Every module below names the official chapter(s) it derives from, so when you want the canonical, slower, beginner-pitched treatment of a topic you can jump straight to it. Read the official book as the <em>reference manual</em>; read this one as the <em>theory</em>.</li>
-<li><strong>What did I already learn that this leans on?</strong> Each module names the Cambridge Tripos course(s) whose machinery it reuses, so you can revisit your own notes for the deeper framing. These are study anchors, not prerequisites: the 🎓 <em>Tripos link</em> callouts inside each module make the connection precise.</li>
+<li><strong>What did I already learn that this leans on?</strong> Each module names the Cambridge Tripos course(s) whose machinery it reuses, so you can revisit your own notes for the deeper framing. These are study anchors, not prerequisites.</li>
 </ol>
 <p>A word on the chapter column: the official book is not a partition we re-shuffled one-to-one. We <strong>merged</strong> topics it splits (pattern matching, traits), <strong>compressed</strong> topics it stretches (the ch. 1–3 on-ramp), and <strong>gathered</strong> the three faces of the memory model (ownership, lifetimes, smart pointers) that it scatters across hundreds of pages. So several rows cite the same official chapter, and a few official chapters are deliberately dissolved across multiple modules. The “moved and why” notes below explain each non-trivial deviation.</p>
 <h2 id="the-table"><a class="header" href="#the-table">The table</a></h2>
@@ -215,9 +215,6 @@
 </tbody>
 </table>
 </div>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> If you read the right-hand column top-to-bottom, it is roughly a dependency-sorted tour of your own degree: OCaml’s type discipline and C/C++’s memory model dominate the early rows; Compiler Construction underwrites the ownership and trait machinery; Concurrent &amp; Distributed Systems and Operating Systems carry the back half. The thesis of <a href="00-orientation.html">module 00</a> — <em>a strict OCaml-style type system bolted onto a C++ memory model</em> — is literally visible as the shape of this table.</p>
-</blockquote>
 <h2 id="if-you-came-from-the-official-book-heres-what-moved-and-why"><a class="header" href="#if-you-came-from-the-official-book-heres-what-moved-and-why">If you came from the official book, here’s what moved and why</a></h2>
 <p>If you have read, or are cross-referencing, the official book, these are the structural deviations worth knowing about so a row above doesn’t surprise you:</p>
 <ul>

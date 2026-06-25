@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -276,9 +276,6 @@ fn main() {
 }</code></pre>
 <p>Add it with <code>cargo add clap --features derive</code>. <code>Cli::parse()</code> reads <code>env::args_os()</code>, validates, and on failure prints a usage message to stderr and exits with code 2 — the conventional “usage error” code. The <code>value_delimiter = ','</code> attribute even reproduces our <code>parse_fields</code> for free. The derive macro is ordinary Rust code generated at compile time (see <a href="18-macros.html">chapter 18</a>) and compiled like anything else: there is no reflection at runtime. Contrast Java, where annotation-driven frameworks like Spring or Jackson read annotations via reflection while the program is running; <code>clap</code> has done all of that work before <code>main</code> ever starts.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <code>clap</code>’s derive is a hands-on Compiler Construction exercise. The <code>#[derive(Parser)]</code> macro reads the struct’s tokens as input and <em>writes out</em> a parser as output — a source-to-source translation running inside <code>rustc</code>. The struct is effectively a tiny grammar; the generated code is the recogniser. You wrote argument and grammar parsers by hand in that course; here the macro writes one for you, and the compiler then type-checks it against the very struct that described the grammar.</p>
-</blockquote>
-<blockquote>
 <p><strong>🔧 In practice →</strong> You’re shipping a backup CLI and a teammate asks for <code>backup --dest ./snap --exclude '*.tmp' --exclude node_modules --dry-run -vvv</code>. With a hand-rolled loop you now own <code>--help</code>, repeated <code>--exclude</code>, the count-the-<code>v</code>s verbosity flag, and “did they pass a value?” checks — a day of fiddly bugs. With <code>clap</code> it’s a struct:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -426,9 +423,6 @@ fn main() {
         handle(stream);
     }
 }</code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the Berkeley sockets model from Computer Networking, named in Rust types: <code>bind</code> is <code>bind(2)</code>, <code>incoming()</code> wraps <code>accept(2)</code>, and a <code>TcpStream</code> is a connected socket file descriptor. The difference from a C socket program is that the descriptor is <em>owned</em>: when <code>stream</code> is dropped at the end of the loop body, Rust calls <code>close(2)</code> for you — no leaked descriptors, no double-close. It is the same scope-tied cleanup as the file-handle locking above, now applied to a kernel resource: the destructor that runs at the end of the block closes the socket, the way Swift’s <code>deinit</code> or a C++ destructor frees what it owns.</p>
-</blockquote>
 <h3 id="step-2-parse-a-request-route-respond"><a class="header" href="#step-2-parse-a-request-route-respond">Step 2: parse a request, route, respond</a></h3>
 <p>An HTTP request begins with a request line: <code>GET /path HTTP/1.1\r\n</code>, followed by headers and a blank line. For a minimal server we read just the first line, route on it, and write back a status line, a <code>Content-Length</code> header, a blank line, and a body. <code>TcpStream</code> implements <code>Read</code> and <code>Write</code>; wrapping it in a <code>BufReader</code> gives us <code>.lines()</code>.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -581,9 +575,6 @@ while let Ok(job) = receiver.lock().unwrap().recv() {
 }
 <span class="boring">}</span></code></pre>
 <p>the guard’s lifetime extends across the entire <code>while let</code> body (a <code>while let</code> holds its scrutinee’s temporaries for the loop body), so a worker holds the mutex <em>while executing the job</em>, and the pool degrades to one-at-a-time — the very serialisation we set out to kill. The borrow checker won’t flag this; it is a correctness bug hiding in a lifetime rule. The <code>match</code>/<code>break</code> form drops the guard at the <code>;</code>, then runs the job unlocked.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the message-passing model from Concurrent &amp; Distributed Systems realised with ownership. The channel <code>send</code> <em>moves</em> the <code>Job</code> from main to worker — there is no shared mutable job, so no data race on it; transferring ownership <em>is</em> the synchronisation. The <code>Arc&lt;Mutex&lt;Receiver&gt;&gt;</code> is the one genuinely shared resource, and the <code>Mutex</code> serialises access to <em>dequeueing</em> (taking a job off the queue, which must happen one worker at a time) while leaving job <em>execution</em> fully parallel. Holding the lock only across <code>recv</code> is the course’s “keep the critical section as small as possible” rule — here it comes down to exactly where you put a semicolon.</p>
-</blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>Arc&lt;T&gt;</code> is a pointer to a heap allocation carrying <code>T</code> plus two atomic counters (strong/weak). <code>Arc::clone</code> is an atomic increment, not a deep copy — all four workers point at the <em>same</em> <code>Mutex&lt;Receiver&gt;</code>. <code>Rc</code> would be faster (non-atomic refcount) but is <code>!Send</code>, so it cannot cross the <code>thread::spawn</code> boundary; the compiler rejects it. That <code>!Send</code>-ness is the type system encoding “this refcount is not safe to touch from two threads,” the data-race-freedom proof from <a href="13-fearless-concurrency.html">chapter 13</a> discharged structurally.</p>
 </blockquote>

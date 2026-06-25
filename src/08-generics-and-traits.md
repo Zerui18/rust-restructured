@@ -26,8 +26,6 @@ The decisive question is what the compiler *does* with this. Rust **monomorphise
 
 > **⚙️ Under the hood →** Monomorphisation happens after type-checking, during MIR-to-LLVM lowering. rustc collects the set of "mono items" reachable from `main` (or from `pub` API for libraries) and emits one LLVM function per distinct `(fn, type-args)` pair. Identical instantiations across crates are deduplicated at link time. This is also why generic functions usually must live in a crate's source (or be marked `#[inline]`) to be usable downstream — there is nothing to call until a concrete type pins the template down.
 
-> **🎓 Tripos link →** *Compiler Construction.* There are two ways a compiler can implement polymorphism. One is a **uniform representation**: everything is a pointer, one copy of the code, the actual type figured out at runtime (this is how Java and OCaml work). The other is **specialisation/monomorphisation**: one copy of the machine code per concrete type, with the type baked in at compile time. Rust commits to specialisation for generics, which is why a generic `Vec<T>` can store `T` *unboxed and inline* in a flat buffer — impossible under erasure, where every element would have to be a boxed pointer.
-
 Generics are not limited to functions. Structs, enums, and `impl` blocks all take type parameters:
 
 ```rust
@@ -224,8 +222,6 @@ You could *imagine* writing this with a generic parameter instead: `trait Iterat
 
 > **🦀 From your toolbox →** Decide by counting implementations. **Generic parameter** = the trait can be implemented *many times* for one type with different parameters (e.g. `Add<i32>` *and* `Add<Duration>` for one type — see below). **Associated type** = at most *one* implementation makes sense per type, and the type is a *consequence* of the impl, not a choice (the element type of an iterator, the output of indexing). Swift draws the same line: a protocol with an `associatedtype Element` (one per conformer, like `Sequence.Element`) versus a generic constraint the caller supplies. If you've used Swift's `associatedtype`, this is the same mechanism.
 
-> **🎓 Tripos link →** *Foundations of CS / type inference.* You can think of an associated type as a small *function on types*: given the iterator type, it hands back the element type, and there is exactly one answer. Because the answer is determined (one output per input), the compiler's type inference can simply look it up and keep going. A generic parameter is the opposite — it's an *unknown the compiler has to solve for* — which is why allowing two `Iterator<u8>` / `Iterator<String>` impls on one type would leave `Item` ambiguous and force you to annotate it everywhere.
-
 ## Operator overloading is just trait implementation
 
 Rust has no special operator-overloading syntax. `+` *is* a call to `std::ops::Add::add`; `[]` is `Index::index`; `*` (deref) is `Deref::deref`. Overload an operator by implementing the corresponding trait — and notice it uses an associated type for its `Output`:
@@ -268,8 +264,6 @@ error[E0117]: only traits defined in the current crate can be
 ```
 
 > **⚠️ Pitfall →** This bites everyone eventually: "I want to add a method to `Vec`" or "I want `serde::Serialize` for `chrono::DateTime`" and both are foreign. The idiomatic fix is the **newtype pattern**: wrap the foreign type in a local one-field tuple struct, `struct Wrapper(Vec<i32>)`, and implement the trait on `Wrapper`. The wrapper is local, so the orphan rule is satisfied, and it compiles to nothing (single-field structs are layout-transparent). The `#[derive(...)]` or a `Deref` impl restores ergonomic access to the inner value.
-
-> **🎓 Tripos link →** *Databases.* The win from coherence is the same one you get from a *uniqueness constraint* on a key: because there is provably at most one `impl` per (trait, type) pair, looking up "which `Add` for `V2`?" is an unambiguous lookup with exactly one row, decided entirely at compile time. Java sidesteps the question a cruder way — it ties an implementation to the class definition, so you simply *can't* retro-fit an interface onto a type you don't own. That keeps things unambiguous too, but it is strictly less expressive than Rust's "implement it elsewhere, but only once" rule.
 
 ## Conditional and blanket impls
 
@@ -349,8 +343,6 @@ Derive is generated source code: it monomorphises, costs nothing extra, and fail
 > ```
 > Now `map.insert(price, qty)` works (`Hash + Eq`), `assert_eq!(a, b)` prints a readable diff (`Debug + PartialEq`), and `prices.sort()` orders them (`Ord`). The moment your equality needs custom logic — say two `Money` values are equal only after normalising currency — you drop `PartialEq` from the derive list and hand-write that one impl, keeping the rest derived.
 
-> **🎓 Tripos link →** *Foundations of CS.* In OCaml you got structural equality (`=`) and polymorphic comparison built into the language for free, applied to any value whether or not it made sense. Rust refuses implicit structural operations — but `derive` recovers the convenience *opt-in and explicitly*, per trait, so you always know (and the compiler always knows) precisely which capabilities a type has. No surprise comparison on a record that happens to contain a function.
-
 ## Marker traits: capabilities with no methods
 
 Some traits have *zero* methods; they exist purely to tag a type with a compile-time property the compiler reasons about. You have already met `Copy`. The two that matter most arrive in [fearless concurrency](13-fearless-concurrency.md):
@@ -359,8 +351,6 @@ Some traits have *zero* methods; they exist purely to tag a type with a compile-
 - **`Sync`** — `&T` may be *shared* across threads (equivalently, `&T: Send`).
 
 These are **auto traits**: the compiler *derives them automatically and structurally* — a struct is `Send` iff all its fields are `Send`. You rarely write them by hand. Their entire purpose is to let the type system prove data-race freedom statically: a bound like `T: Send` on `thread::spawn` is what *makes* concurrency fearless, by rejecting at compile time any attempt to ship a non-thread-safe value (like `Rc<T>`) across a thread boundary.
-
-> **🎓 Tripos link →** *Concurrent and Distributed Systems.* The whole problem you study there — data races, where two threads touch the same memory and at least one writes — Rust pushes into the type system. `Send` and `Sync` are the tags that say "this value is safe to move to / share with another thread". A function like `thread::spawn` requires its closure to be `Send`, so the compiler simply refuses to compile code that would hand a thread-unsafe value (like `Rc<T>`) to another thread. The races you'd otherwise have to find with careful reasoning are rejected before the program runs.
 
 ## Mental-model recap
 

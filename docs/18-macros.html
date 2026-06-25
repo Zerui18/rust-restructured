@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -182,9 +182,6 @@
 <h2 id="what-a-macro-operates-on-token-trees"><a class="header" href="#what-a-macro-operates-on-token-trees">What a macro operates on: token trees</a></h2>
 <p>Before parsing into an AST, <code>rustc</code> lexes source into a flat token stream, then groups it into <strong>token trees</strong>: a token tree is either a single token (<code>identifier</code>, literal, punctuation) or a <em>delimited group</em> — anything balanced inside <code>()</code>, <code>[]</code>, or <code>{}</code>, recursively. So <code>vec![1, 2, 3]</code> is the macro name <code>vec</code>, the bang <code>!</code>, and one bracket-delimited group containing the trees <code>1</code> <code>,</code> <code>2</code> <code>,</code> <code>3</code>.</p>
 <p>Macros run on this layer. A declarative macro pattern-matches over token trees; a procedural macro receives a <code>proc_macro::TokenStream</code> (a sequence of token trees) and returns one. Crucially, <strong>the input need not be valid Rust</strong> — <code>sql!(SELECT * FROM posts)</code> lexes into legal token trees even though <code>SELECT * FROM posts</code> is not a Rust expression. The only hard constraint is that delimiters balance. This is the source of macros’ expressive power and their cost: the tokens carry no types yet.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is precisely the lexer/parser boundary from Compiler Construction. Lexing produces tokens; macro expansion is an extra <em>tree-rewriting pass</em> slipped in between tokenisation and full parsing/name-resolution. A declarative macro is a small set of pattern → replacement rules over the token-tree grammar; a procedural macro is just a plain function from tokens to tokens — i.e. a hook for you to write an extra compiler pass in safe Rust and have <code>rustc</code> dynamically load and run it.</p>
-</blockquote>
 <h2 id="family-one-macro_rules-declarative"><a class="header" href="#family-one-macro_rules-declarative">Family one: <code>macro_rules!</code> (declarative)</a></h2>
 <p>A declarative macro is defined with <code>macro_rules!</code> and reads like a <code>match</code> whose scrutinee is <em>source structure</em> rather than a runtime value. Each arm has a <strong>matcher</strong> (the pattern over token trees) and a <strong>transcriber</strong> (the replacement tokens). Here is a small but real one — a <code>HashMap</code> literal, the kind of thing the standard library pointedly does <em>not</em> give you:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -294,9 +291,6 @@ println!("{} {}", tmp, r);
 <li><strong>Function-like macros</strong> — <code>#[proc_macro]</code> — invoked as <code>name!(...)</code>; like <code>macro_rules!</code> but with arbitrary parsing logic.</li>
 </ol>
 <p>A structural constraint: proc-macros <strong>must live in their own crate</strong> with <code>proc-macro = true</code> set in <code>Cargo.toml</code>, because the crate is compiled for the <em>host</em> (the compiler) rather than the target, and loaded as a dynamic library by <code>rustc</code>. The convention is that a library crate <code>foo</code> ships its derive macros in a sibling crate <code>foo_derive</code>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> A proc-macro is a user-supplied compiler pass, dynamically linked into <code>rustc</code> — exactly the kind of “extra stage between lexing and the rest of the front end” you’d add in Compiler Construction, except you write it in safe Rust and the compiler loads it for you. Because it runs <em>inside</em> the compiler as ordinary code, it can do absolutely anything a program can — read files, hit the network, loop forever — and it will re-run on every build, which is why the community treats proc-macros as a sharp tool and audits them.</p>
-</blockquote>
 <h3 id="the-syn--quote-toolchain"><a class="header" href="#the-syn--quote-toolchain">The <code>syn</code> / <code>quote</code> toolchain</a></h3>
 <p>The <code>proc_macro</code> crate gives you <code>TokenStream</code>, but parsing raw tokens into a usable Rust AST by hand is the full parser problem you’d rather not redo. Two ecosystem crates make proc-macros tractable:</p>
 <ul>

@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -192,9 +192,6 @@
 <p>The rule of thumb: <strong>associated type when the implementor determines the type as a function of <code>Self</code>; generic parameter when the caller chooses it.</strong> <code>Iterator::Item</code> is fixed by the iterator. <code>Add&lt;Rhs&gt;</code> (below) is parameterised because you genuinely want <code>f32 + f32</code> <em>and</em> <code>f32 + &amp;f32</code>.</p>
 <blockquote>
 <p><strong>🦀 From your toolbox →</strong> Think of a Java interface where the result type is <em>fixed per implementing class</em> rather than chosen by each caller. If you declared <code>interface Iterator&lt;Item&gt;</code>, the same class could implement both <code>Iterator&lt;String&gt;</code> and <code>Iterator&lt;Integer&gt;</code>, and at each call site you’d have to say which one you meant. Rust’s associated type behaves like an interface that builds the element type <em>into</em> the implementation — one class, one element type, no annotation needed at the call site. Swift’s <code>protocol Iterator { associatedtype Element; ... }</code> is the direct cousin: an <code>associatedtype</code> is exactly this “output type the conformer fills in.” OCaml’s nearest echo is a module signature with an abstract <code>type t</code> that each module fills in with a concrete type — but you wire OCaml modules together by hand, whereas Rust picks the impl for you during trait resolution, so the analogy stops there.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> The intuition worth keeping: an associated type is a <em>type-level lookup</em> — given the implementor, the compiler reads off one fixed answer for <code>Self::Item</code>. The rule that there is only ever one <code>impl Iterator for Counter</code> (coherence) is what makes that lookup yield a single answer instead of several, which is precisely why <code>counter.next()</code> needs no hint about which iterator you meant.</p>
 </blockquote>
 <h3 id="associated-constants"><a class="header" href="#associated-constants">Associated constants</a></h3>
 <p>The same idea extends to constants. A trait may declare a <code>const</code> that each impl supplies, available as <code>Self::NAME</code>:</p>
@@ -358,9 +355,6 @@ let u = UserId(42);
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> A single-field tuple struct has <em>identical layout</em> to its field; the wrapper is erased. <code>Meters(3.0)</code> is one <code>f64</code> in a register. This is why the pattern is free — newtypes are a compile-time fiction. If you want the wrapper to forward the inner type’s methods, implement <code>Deref</code> (<a href="15-smart-pointers.html">smart pointers</a>); if you want only a subset, write just those.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> The plain idea: you are deliberately drawing an abstraction boundary on top of a representation that is byte-for-byte identical, and asking the type checker to police it. Because the only way to make a <code>Validated</code> is to go through <code>validate</code>, holding one is itself evidence that the check ran at construction time — the type <em>is</em> the proof, and nothing downstream has to re-verify it.</p>
-</blockquote>
 <h2 id="type-aliases-vs-newtypes-same-bits-opposite-meaning"><a class="header" href="#type-aliases-vs-newtypes-same-bits-opposite-meaning">Type aliases vs newtypes: same bits, opposite meaning</a></h2>
 <p>A <code>type</code> alias is <em>not</em> a new type — it is a synonym, fully transparent to the type checker.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -426,9 +420,6 @@ announce(&amp;42);                      // T = i32, sized, also fine
 <p><code>?Sized</code> is the <em>only</em> <code>?Trait</code> relaxation in the language — it exists solely because <code>Sized</code> is the one bound applied by default.</p>
 <blockquote>
 <p><strong>🦀 From your toolbox →</strong> In Java, Swift, and Python you never think about this because objects always live behind a reference and the runtime tracks their layout; the “pointer” is implicit and uniform. The closest hands-on touch is C: if you want to hand around a chunk of bytes whose length isn’t fixed, you carry a pointer <em>plus</em> a separate length (<code>{char* ptr; size_t len}</code>) by hand, and it’s on you to keep them in sync. A Rust <code>&amp;[T]</code> <em>is</em> exactly that pair, except the compiler bundles and tracks the length for you so you can’t desync them or read past the end. <code>&amp;dyn Trait</code> is the same trick with a method-table pointer instead of a length. The bridge from a plain C pointer breaks down because a C pointer is always just an address — there’s no language-level idea of “this pointee has no fixed size.”</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Operating Systems / Computer Architecture.</em> <code>Sized</code> is the type-system shadow of a very concrete question from those courses: how many bytes does this value take in a stack frame? A <code>str</code> or <code>[T]</code> has no fixed answer until runtime, so it cannot be a plain stack local — you store it elsewhere and keep a pointer-plus-length to it, exactly the layout you’d hand-roll for variable-length data. Rust lifts that bookkeeping into the type checker, so getting it wrong is a compile error rather than a read off the end of a buffer.</p>
 </blockquote>
 <h2 id="function-pointers-vs-closures"><a class="header" href="#function-pointers-vs-closures">Function pointers vs closures</a></h2>
 <p>You can pass a <em>named function</em> where a value is expected; it coerces to the type <code>fn(...) -&gt; ...</code> — the <strong>function pointer</strong> (lowercase <code>fn</code>, distinct from the <code>Fn</code> closure traits).</p>

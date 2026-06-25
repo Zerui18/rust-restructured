@@ -10,8 +10,6 @@ Before parsing into an AST, `rustc` lexes source into a flat token stream, then 
 
 Macros run on this layer. A declarative macro pattern-matches over token trees; a procedural macro receives a `proc_macro::TokenStream` (a sequence of token trees) and returns one. Crucially, **the input need not be valid Rust** — `sql!(SELECT * FROM posts)` lexes into legal token trees even though `SELECT * FROM posts` is not a Rust expression. The only hard constraint is that delimiters balance. This is the source of macros' expressive power and their cost: the tokens carry no types yet.
 
-> **🎓 Tripos link →** This is precisely the lexer/parser boundary from Compiler Construction. Lexing produces tokens; macro expansion is an extra *tree-rewriting pass* slipped in between tokenisation and full parsing/name-resolution. A declarative macro is a small set of pattern → replacement rules over the token-tree grammar; a procedural macro is just a plain function from tokens to tokens — i.e. a hook for you to write an extra compiler pass in safe Rust and have `rustc` dynamically load and run it.
-
 ## Family one: `macro_rules!` (declarative)
 
 A declarative macro is defined with `macro_rules!` and reads like a `match` whose scrutinee is *source structure* rather than a runtime value. Each arm has a **matcher** (the pattern over token trees) and a **transcriber** (the replacement tokens). Here is a small but real one — a `HashMap` literal, the kind of thing the standard library pointedly does *not* give you:
@@ -126,8 +124,6 @@ When pattern-matching over token trees is not enough — you need to actually *p
 3. **Function-like macros** — `#[proc_macro]` — invoked as `name!(...)`; like `macro_rules!` but with arbitrary parsing logic.
 
 A structural constraint: proc-macros **must live in their own crate** with `proc-macro = true` set in `Cargo.toml`, because the crate is compiled for the *host* (the compiler) rather than the target, and loaded as a dynamic library by `rustc`. The convention is that a library crate `foo` ships its derive macros in a sibling crate `foo_derive`.
-
-> **🎓 Tripos link →** A proc-macro is a user-supplied compiler pass, dynamically linked into `rustc` — exactly the kind of "extra stage between lexing and the rest of the front end" you'd add in Compiler Construction, except you write it in safe Rust and the compiler loads it for you. Because it runs *inside* the compiler as ordinary code, it can do absolutely anything a program can — read files, hit the network, loop forever — and it will re-run on every build, which is why the community treats proc-macros as a sharp tool and audits them.
 
 ### The `syn` / `quote` toolchain
 

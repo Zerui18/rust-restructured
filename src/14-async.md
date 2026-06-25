@@ -4,8 +4,6 @@ In [Fearless Concurrency](13-fearless-concurrency.md) you got *preemptive* concu
 
 Async is the *cooperative* alternative. One OS thread, or a small pool, runs an in-process scheduler multiplexing thousands of logical tasks. A task yields only at points *you* marked, and the whole machine is built so the compiler still proves memory- and data-race-safety statically. This is the tool for **I/O-bound, high-connection-count** work — the multithreaded web server in the [capstones](21-capstones.md) chapter, or any network service holding thousands of slow, mostly-waiting TCP connections (Computer Networking). It is *not* a speedup for CPU-bound work; for that, use threads, or both together.
 
-> **🎓 Tripos link →** This is the cooperative-vs-preemptive scheduling distinction from Concurrent and Distributed Systems, lifted into a language feature. OS threads are preemptively scheduled by the kernel; async tasks are cooperatively scheduled by a user-space runtime. Cooperative scheduling has lower switching cost (no syscall, no kernel stack) but demands that tasks *voluntarily* yield — a task that never yields starves all others sharing its thread, exactly the failure mode of cooperative kernels of the 1990s.
-
 ## The core mechanism: `async`/`.await` compiles to a state machine
 
 The single most important fact in this chapter, and what makes Rust's async model different from almost every other language's: an `async fn` or `async` block does not *run* anything. It compiles to an anonymous struct — a **state machine** — implementing the `Future` trait. Calling the function just *constructs* that struct. Nothing executes until something polls it.
@@ -45,8 +43,6 @@ enum FetchLen<'a> {
 ```
 
 Each `.await` is a possible suspension point. The compiler chops the linear body into segments delimited by `.await`, figures out exactly which local variables are still needed when execution is paused at each suspension point, and stores precisely those in the corresponding variant. The variant you are currently "in" *is* the saved progress: it records where you stopped and everything you need to pick up from there.
-
-> **🎓 Tripos link →** From Compiler Construction: this body-chopping is a code transformation rustc applies, and deciding which locals each variant must store is the same "which variables are still live at this point?" dataflow analysis you saw used for register allocation — here run over `.await` boundaries instead of basic blocks. The payoff is that rustc lays out a *flat enum* whose largest variant bounds the whole future's size, so there is no separate allocation per suspension point.
 
 ### The `Future` trait
 
@@ -206,8 +202,6 @@ Three nested units of concurrency:
 - A **thread** is an OS-scheduled execution resource; the runtime runs a pool and multiplexes many tasks onto few threads.
 
 This is an **M:N model**: M tasks scheduled onto N OS threads (N ≈ core count). Work-stealing lets an idle worker steal tasks from a busy worker's queue, balancing load transparently. A task can migrate between threads at `.await` points — precisely why spawned futures must be `Send`.
-
-> **🎓 Tripos link →** Multiplexing many lightweight tasks onto a few OS threads (the M:N model) is the user-level / green-threads scheduling design from Concurrent and Distributed Systems. The classic green-thread pitfall — one blocking syscall stalls the whole scheduler thread — is dodged because async futures *never* make a blocking syscall at an `.await`; they register a waker and yield. For genuinely blocking work, `spawn_blocking` moves it to a dedicated thread pool so it can't stall the cooperative scheduler.
 
 ## The starvation trap: only `.await` yields
 

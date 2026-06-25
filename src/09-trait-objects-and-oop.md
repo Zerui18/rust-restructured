@@ -32,8 +32,6 @@ The data pointer points at the value; the vtable pointer points at a per-(type, 
 
 > **🦀 From your toolbox →** In Java, every object header carries a hidden class pointer used both for dynamic dispatch and for `instanceof` — the type info travels *inside* the object. Swift does much the same for classes, and a class with overridable methods has a per-instance vtable pointer. Rust flips this: the object stays thin and the vtable rides alongside the *reference*. A Java reference is one word and self-describing (it can always find its own class); a Rust `&dyn Draw` is two words, but a plain `&Button` carries no type info at all — it's just an address. (If you've seen C++, the closest light touch is that a class with a virtual method grows a hidden pointer inside every object; Rust never does that.) Rust also has no object header and no built-in `instanceof`; `dyn Any` ([Chapter 17](17-advanced-traits-and-types.md)) bolts on downcasting explicitly. The analogy breaks hardest here: **Rust separates "the value" from "the trait view of the value,"** which is why the same `Button` can sit behind a `&dyn Draw` and a `&dyn Debug` at once with no extra storage in the `Button`.
 
-> **🎓 Tripos link →** This is the dispatch-table mechanism from Compiler Construction with one choice flipped: in a typical class-layout pass the vtable pointer is emitted as a *field of the object*. Rust passes the table *alongside* the value instead of embedding it. Concretely: when you write `&button as &dyn Draw`, the compiler bundles the address of the button with a pointer to a small static table of that type's `Draw` method addresses, and method calls jump through that table. Same dispatch idea, different place to keep the table.
-
 ## Static vs dynamic dispatch: the explicit tradeoff
 
 You now have two ways to write "operate on anything that implements `Draw`":
@@ -141,8 +139,6 @@ trait Widget {
 ```
 
 `where Self: Sized` tells the compiler "this method does not exist for the unsized `dyn Widget`," so it does not block vtable construction; you can still call it on a concrete `Button`. Note `clone_box` returns a *boxed trait object*, not `Self` — the idiomatic way to "clone a trait object" precisely because returning `Self` is forbidden.
-
-> **🎓 Tripos link →** Think of this as a plain representability constraint (the intuition behind type-checking in Semantics of Programming Languages, stated without the formalism). A vtable is a finite list of function addresses, and each entry has to be *one* address that works over a thin `self`. A generic method would need a different address for every type you might instantiate it with — infinitely many, so there's no single slot to put. A method returning `Self` by value would need the caller to set aside room for a result whose size it can't know once the concrete type is erased. Both have no uniform representation, so the compiler refuses to build the table at all rather than letting you make a call the machine couldn't carry out. The guarantee you get back: a `&dyn Trait` *always* has a valid vtable entry for every method it exposes.
 
 ## Is Rust object-oriented?
 
@@ -292,8 +288,6 @@ Try `DraftPost::new().content()` and the compiler refuses with the exact diagnos
 > }
 > ```
 > Once you call `close`, the `Open` value is *moved away* and gone — `send` on it won't even compile, so "write after close" is impossible to express. Builder APIs use the same trick to enforce "you must set the URL before calling `.build()`". This is the high-value reason to reach for typestate: turning a class of runtime misuse into a compile error, with zero runtime cost.
-
-> **🎓 Tripos link →** Foundations of Computer Science (the OCaml course) gives the intuition: there, the only way to obtain a value of a given type is to build it with one of that type's constructors. Here it's the same discipline, enforced by privacy. The only route to a `Post` (the published one) is the chain `DraftPost → PendingReviewPost → Post`, because the constructors are private and the transition methods are the only doors between the types. Holding a `PendingReviewPost` is itself evidence that a review was requested — you couldn't have got one any other way. So the reachable states of the FSM become exactly the types you can construct, and the legal transitions become the functions between them; an illegal transition is simply a call that doesn't typecheck. The same idea generalises to a `PhantomData<State>` marker when you want one struct parameterised by a state type rather than three distinct structs.
 
 The lesson is not "never use trait objects." It is: **when the legal transitions are known at compile time and you want misuse to be a compile error, prefer typestate; reach for `dyn` when the set of types is open or genuinely runtime-chosen.** The trait-object state pattern earns its keep when downstream code must add new states the library cannot foresee — the same extensibility argument as `Canvas`.
 

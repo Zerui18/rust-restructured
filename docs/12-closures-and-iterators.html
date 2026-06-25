@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -499,9 +499,6 @@ fn sum_iter(v: &amp;[i32]) -&gt; i32 {
 <span class="boring">}</span></code></pre>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> The <code>Map</code>/<code>Filter</code> structs are stack values holding the inner iterator and a closure (itself a zero-field struct if it captures nothing). After monomorphisation the call graph <code>Sum::sum → Filter::next → Map::next → Iter::next</code> is fully concrete; inlining flattens it. The standard-library benchmark — searching the full text of <em>Sherlock Holmes</em> for a word — shows the <code>for</code>-loop and iterator versions within noise of each other (~19.2M vs ~19.6M ns/iter). What you don’t use you don’t pay for; what you do use you couldn’t hand-code better. The iterator form often gets <em>better</em> codegen than a manual index loop because <code>v.iter()</code> carries the no-out-of-bounds invariant in the type, letting the optimiser drop bounds checks the index version may keep.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Course link →</strong> This is the classic <em>Compiler Construction</em> tradeoff between monomorphisation (the compiler stamps out a separate specialised copy of the code per concrete type) and dynamic dispatch (one shared copy that looks up the right code through a vtable at runtime, like Java’s erased generics). For iterator chains Rust always picks monomorphisation. The cost is binary size — one specialised loop per distinct chain type — and the payoff is that the high-level pipeline and the low-level hand loop compile to the same machine code after inlining and bounds-check elimination. The abstraction genuinely vanishes once you turn the optimiser on.</p>
 </blockquote>
 <h2 id="idiom-pipelines-replace-index-loops"><a class="header" href="#idiom-pipelines-replace-index-loops">Idiom: pipelines replace index loops</a></h2>
 <p>Given the zero-cost guarantee, the community idiom is unambiguous: prefer the iterator pipeline over a <code>for</code>-with-index loop. It is no slower, it eliminates the off-by-one and out-of-bounds failure modes that index arithmetic invites, and it reads as a declarative description of the transformation. Reach for an explicit <code>for</code> loop only when the body has complex control flow (early <code>return</code>, <code>break</code> with a value, <code>continue</code> across multiple conditions) that does not map cleanly onto adapters.</p>

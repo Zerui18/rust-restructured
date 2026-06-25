@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -179,9 +179,6 @@
                         <h1 id="14-asynchronous-rust"><a class="header" href="#14-asynchronous-rust">14. Asynchronous Rust</a></h1>
 <p>In <a href="13-fearless-concurrency.html">Fearless Concurrency</a> you got <em>preemptive</em> concurrency: <code>std::thread::spawn</code> hands the OS a stack and a closure, and the kernel scheduler decides — at arbitrary instruction boundaries, driven by a timer interrupt — when to suspend one thread and resume another. Correct and, in Rust, statically race-free, but with a fixed cost: each thread carries its own kernel stack (megabytes of reserved virtual address space plus a kernel control block), and every switch crosses into the kernel and trashes the cache working set (CompArch/OS: TLB, cache). Spawn ten thousand of them to hold ten thousand mostly-idle sockets and you pay for ten thousand stacks to do almost nothing.</p>
 <p>Async is the <em>cooperative</em> alternative. One OS thread, or a small pool, runs an in-process scheduler multiplexing thousands of logical tasks. A task yields only at points <em>you</em> marked, and the whole machine is built so the compiler still proves memory- and data-race-safety statically. This is the tool for <strong>I/O-bound, high-connection-count</strong> work — the multithreaded web server in the <a href="21-capstones.html">capstones</a> chapter, or any network service holding thousands of slow, mostly-waiting TCP connections (Computer Networking). It is <em>not</em> a speedup for CPU-bound work; for that, use threads, or both together.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the cooperative-vs-preemptive scheduling distinction from Concurrent and Distributed Systems, lifted into a language feature. OS threads are preemptively scheduled by the kernel; async tasks are cooperatively scheduled by a user-space runtime. Cooperative scheduling has lower switching cost (no syscall, no kernel stack) but demands that tasks <em>voluntarily</em> yield — a task that never yields starves all others sharing its thread, exactly the failure mode of cooperative kernels of the 1990s.</p>
-</blockquote>
 <h2 id="the-core-mechanism-asyncawait-compiles-to-a-state-machine"><a class="header" href="#the-core-mechanism-asyncawait-compiles-to-a-state-machine">The core mechanism: <code>async</code>/<code>.await</code> compiles to a state machine</a></h2>
 <p>The single most important fact in this chapter, and what makes Rust’s async model different from almost every other language’s: an <code>async fn</code> or <code>async</code> block does not <em>run</em> anything. It compiles to an anonymous struct — a <strong>state machine</strong> — implementing the <code>Future</code> trait. Calling the function just <em>constructs</em> that struct. Nothing executes until something polls it.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -217,9 +214,6 @@ enum FetchLen&lt;'a&gt; {
 }
 <span class="boring">}</span></code></pre>
 <p>Each <code>.await</code> is a possible suspension point. The compiler chops the linear body into segments delimited by <code>.await</code>, figures out exactly which local variables are still needed when execution is paused at each suspension point, and stores precisely those in the corresponding variant. The variant you are currently “in” <em>is</em> the saved progress: it records where you stopped and everything you need to pick up from there.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From Compiler Construction: this body-chopping is a code transformation rustc applies, and deciding which locals each variant must store is the same “which variables are still live at this point?” dataflow analysis you saw used for register allocation — here run over <code>.await</code> boundaries instead of basic blocks. The payoff is that rustc lays out a <em>flat enum</em> whose largest variant bounds the whole future’s size, so there is no separate allocation per suspension point.</p>
-</blockquote>
 <h3 id="the-future-trait"><a class="header" href="#the-future-trait">The <code>Future</code> trait</a></h3>
 <p>A future is anything implementing this:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -358,9 +352,6 @@ async fn race() {
 <li>A <strong>thread</strong> is an OS-scheduled execution resource; the runtime runs a pool and multiplexes many tasks onto few threads.</li>
 </ul>
 <p>This is an <strong>M:N model</strong>: M tasks scheduled onto N OS threads (N ≈ core count). Work-stealing lets an idle worker steal tasks from a busy worker’s queue, balancing load transparently. A task can migrate between threads at <code>.await</code> points — precisely why spawned futures must be <code>Send</code>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Multiplexing many lightweight tasks onto a few OS threads (the M:N model) is the user-level / green-threads scheduling design from Concurrent and Distributed Systems. The classic green-thread pitfall — one blocking syscall stalls the whole scheduler thread — is dodged because async futures <em>never</em> make a blocking syscall at an <code>.await</code>; they register a waker and yield. For genuinely blocking work, <code>spawn_blocking</code> moves it to a dedicated thread pool so it can’t stall the cooperative scheduler.</p>
-</blockquote>
 <h2 id="the-starvation-trap-only-await-yields"><a class="header" href="#the-starvation-trap-only-await-yields">The starvation trap: only <code>.await</code> yields</a></h2>
 <p>Cooperative scheduling has a sharp edge. <strong>A task yields control <em>only</em> at an <code>.await</code> point.</strong> Everything between <code>.await</code>s runs to completion with no preemption. So a future doing a long CPU-bound stretch — or worse, calling a <em>blocking</em> synchronous API like <code>std::thread::sleep</code> or a synchronous file read — without awaiting will <strong>starve</strong> every other task sharing its thread. The runtime cannot preempt it; there is no timer interrupt in user space.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]

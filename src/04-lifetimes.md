@@ -6,8 +6,6 @@ In [References & Borrowing](03-references-and-borrowing.md) you saw the borrow c
 
 If you internalise that, the rest is bookkeeping. The thing that trips up newcomers is treating `'a` as a runtime quantity ("how long does this thing live?") rather than what it is: a *type-level* variable that the compiler solves for, exactly like a type parameter `T` (think of a Java or Swift generic `<T>`, but standing for a *span of code* instead of a type). You have met the underlying idea before — it just had a different name in a different course.
 
-> **🎓 Tripos link →** From *Semantics of Programming Languages*, the intuition is: a lifetime `'a` names a *region* of the program, and `&'a T` is "a reference that's only valid inside region `'a`". The borrow checker works like a little constraint solver: it reads relationships off the program text — "this region must contain that one" — and checks they can all hold at once. There's no runtime machinery for any of this; the region lives entirely in the type and disappears before the binary is produced.
-
 ## Lifetimes do not control dropping
 
 Kill this myth now, because it is the commonest wrong mental model. A value is dropped when its **owner** goes out of scope — that is determined by ownership and lexical scope ([Ownership & Moves](02-ownership-and-moves.md)), full stop. Lifetimes are about how long a *reference* may be *used*, and the checker's only job is to prove that every use of a reference happens within the region where its referent is alive. The annotation `'a` does not extend, shorten, or otherwise touch when anything is freed.
@@ -290,8 +288,6 @@ error: lifetime may not live long enough
   = note: requirement occurs because of a mutable reference to `&str`
   = note: mutable references are invariant over their type parameter
 ```
-
-> **🎓 Tripos link →** This is the same hole that *Further Java* warns about with **array covariance**, but caught at compile time instead of at runtime. Java lets you treat a `String[]` as an `Object[]` (covariant arrays), so if you then write an `Integer` into it through the `Object[]` alias, you get an `ArrayStoreException` *while the program runs*. Same disease — letting you substitute freely *and* write through the result is unsound — and essentially the same cure, just applied earlier: Rust refuses the lifetime substitution on the *mutable* reference, so the violating coercion is a *compile error*, not a runtime crash. The rule of thumb is general: a position you only ever read from can be substituted freely; a position you can also write to cannot.
 
 ## Combining lifetimes with generics and bounds
 

@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -180,9 +180,6 @@
 <p>In <a href="03-references-and-borrowing.html">References &amp; Borrowing</a> you saw the borrow checker reject a reference that outlived its referent. That chapter waved its hands at <em>how</em> the checker knows. The machinery is <strong>lifetimes</strong>, and the single most important sentence in this chapter is this:</p>
 <p><strong>A lifetime is a region — a set of program points over which a reference is valid — and a lifetime annotation <code>'a</code> is a generic parameter ranging over such regions. Annotations <em>describe</em> constraints between regions; they never <em>change</em> them.</strong></p>
 <p>If you internalise that, the rest is bookkeeping. The thing that trips up newcomers is treating <code>'a</code> as a runtime quantity (“how long does this thing live?”) rather than what it is: a <em>type-level</em> variable that the compiler solves for, exactly like a type parameter <code>T</code> (think of a Java or Swift generic <code>&lt;T&gt;</code>, but standing for a <em>span of code</em> instead of a type). You have met the underlying idea before — it just had a different name in a different course.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Semantics of Programming Languages</em>, the intuition is: a lifetime <code>'a</code> names a <em>region</em> of the program, and <code>&amp;'a T</code> is “a reference that’s only valid inside region <code>'a</code>”. The borrow checker works like a little constraint solver: it reads relationships off the program text — “this region must contain that one” — and checks they can all hold at once. There’s no runtime machinery for any of this; the region lives entirely in the type and disappears before the binary is produced.</p>
-</blockquote>
 <h2 id="lifetimes-do-not-control-dropping"><a class="header" href="#lifetimes-do-not-control-dropping">Lifetimes do not control dropping</a></h2>
 <p>Kill this myth now, because it is the commonest wrong mental model. A value is dropped when its <strong>owner</strong> goes out of scope — that is determined by ownership and lexical scope (<a href="02-ownership-and-moves.html">Ownership &amp; Moves</a>), full stop. Lifetimes are about how long a <em>reference</em> may be <em>used</em>, and the checker’s only job is to prove that every use of a reference happens within the region where its referent is alive. The annotation <code>'a</code> does not extend, shorten, or otherwise touch when anything is freed.</p>
 <p>Concretely, since the 2018 edition Rust uses <strong>non-lexical lifetimes (NLL)</strong>: a borrow’s region ends at its <em>last use</em>, not at the closing brace.</p>
@@ -420,9 +417,6 @@ use_for(forever);   // 'static coerces down to 'a — perfectly fine
   = note: requirement occurs because of a mutable reference to `&amp;str`
   = note: mutable references are invariant over their type parameter
 </code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the same hole that <em>Further Java</em> warns about with <strong>array covariance</strong>, but caught at compile time instead of at runtime. Java lets you treat a <code>String[]</code> as an <code>Object[]</code> (covariant arrays), so if you then write an <code>Integer</code> into it through the <code>Object[]</code> alias, you get an <code>ArrayStoreException</code> <em>while the program runs</em>. Same disease — letting you substitute freely <em>and</em> write through the result is unsound — and essentially the same cure, just applied earlier: Rust refuses the lifetime substitution on the <em>mutable</em> reference, so the violating coercion is a <em>compile error</em>, not a runtime crash. The rule of thumb is general: a position you only ever read from can be substituted freely; a position you can also write to cannot.</p>
-</blockquote>
 <h2 id="combining-lifetimes-with-generics-and-bounds"><a class="header" href="#combining-lifetimes-with-generics-and-bounds">Combining lifetimes with generics and bounds</a></h2>
 <p>Lifetimes, type parameters, and trait bounds all coexist in one <code>&lt;...&gt;</code> list because lifetimes <em>are</em> a kind of generic parameter (by convention they come first):</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]

@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -189,9 +189,6 @@
 <li>and aliasing-XOR-mutability says you cannot have both at once.</li>
 </ul>
 <p>The single-threaded rule that prevents iterator invalidation and use-after-free is <em>structurally the same</em> rule that prevents data races. The only missing piece is teaching the type system <em>which</em> types may cross a thread boundary at all, and which references may be shared across one. That is exactly what <code>Send</code> and <code>Sync</code> encode, and we get to them at the end.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> In Concurrent &amp; Distributed Systems a data race is undefined behaviour at the memory-model level, and the standard mitigations (locks, message passing) are <em>disciplines</em> the programmer must apply correctly and can always forget. Rust’s twist is to move that discipline from your head into the type checker: instead of you remembering to lock, the compiler refuses to compile any program that could race. The aliasing-XOR-mutability rule is the single idea doing all the work, and data-race freedom falls out of it as a consequence.</p>
-</blockquote>
 <h2 id="threads-spawn-joinhandle-and-why-static"><a class="header" href="#threads-spawn-joinhandle-and-why-static">Threads: <code>spawn</code>, <code>JoinHandle</code>, and why <code>'static</code></a></h2>
 <p>Rust’s standard library uses a 1:1 threading model — one OS thread per <code>std::thread</code>, the same processes-and-threads picture from Computer Architecture &amp; Operating Systems. You create one by handing <code>thread::spawn</code> a closure:</p>
 <pre class="playground"><code class="language-rust">use std::thread;
@@ -336,9 +333,6 @@ tx.send(job).unwrap();   // ownership of the job leaves; handler returns immedia
 <span class="boring">}</span></code></pre>
 <p>Because <code>send</code> <em>moves</em> the job, there is zero shared mutable state between handler and worker, so no lock and no possibility of the handler accidentally mutating a job the worker is already processing. This is the pattern behind work queues, log/metrics pipelines, and actor-style event loops.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the CSP channel from Concurrent &amp; Distributed Systems made concrete: a <code>Sender</code>/<code>Receiver</code> pair is exactly a typed channel, <code>send</code> is the output <code>c!v</code> and <code>recv</code> is the input <code>c?x</code>. The <code>mpsc</code> restriction — many writers, one reader — matches the actor model, where many threads can post to an actor’s mailbox but only the actor reads it. Because the message is <em>moved</em> rather than copied or shared, there is no aliasing between sender and receiver after the handover, which is precisely the no-shared-state property actors rely on to stay race-free.</p>
-</blockquote>
 <h2 id="shared-state-mutext-owns-its-data"><a class="header" href="#shared-state-mutext-owns-its-data">Shared state: <code>Mutex&lt;T&gt;</code> owns its data</a></h2>
 <p>Message passing models single ownership flowing through pipes. Sometimes you genuinely want <strong>multiple threads touching one piece of state</strong> — a shared counter, a cache. That is multiple ownership plus mutation, and it is where the lock-versus-data separation in C and Java does its damage.</p>
 <p>Rust’s answer is <code>Mutex&lt;T&gt;</code>, and the design decision that makes it different is in the type itself: <strong>the mutex <em>contains</em> the data.</strong> You do not have a <code>Mutex</code> over here and an <code>i32</code> over there bound by a comment. You have a <code>Mutex&lt;i32&gt;</code>, and the only way to reach the <code>i32</code> is through the lock.</p>
@@ -450,9 +444,6 @@ fn main() {
 <li><code>Arc&lt;T&gt;</code> is <code>Send + Sync</code> <em>provided</em> <code>T: Send + Sync</code>; <code>Mutex&lt;T&gt;</code> is <code>Sync</code> whenever <code>T: Send</code>, because the lock turns any <code>Send</code> payload into something safely shareable.</li>
 </ul>
 <p>This is how the data-race-freedom guarantee is actually carried. <code>spawn</code>’s <code>F: Send</code> bound says “the captured state must be safe to move to another thread,” and the compiler checks it the obvious way: <code>F</code> is <code>Send</code> because each of its fields is, all the way down to primitives which are <code>Send</code> by definition. When you wrote <code>Rc&lt;Mutex&lt;i32&gt;&gt;</code>, that check <em>failed</em> at the <code>Rc</code> field: <code>Rc</code> is not <code>Send</code>, so the closure capturing it is not <code>Send</code>, so the program does not compile. The error is concrete — the compiler points at the exact field that breaks the chain.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> The promise here is the same kind of “well-typed programs don’t do the bad thing” property you meet informally in Semantics of Programming Languages: a program written entirely in safe Rust cannot have a data race, and <code>Send</code>/<code>Sync</code> are the type-level conditions that make that hold. They are auto-derived, so you almost never write them yourself — the compiler infers them from a type’s fields, the same way type inference (Foundations of CS) spares you from spelling out most types. Implementing them by hand requires <code>unsafe</code> (see <a href="16-unsafe-and-ffi.html">chapter 16</a>): that is you stepping outside the part of the language the compiler can check, and personally promising the safety the compiler can no longer verify for you.</p>
-</blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>Send</code>/<code>Sync</code> are zero-cost: marker traits compile to nothing, carry no data, and have no vtable. They exist only during type-checking. After monomorphisation (Compiler Construction) they vanish entirely — there is no runtime representation of “this <code>Vec</code> is <code>Send</code>.” The guarantee is paid for once, at compile time, and the generated machine code is identical to what an equivalent correct C program would emit.</p>
 </blockquote>

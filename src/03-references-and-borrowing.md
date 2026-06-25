@@ -62,8 +62,6 @@ let m = &mut s;         // error[E0502]: cannot borrow `s` as mutable because it
 println!("{r} {m}");
 ```
 
-> **🎓 Tripos link →** From *Concurrent and Distributed Systems*: a **data race** is concurrent access to a shared location where at least one access is a write and there is no synchronisation. The aliasing-XOR-mutability law is precisely the negation of that situation, enforced at every program point — even single-threaded ones. If only shared references are live, every access is a read, so there is nothing to race. If a `&mut` is live, the law guarantees it is the *only* path to that value, so there is no second accessor to race against. Rust takes a hazard you normally only catch at runtime (or never) and turns it into something the compiler refuses to let you write. We will see in [fearless concurrency](13-fearless-concurrency.md) that this is not just an analogy: the `Send`/`Sync` machinery builds directly on the fact that a live `&mut T` is unaliased, which is how "no data races" becomes a compile-time guarantee rather than a hope.
-
 The same law also kills **iterator invalidation** — a single-threaded bug that has nothing to do with concurrency. In C++, `v.push_back(x)` may reallocate the backing buffer and dangle every outstanding iterator and pointer into `v`; the standard says it's undefined behaviour and the compiler says nothing. (Java and Python catch the analogous "modified the list while iterating it" bug, but only at runtime — `ConcurrentModificationException` or surprising skipped elements.) Rust forbids it structurally, at compile time:
 
 ```rust
@@ -119,8 +117,6 @@ fn main() {
     println!("{r} {m}"); // ...because r is used HERE, after m's creation
 }
 ```
-
-> **🎓 Tripos link →** The "when does a borrow end" question is exactly the **liveness analysis** you meet in *Compiler Construction*: a variable (here, a borrow) is *live* at a program point if its value will still be used on some path forward, and *dead* once its last use is behind it. NLL is that backward dataflow applied to borrows — each borrow gets a region covering every path from where it's created to each place it's used, and the checker only complains where two such regions overlap in a forbidden way. The earlier, purely lexical checker (pre-2018) was a cruder approximation that ended every borrow at the closing brace, and so rejected perfectly safe programs that NLL now accepts.
 
 ## Shared references are `Copy`; `&mut` is not
 

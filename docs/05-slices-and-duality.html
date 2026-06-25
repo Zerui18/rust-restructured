@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -253,9 +253,6 @@ println!("{word}");             // borrow still live here
 <blockquote>
 <p><strong>⚠️ Pitfall →</strong> The above is <code>error[E0502]: cannot borrow </code>line<code> as mutable because it is also borrowed as immutable</code>. <code>String::clear</code> needs <code>&amp;mut self</code>, but <code>word</code> holds a live <code>&amp;</code> into the same string, and the <a href="03-references-and-borrowing.html">borrowing</a> rules forbid a mutable and an immutable borrow coexisting. The fix is not a workaround — it is the point. The compiler has proved that mutating the string while a view into it is alive would invalidate the view, exactly the bug the index version hid. Finish using <code>word</code> first, or compute an owned <code>String</code> if you genuinely need to outlive the source.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> The intuition here connects to <em>Semantics of Programming Languages</em>: a value’s type can be made strong enough to carry an invariant the program must respect. The index-returning version type-checks but the type was too weak — it said “this is a number”, not “this number is only valid while <em>that</em> string is unchanged”. The slice strengthens the type until “it compiles” implies “the view is still valid”, so the <code>clear()</code> call becomes a compile error rather than a silent bug. That is the type system doing real work, not ceremony — the same lifetime/region reasoning you saw in <a href="04-lifetimes.html">lifetimes</a>, now applied to a pointer into the <em>middle</em> of a value.</p>
-</blockquote>
 <h2 id="the-ownedborrowed-pair"><a class="header" href="#the-ownedborrowed-pair">The owned/borrowed pair</a></h2>
 <p><code>String</code> and <code>&amp;str</code> are not two unrelated string types; they are the <strong>owning</strong> and <strong>borrowing</strong> halves of one design. This split is the central idea of the chapter, so make it explicit:</p>
 <div class="table-wrapper">
@@ -338,9 +335,6 @@ let bad  = &amp;s[0..1];   // panics: byte index 1 is inside 'З' (bytes 0..2)
 <span class="boring">}</span></code></pre>
 <blockquote>
 <p><strong>⚠️ Pitfall →</strong> <code>byte index 1 is not a char boundary; it is inside 'З' (bytes 0..2)</code>. Byte-range slicing is the one string operation that trades a compile error for a runtime panic, because the validity depends on data the compiler cannot see. Treat raw byte-range slicing of arbitrary (possibly non-ASCII) text as a code smell. Prefer boundary-aware iterators: <code>s.char_indices()</code> gives you <code>(byte_offset, char)</code> pairs whose offsets are guaranteed valid, or <code>split</code>/<code>find</code>/<code>splitn</code> which return sub-<code>&amp;str</code>s on correct boundaries by construction.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Compiler Construction</em> / lexing: UTF-8 is a prefix-free variable-length code where a byte’s high bits classify it as ASCII (<code>0xxxxxxx</code>), a continuation byte (<code>10xxxxxx</code>), or a leading byte of a 2/3/4-byte sequence (<code>110/1110/11110...</code>). “Is this a char boundary” is just “this byte is not a continuation byte” — an O(1) local check, which is why <code>s.is_char_boundary(i)</code> exists and why the panic message can name the exact multibyte scalar you cut into. The self-synchronising property of UTF-8 is precisely what lets slices stay cheap.</p>
 </blockquote>
 <h2 id="slicing-syntax-and-slice-patterns"><a class="header" href="#slicing-syntax-and-slice-patterns">Slicing syntax and slice patterns</a></h2>
 <p>Range syntax is uniform across <code>&amp;str</code> and <code>&amp;[T]</code>, and the endpoints are optional:</p>

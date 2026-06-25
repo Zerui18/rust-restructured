@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -365,9 +365,6 @@ let zeros = [0u8; 16];    // [value; count]: sixteen zero bytes
 };                 // y == 4
 <span class="boring">}</span></code></pre>
 <p>The semicolon is the pivotal piece of punctuation in Rust, and it does the opposite of what it does in C. A trailing semicolon <strong>discards</strong> the value and turns the expression into a statement whose value is <code>()</code>. Drop the semicolon and the expression’s value becomes the block’s value. This rule unifies <code>let x = { … }</code> with function return below.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages</em> — the intuition, no formalism. Read a block top to bottom: each line that ends in a semicolon is run for its effect and then thrown away (its value becomes <code>()</code>); the final line, if you leave the semicolon off, <em>is</em> the block’s value. That’s the whole rule. If you’ve used OCaml, it’s the <code>e1; e2</code> sequencing you already know — run <code>e1</code> for effect, hand back <code>e2</code> — just generalised to a stack of statements followed by one tail expression. The mental model to carry: <strong>semicolon = “and then discard”; no semicolon on the last line = “this is the answer.”</strong></p>
-</blockquote>
 <h3 id="functions-return-their-tail-expression"><a class="header" href="#functions-return-their-tail-expression">Functions return their tail expression</a></h3>
 <p>There is no <code>return</code> keyword on the happy path. The body is a block; the function returns the block’s trailing (semicolon-less) expression. The return type follows <code>-&gt;</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -472,9 +469,6 @@ for i in (1..4).rev() { /* 3,2,1 */ }  // ranges compose with iterator adapters
     _ =&gt; "large",        // the wildcard; required here for exhaustiveness
 };
 <span class="boring">}</span></code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Foundations of Computer Science.</em> This is OCaml’s <code>match … with</code>, exhaustiveness check and all — and it’s the close cousin of Swift’s <code>switch</code>, which also forces you to handle every case (or write <code>default</code>). The false friend is Java’s / C’s <code>switch</code>: it falls through unless you <code>break</code>, makes no promise that you covered every case, and works only on a handful of types. Rust’s <code>match</code> insists that <em>some</em> arm fires for every possible value — the wildcard <code>_</code> is how you say “everything else.” Forget a variant of an <code>enum</code> and you get a compile error, not a silent fall-through to nothing. The plain takeaway: the compiler turns “did I handle every case?” from a code-review worry into a guarantee.</p>
-</blockquote>
 <h2 id="comments-and-a-note-on-println"><a class="header" href="#comments-and-a-note-on-println">Comments and a note on <code>println!</code></a></h2>
 <p>Line comments are <code>//</code>; block comments <code>/* … */</code> nest. Doc comments <code>///</code> and <code>//!</code> feed <code>rustdoc</code> and are covered in <a href="20-testing-and-tooling.html">testing and tooling</a>.</p>
 <p>You have seen <code>println!("{x}")</code>. The trailing <code>!</code> means it is a <strong>macro</strong>, not a function — the formatting string is parsed and type-checked <em>at compile time</em>, which is why <code>{x}</code> can capture the variable <code>x</code> directly and why a wrong number of arguments is a compile error, not a runtime crash like C’s <code>printf</code>. Macros get a full treatment in <a href="18-macros.html">macros</a>; for now, read <code>!</code> as “this is a macro.”</p>

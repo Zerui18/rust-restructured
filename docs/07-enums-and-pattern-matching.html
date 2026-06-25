@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -267,9 +267,6 @@ match first_word("  hello world") {
 <blockquote>
 <p><strong>🔧 In practice →</strong> You add a new payment method to an e-commerce backend — a <code>PaymentMethod::ApplePay</code> variant alongside <code>Card</code> and <code>BankTransfer</code>. Without exhaustive <code>match</code>, you’d grep for every place that handles payment methods and hope you found them all. With it, you just add the variant and recompile: every <code>match</code> that hasn’t been taught about <code>ApplePay</code> lights up red — the refund calculator, the receipt formatter, the fraud check. The compiler hands you a to-do list of exactly the sites that need updating, and you can’t ship until they’re all handled.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Foundations of CS link →</strong> This is the same machinery as OCaml’s “this pattern-matching is not exhaustive” warning you met in Foundations, promoted from a warning to a hard error. The intuition is simple: the compiler checks that your arms, taken together, cover every possible value of the type, with no value left unhandled. Because there is no value that falls through the bottom, a <code>match</code> always produces a result — which is what lets it safely be an expression.</p>
-</blockquote>
 <h3 id="binding-catch-alls-and-_"><a class="header" href="#binding-catch-alls-and-_">Binding, catch-alls, and <code>_</code></a></h3>
 <p>Arms can bind parts of the scrutinee to names (that is how <code>r</code>, <code>w</code>, and <code>h</code> above came into scope). To make a <code>match</code> exhaustive without enumerating everything, end with a catch-all:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -394,9 +391,6 @@ match x {
 help: you might want to use `let else` to handle the variant that isn't matched
 </code></pre>
 <p>The <code>let</code> form must always succeed because there is nowhere to put the failure. The compiler even points you at the fix: <code>let ... else</code>.</p>
-<blockquote>
-<p><strong>🎓 Plain-language insight →</strong> Refutability is just exhaustiveness seen from the other side. An irrefutable pattern is one that covers the <em>whole</em> type on its own — it can never fail to match, so it needs no second arm. <code>let PATTERN = EXPR;</code> is allowed only when <code>PATTERN</code> is irrefutable, because a plain <code>let</code> has nowhere to send a value that didn’t match. The moment a pattern <em>could</em> fail, the compiler insists you use a form that has a “didn’t match” branch (<code>if let</code>, <code>while let</code>, <code>let ... else</code>).</p>
-</blockquote>
 <h2 id="the-conditional-family-if-let-let--else-while-let-matches"><a class="header" href="#the-conditional-family-if-let-let--else-while-let-matches">The conditional family: <code>if let</code>, <code>let ... else</code>, <code>while let</code>, <code>matches!</code></a></h2>
 <p>When you care about <em>one</em> pattern and want to ignore the rest, a full <code>match</code> with a <code>_ =&gt; {}</code> arm is noise. The conditional forms are sugar over that pattern.</p>
 <p><strong><code>if let</code></strong> runs a block only when one refutable pattern matches, optionally with <code>else</code>. This is the direct counterpart of Swift’s <code>if let</code>:</p>

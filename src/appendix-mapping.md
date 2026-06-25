@@ -3,7 +3,7 @@
 This book is the official *Rust Programming Language* (21 chapters) reassembled by conceptual dependency rather than beginner ramp. Two consequences follow, and this appendix indexes both:
 
 1. **Where is the "for everyone" version?** Every module below names the official chapter(s) it derives from, so when you want the canonical, slower, beginner-pitched treatment of a topic you can jump straight to it. Read the official book as the *reference manual*; read this one as the *theory*.
-2. **What did I already learn that this leans on?** Each module names the Cambridge Tripos course(s) whose machinery it reuses, so you can revisit your own notes for the deeper framing. These are study anchors, not prerequisites: the 🎓 *Tripos link* callouts inside each module make the connection precise.
+2. **What did I already learn that this leans on?** Each module names the Cambridge Tripos course(s) whose machinery it reuses, so you can revisit your own notes for the deeper framing. These are study anchors, not prerequisites.
 
 A word on the chapter column: the official book is not a partition we re-shuffled one-to-one. We **merged** topics it splits (pattern matching, traits), **compressed** topics it stretches (the ch. 1–3 on-ramp), and **gathered** the three faces of the memory model (ownership, lifetimes, smart pointers) that it scatters across hundreds of pages. So several rows cite the same official chapter, and a few official chapters are deliberately dissolved across multiple modules. The "moved and why" notes below explain each non-trivial deviation.
 
@@ -33,8 +33,6 @@ A word on the chapter column: the official book is not a partition we re-shuffle
 | [19 · Crates, Modules & Workspaces](19-project-structure.md) | 7 Packages, Crates & Modules; 14 More About Cargo | Further Java/OOP; Compiler Construction; Operating Systems |
 | [20 · Testing & Tooling](20-testing-and-tooling.md) | 11 Writing Automated Tests; 14 More About Cargo | Algorithms; Compiler Construction; Cybersecurity |
 | [21 · Capstones (CLI tool & Multithreaded Web Server)](21-capstones.md) | 12 I/O Project (CLI); 21 Multithreaded Web Server | Operating Systems; Computer Networking; Concurrent & Distributed Systems; Algorithms |
-
-> **🎓 Tripos link →** If you read the right-hand column top-to-bottom, it is roughly a dependency-sorted tour of your own degree: OCaml's type discipline and C/C++'s memory model dominate the early rows; Compiler Construction underwrites the ownership and trait machinery; Concurrent & Distributed Systems and Operating Systems carry the back half. The thesis of [module 00](00-orientation.md) — *a strict OCaml-style type system bolted onto a C++ memory model* — is literally visible as the shape of this table.
 
 ## If you came from the official book, here's what moved and why
 

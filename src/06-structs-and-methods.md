@@ -2,8 +2,6 @@
 
 A `struct` is Rust's **product type**: a labelled bundle of its field types, exactly the records you built in OCaml, the `struct`s you wrote in C, the classes-without-methods you'd write in Java or Swift. Nothing here will surprise you syntactically. What is worth your attention is the *seams* — the places where Rust's design diverges from Java and Swift in ways that fall directly out of [ownership](02-ownership-and-moves.md) and [borrowing](03-references-and-borrowing.md). There are three: structs own their fields (so construction and update *move*), behaviour lives in detached `impl` blocks rather than inside the type, and the method receiver `self` is just a borrow whose form (`&`, `&mut`, by-value) *is* the access discipline. Get those three and the rest is notation.
 
-> **🎓 Tripos link →** From *Foundations of Computer Science*: a struct is the dual of an enum. Enums are "one of these" types (one variant active at a time); structs are "all of these together" types (every field present at once). Together with [enums](07-enums-and-pattern-matching.md) they are the OCaml variant-and-record pair you already know — Rust just gives the record half named fields and the variant half [pattern matching](07-enums-and-pattern-matching.md). The count of possible values multiplies: a struct of a `bool` and a `u8` can be in `2 × 256` distinct states.
-
 ## The three shapes of struct
 
 ```rust
@@ -80,8 +78,6 @@ struct BadSession {
 
 The compiler insists you write `struct Session<'a> { token: &'a str }`, tying the struct's validity to the borrowed data. That is correct and sometimes what you want, but it infects every use site with a lifetime parameter. The default, idiomatic choice for an owning data type is owned fields (`String`, `Vec<T>`, `Box<T>`) so the instance owns all its data and outlives nothing external. We treat the `<'a>` machinery properly in [lifetimes](04-lifetimes.md).
 
-> **🎓 Tripos link →** From *Semantics of Programming Languages*, taken purely as intuition: the lifetime parameter `'a` is a label for "the stretch of program during which the borrowed data is guaranteed to be alive." Writing `Session<'a>` says *this struct must not outlive the thing it points at* — if the `String` you borrowed from is dropped, any `Session<'a>` still holding a reference to it would be dangling, so the compiler forbids it. Owned fields are the simple case where the struct points at nothing external, so no such label is needed.
-
 ## `impl`: behaviour, detached from data
 
 Here is the deepest break from Java and Swift: **data and behaviour are declared separately.** The struct definition lists fields and nothing else; methods live in an `impl` block.
@@ -140,8 +136,6 @@ This is the unifying insight of the chapter. The first parameter form encodes pr
 So `area(&self)` borrows shared, `scale(&mut self)` borrows exclusively (and therefore requires the caller's binding be `mut` and not otherwise borrowed), and `into_pair(self)` *consumes* the `Rect`: after `r.into_pair()`, `r` is moved and gone. By-value `self` is rare and deliberate — it is for transformations where the old value should not survive (note the `into_` naming convention signalling consumption). All the borrow-checker rules carry over unchanged: you cannot call `&mut self` while a shared borrow of the instance is live, because that would violate aliasing-XOR-mutation (at most one mutable borrow, or any number of shared ones, never both).
 
 > **🔧 In practice →** the receiver choice is a real API-design decision you make constantly. A method that *reports* something takes `&self` (`config.is_valid()`, `cart.total()`) so callers keep using the value. A method that *updates in place* takes `&mut self` (`cart.add_item(x)`, `buffer.clear()`). And `self` by value is how you build deliberate "this object is now consumed" conversions: a `Request` that you finalise into a `PreparedRequest`, or a file handle's `into_raw_fd()` that hands off ownership so you can't accidentally use the old wrapper afterwards. Picking `self` over `&mut self` is you telling every caller "after this call, the old value is gone" — and the compiler enforces it for free.
-
-> **🎓 Tripos link →** From *Concurrent and Distributed Systems*, as intuition only: `&mut self` is the compile-time analogue of grabbing an exclusive lock on the instance for the duration of the call — but there is no actual lock and no runtime cost, because the type system checks the "no other access while I'm writing" rule *before the program ever runs*. `&self` is the shared-read case (many readers, no writer). This is exactly the discipline that makes data races impossible, which is why [fearless concurrency](13-fearless-concurrency.md) works.
 
 ### Autoref / autoderef at the call site
 

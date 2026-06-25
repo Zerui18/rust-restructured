@@ -236,8 +236,6 @@ for n in 0..6 {
 > ```
 > Reach for `entry` whenever the shape is "look it up; if it's there update it, if not seed a default" — counters, multimaps, memoisation caches, dedup-with-tally. The naive `if map.contains_key(k) { ... } else { ... }` does two lookups and fights the borrow checker; `entry` does one of each.
 
-> **🎓 Tripos link →** *Concurrent and Distributed Systems.* The reason `entry` "plays nicely with the borrow checker" is the same reason you prefer a single atomic update over a separate read-then-write: it collapses two steps into one. `get`-then-`insert` reads the map, then comes back later to write it — two separate touches the borrow checker has to reconcile across a gap, just as a lock-read-then-lock-write leaves a window where another thread could interleave. `entry` holds one mutable handle for the whole read-modify-write, which is both easier to prove sound and a single hash probe instead of two.
-
 ### `Eq`, `Hash`, and the hashing function
 
 A type may be a `HashMap` key only if it implements both `Hash` and `Eq` ([traits](08-generics-and-traits.md)), and the two must agree: `a == b` must imply `hash(a) == hash(b)`. For your own structs, `#[derive(Hash, Eq, PartialEq)]` gives the field-wise implementations, which is almost always what you want. Floating-point types are *not* `Eq` (because of `NaN`), so `f64` cannot be a key without a wrapper.

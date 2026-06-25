@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -343,9 +343,6 @@ puts(owned.as_ptr());                                 // &amp;owned keeps it ali
 <p>This is the part with no C analogue, and the reason Rust’s optimiser can be more aggressive than C’s. Rust guarantees a live <code>&amp;mut T</code> is the <em>unique</em> path to its referent — no other live reference or pointer may read or write that memory while the <code>&amp;mut</code> is usable. rustc tells LLVM this by tagging <code>&amp;mut</code> parameters <code>noalias</code> (and <code>&amp;T</code> <code>readonly</code>), the hint C’s <code>restrict</code> gives but applied <em>automatically and pervasively</em>. The optimiser then keeps values in registers and reorders loads/stores across calls, trusting nothing else can observe or clobber that location.</p>
 <p>The catch for <code>unsafe</code> authors: this guarantee holds for <em>raw-pointer code too</em>. If you create a <code>&amp;mut</code> and a raw pointer to the same place and write through both while the <code>&amp;mut</code> is live, you have violated <code>noalias</code> — UB — even though no <code>&amp;mut</code>/<code>&amp;mut</code> pair ever existed. This is why <code>&amp;raw mut x</code> exists: it takes a pointer without ever forming the conflicting reference.</p>
 <p>There is an ongoing research effort to write down precisely <em>the rules raw pointers must obey to coexist with references</em>. <strong>Stacked Borrows</strong> (Jung et al.) modelled borrows as a per-location stack of permission tags, each access checking and popping the stack; its successor <strong>Tree Borrows</strong> generalises this to a tree to admit more valid patterns. Neither is yet <em>the</em> official, normative spec — but <strong>Miri implements them</strong>, so they are the de-facto rulebook your unsafe code is tested against today.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> The mental picture from Semantics of Programming Languages is useful here, stated plainly: Stacked/Tree Borrows is a step-by-step machine that tracks, for each memory location, which pointers are currently allowed to touch it, and <em>gets stuck</em> the moment an access breaks the rules — that “stuck” state is exactly UB. It is the runtime side of the same aliasing discipline the borrow checker enforces at compile time. <code>&amp;mut</code>-as-<code>noalias</code> — “while this mutable reference is live, nothing else may read or write here” — is that discipline pushed all the way down to the machine.</p>
-</blockquote>
 <h2 id="tooling-how-to-actually-trust-your-unsafe-code"><a class="header" href="#tooling-how-to-actually-trust-your-unsafe-code">Tooling: how to actually trust your unsafe code</a></h2>
 <p>The borrow checker is <em>static</em> and now stopped helping, so you need dynamic tools that run your program and watch for violations:</p>
 <ul>

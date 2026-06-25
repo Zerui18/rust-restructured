@@ -38,7 +38,7 @@
             const path_to_root = "";
             const default_light_theme = "ayu";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-66f52993.js";
+            window.path_to_searchindex_js = "searchindex-cf9b31af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e4376f2.js"></script>
@@ -194,7 +194,7 @@
 </blockquote>
 <p>Everything in this book is a corollary of that sentence. When a rule seems arbitrary, trace it back to “the compiler is proving memory- and data-race-safety at compile time, and it will only accept programs it can prove correct.”</p>
 <h2 id="house-style--the-recurring-callouts"><a class="header" href="#house-style--the-recurring-callouts">House style — the recurring callouts</a></h2>
-<p>Throughout, you will see five kinds of margin-notes. Learn to read them:</p>
+<p>Throughout, you will see four kinds of margin-notes. Learn to read them:</p>
 <blockquote>
 <p><strong>🦀 From your toolbox →</strong> maps a Rust feature to its closest analogue in a language you already know (a Swift <code>enum</code> or <code>protocol</code>, a Java <code>interface</code>, Python’s reference counting, …) — <em>and names where the analogy breaks down</em>.</p>
 </blockquote>
@@ -206,9 +206,6 @@
 </blockquote>
 <blockquote>
 <p><strong>🔧 In practice →</strong> a concrete, real-world situation where the feature earns its keep — when and why you’d actually reach for it in real code, with a small realistic sketch.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> where a concept connects, in plain terms, to a course you’ve already done (Compiler Construction, Concurrent &amp; Distributed Systems, Operating Systems, …) — the intuition, not the theorems.</p>
 </blockquote>
 <p>Each module ends with a <strong>Mental-model recap</strong> (the three or four sentences worth memorising) and a few <strong>Exercises</strong> that push past the chapter — applying the idea to new situations rather than rehearsing it.</p>
 <h2 id="how-to-actually-use-it"><a class="header" href="#how-to-actually-use-it">How to actually use it</a></h2>
@@ -502,9 +499,6 @@ let zeros = [0u8; 16];    // [value; count]: sixteen zero bytes
 };                 // y == 4
 <span class="boring">}</span></code></pre>
 <p>The semicolon is the pivotal piece of punctuation in Rust, and it does the opposite of what it does in C. A trailing semicolon <strong>discards</strong> the value and turns the expression into a statement whose value is <code>()</code>. Drop the semicolon and the expression’s value becomes the block’s value. This rule unifies <code>let x = { … }</code> with function return below.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages</em> — the intuition, no formalism. Read a block top to bottom: each line that ends in a semicolon is run for its effect and then thrown away (its value becomes <code>()</code>); the final line, if you leave the semicolon off, <em>is</em> the block’s value. That’s the whole rule. If you’ve used OCaml, it’s the <code>e1; e2</code> sequencing you already know — run <code>e1</code> for effect, hand back <code>e2</code> — just generalised to a stack of statements followed by one tail expression. The mental model to carry: <strong>semicolon = “and then discard”; no semicolon on the last line = “this is the answer.”</strong></p>
-</blockquote>
 <h3 id="functions-return-their-tail-expression"><a class="header" href="#functions-return-their-tail-expression">Functions return their tail expression</a></h3>
 <p>There is no <code>return</code> keyword on the happy path. The body is a block; the function returns the block’s trailing (semicolon-less) expression. The return type follows <code>-&gt;</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -609,9 +603,6 @@ for i in (1..4).rev() { /* 3,2,1 */ }  // ranges compose with iterator adapters
     _ =&gt; "large",        // the wildcard; required here for exhaustiveness
 };
 <span class="boring">}</span></code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Foundations of Computer Science.</em> This is OCaml’s <code>match … with</code>, exhaustiveness check and all — and it’s the close cousin of Swift’s <code>switch</code>, which also forces you to handle every case (or write <code>default</code>). The false friend is Java’s / C’s <code>switch</code>: it falls through unless you <code>break</code>, makes no promise that you covered every case, and works only on a handful of types. Rust’s <code>match</code> insists that <em>some</em> arm fires for every possible value — the wildcard <code>_</code> is how you say “everything else.” Forget a variant of an <code>enum</code> and you get a compile error, not a silent fall-through to nothing. The plain takeaway: the compiler turns “did I handle every case?” from a code-review worry into a guarantee.</p>
-</blockquote>
 <h2 id="comments-and-a-note-on-println"><a class="header" href="#comments-and-a-note-on-println">Comments and a note on <code>println!</code></a></h2>
 <p>Line comments are <code>//</code>; block comments <code>/* … */</code> nest. Doc comments <code>///</code> and <code>//!</code> feed <code>rustdoc</code> and are covered in <a href="#20-testing--tooling">testing and tooling</a>.</p>
 <p>You have seen <code>println!("{x}")</code>. The trailing <code>!</code> means it is a <strong>macro</strong>, not a function — the formatting string is parsed and type-checked <em>at compile time</em>, which is why <code>{x}</code> can capture the variable <code>x</code> directly and why a wrong number of arguments is a compile error, not a runtime crash like C’s <code>printf</code>. Macros get a full treatment in <a href="#18-macros--metaprogramming">macros</a>; for now, read <code>!</code> as “this is a macro.”</p>
@@ -950,9 +941,6 @@ let r = &amp;s;             // immutable borrow
 let m = &amp;mut s;         // error[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable
 println!("{r} {m}");
 <span class="boring">}</span></code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Concurrent and Distributed Systems</em>: a <strong>data race</strong> is concurrent access to a shared location where at least one access is a write and there is no synchronisation. The aliasing-XOR-mutability law is precisely the negation of that situation, enforced at every program point — even single-threaded ones. If only shared references are live, every access is a read, so there is nothing to race. If a <code>&amp;mut</code> is live, the law guarantees it is the <em>only</em> path to that value, so there is no second accessor to race against. Rust takes a hazard you normally only catch at runtime (or never) and turns it into something the compiler refuses to let you write. We will see in <a href="#13-fearless-concurrency">fearless concurrency</a> that this is not just an analogy: the <code>Send</code>/<code>Sync</code> machinery builds directly on the fact that a live <code>&amp;mut T</code> is unaliased, which is how “no data races” becomes a compile-time guarantee rather than a hope.</p>
-</blockquote>
 <p>The same law also kills <strong>iterator invalidation</strong> — a single-threaded bug that has nothing to do with concurrency. In C++, <code>v.push_back(x)</code> may reallocate the backing buffer and dangle every outstanding iterator and pointer into <code>v</code>; the standard says it’s undefined behaviour and the compiler says nothing. (Java and Python catch the analogous “modified the list while iterating it” bug, but only at runtime — <code>ConcurrentModificationException</code> or surprising skipped elements.) Rust forbids it structurally, at compile time:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -1001,9 +989,6 @@ jobs.extend(retries);        // no live borrow of jobs here — fine
     let m = &amp;mut s;    // error[E0502]: r is still live...
     println!("{r} {m}"); // ...because r is used HERE, after m's creation
 }</code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> The “when does a borrow end” question is exactly the <strong>liveness analysis</strong> you meet in <em>Compiler Construction</em>: a variable (here, a borrow) is <em>live</em> at a program point if its value will still be used on some path forward, and <em>dead</em> once its last use is behind it. NLL is that backward dataflow applied to borrows — each borrow gets a region covering every path from where it’s created to each place it’s used, and the checker only complains where two such regions overlap in a forbidden way. The earlier, purely lexical checker (pre-2018) was a cruder approximation that ended every borrow at the closing brace, and so rejected perfectly safe programs that NLL now accepts.</p>
-</blockquote>
 <h2 id="shared-references-are-copy-mut-is-not"><a class="header" href="#shared-references-are-copy-mut-is-not">Shared references are <code>Copy</code>; <code>&amp;mut</code> is not</a></h2>
 <p>A <code>&amp;T</code> is <code>Copy</code> — duplicating an address is harmless precisely because all you can do through it is read, and unlimited readers are fine. So passing or assigning a <code>&amp;T</code> copies the pointer and leaves the original usable.</p>
 <p>A <code>&amp;mut T</code> is emphatically <strong>not</strong> <code>Copy</code>. If it were, you could trivially manufacture two exclusive references to the same value, demolishing the law. Assigning or passing a <code>&amp;mut</code> therefore <em>moves</em> it:</p>
@@ -1152,9 +1137,6 @@ let b = &amp;mut p.vals[1];
 <p>In <a href="#3-references--borrowing">References &amp; Borrowing</a> you saw the borrow checker reject a reference that outlived its referent. That chapter waved its hands at <em>how</em> the checker knows. The machinery is <strong>lifetimes</strong>, and the single most important sentence in this chapter is this:</p>
 <p><strong>A lifetime is a region — a set of program points over which a reference is valid — and a lifetime annotation <code>'a</code> is a generic parameter ranging over such regions. Annotations <em>describe</em> constraints between regions; they never <em>change</em> them.</strong></p>
 <p>If you internalise that, the rest is bookkeeping. The thing that trips up newcomers is treating <code>'a</code> as a runtime quantity (“how long does this thing live?”) rather than what it is: a <em>type-level</em> variable that the compiler solves for, exactly like a type parameter <code>T</code> (think of a Java or Swift generic <code>&lt;T&gt;</code>, but standing for a <em>span of code</em> instead of a type). You have met the underlying idea before — it just had a different name in a different course.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Semantics of Programming Languages</em>, the intuition is: a lifetime <code>'a</code> names a <em>region</em> of the program, and <code>&amp;'a T</code> is “a reference that’s only valid inside region <code>'a</code>”. The borrow checker works like a little constraint solver: it reads relationships off the program text — “this region must contain that one” — and checks they can all hold at once. There’s no runtime machinery for any of this; the region lives entirely in the type and disappears before the binary is produced.</p>
-</blockquote>
 <h2 id="lifetimes-do-not-control-dropping"><a class="header" href="#lifetimes-do-not-control-dropping">Lifetimes do not control dropping</a></h2>
 <p>Kill this myth now, because it is the commonest wrong mental model. A value is dropped when its <strong>owner</strong> goes out of scope — that is determined by ownership and lexical scope (<a href="#2-ownership--moves">Ownership &amp; Moves</a>), full stop. Lifetimes are about how long a <em>reference</em> may be <em>used</em>, and the checker’s only job is to prove that every use of a reference happens within the region where its referent is alive. The annotation <code>'a</code> does not extend, shorten, or otherwise touch when anything is freed.</p>
 <p>Concretely, since the 2018 edition Rust uses <strong>non-lexical lifetimes (NLL)</strong>: a borrow’s region ends at its <em>last use</em>, not at the closing brace.</p>
@@ -1392,9 +1374,6 @@ use_for(forever);   // 'static coerces down to 'a — perfectly fine
   = note: requirement occurs because of a mutable reference to `&amp;str`
   = note: mutable references are invariant over their type parameter
 </code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the same hole that <em>Further Java</em> warns about with <strong>array covariance</strong>, but caught at compile time instead of at runtime. Java lets you treat a <code>String[]</code> as an <code>Object[]</code> (covariant arrays), so if you then write an <code>Integer</code> into it through the <code>Object[]</code> alias, you get an <code>ArrayStoreException</code> <em>while the program runs</em>. Same disease — letting you substitute freely <em>and</em> write through the result is unsound — and essentially the same cure, just applied earlier: Rust refuses the lifetime substitution on the <em>mutable</em> reference, so the violating coercion is a <em>compile error</em>, not a runtime crash. The rule of thumb is general: a position you only ever read from can be substituted freely; a position you can also write to cannot.</p>
-</blockquote>
 <h2 id="combining-lifetimes-with-generics-and-bounds"><a class="header" href="#combining-lifetimes-with-generics-and-bounds">Combining lifetimes with generics and bounds</a></h2>
 <p>Lifetimes, type parameters, and trait bounds all coexist in one <code>&lt;...&gt;</code> list because lifetimes <em>are</em> a kind of generic parameter (by convention they come first):</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -1521,9 +1500,6 @@ println!("{word}");             // borrow still live here
 <blockquote>
 <p><strong>⚠️ Pitfall →</strong> The above is <code>error[E0502]: cannot borrow </code>line<code> as mutable because it is also borrowed as immutable</code>. <code>String::clear</code> needs <code>&amp;mut self</code>, but <code>word</code> holds a live <code>&amp;</code> into the same string, and the <a href="#3-references--borrowing">borrowing</a> rules forbid a mutable and an immutable borrow coexisting. The fix is not a workaround — it is the point. The compiler has proved that mutating the string while a view into it is alive would invalidate the view, exactly the bug the index version hid. Finish using <code>word</code> first, or compute an owned <code>String</code> if you genuinely need to outlive the source.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> The intuition here connects to <em>Semantics of Programming Languages</em>: a value’s type can be made strong enough to carry an invariant the program must respect. The index-returning version type-checks but the type was too weak — it said “this is a number”, not “this number is only valid while <em>that</em> string is unchanged”. The slice strengthens the type until “it compiles” implies “the view is still valid”, so the <code>clear()</code> call becomes a compile error rather than a silent bug. That is the type system doing real work, not ceremony — the same lifetime/region reasoning you saw in <a href="#4-lifetimes-as-regions">lifetimes</a>, now applied to a pointer into the <em>middle</em> of a value.</p>
-</blockquote>
 <h2 id="the-ownedborrowed-pair"><a class="header" href="#the-ownedborrowed-pair">The owned/borrowed pair</a></h2>
 <p><code>String</code> and <code>&amp;str</code> are not two unrelated string types; they are the <strong>owning</strong> and <strong>borrowing</strong> halves of one design. This split is the central idea of the chapter, so make it explicit:</p>
 <div class="table-wrapper">
@@ -1606,9 +1582,6 @@ let bad  = &amp;s[0..1];   // panics: byte index 1 is inside 'З' (bytes 0..2)
 <span class="boring">}</span></code></pre>
 <blockquote>
 <p><strong>⚠️ Pitfall →</strong> <code>byte index 1 is not a char boundary; it is inside 'З' (bytes 0..2)</code>. Byte-range slicing is the one string operation that trades a compile error for a runtime panic, because the validity depends on data the compiler cannot see. Treat raw byte-range slicing of arbitrary (possibly non-ASCII) text as a code smell. Prefer boundary-aware iterators: <code>s.char_indices()</code> gives you <code>(byte_offset, char)</code> pairs whose offsets are guaranteed valid, or <code>split</code>/<code>find</code>/<code>splitn</code> which return sub-<code>&amp;str</code>s on correct boundaries by construction.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Compiler Construction</em> / lexing: UTF-8 is a prefix-free variable-length code where a byte’s high bits classify it as ASCII (<code>0xxxxxxx</code>), a continuation byte (<code>10xxxxxx</code>), or a leading byte of a 2/3/4-byte sequence (<code>110/1110/11110...</code>). “Is this a char boundary” is just “this byte is not a continuation byte” — an O(1) local check, which is why <code>s.is_char_boundary(i)</code> exists and why the panic message can name the exact multibyte scalar you cut into. The self-synchronising property of UTF-8 is precisely what lets slices stay cheap.</p>
 </blockquote>
 <h2 id="slicing-syntax-and-slice-patterns"><a class="header" href="#slicing-syntax-and-slice-patterns">Slicing syntax and slice patterns</a></h2>
 <p>Range syntax is uniform across <code>&amp;str</code> and <code>&amp;[T]</code>, and the endpoints are optional:</p>
@@ -1723,9 +1696,6 @@ println!("{w}");
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="6-structs--methods"><a class="header" href="#6-structs--methods">6. Structs &amp; Methods</a></h1>
 <p>A <code>struct</code> is Rust’s <strong>product type</strong>: a labelled bundle of its field types, exactly the records you built in OCaml, the <code>struct</code>s you wrote in C, the classes-without-methods you’d write in Java or Swift. Nothing here will surprise you syntactically. What is worth your attention is the <em>seams</em> — the places where Rust’s design diverges from Java and Swift in ways that fall directly out of <a href="#2-ownership--moves">ownership</a> and <a href="#3-references--borrowing">borrowing</a>. There are three: structs own their fields (so construction and update <em>move</em>), behaviour lives in detached <code>impl</code> blocks rather than inside the type, and the method receiver <code>self</code> is just a borrow whose form (<code>&amp;</code>, <code>&amp;mut</code>, by-value) <em>is</em> the access discipline. Get those three and the rest is notation.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Foundations of Computer Science</em>: a struct is the dual of an enum. Enums are “one of these” types (one variant active at a time); structs are “all of these together” types (every field present at once). Together with <a href="#7-enums--pattern-matching">enums</a> they are the OCaml variant-and-record pair you already know — Rust just gives the record half named fields and the variant half <a href="#7-enums--pattern-matching">pattern matching</a>. The count of possible values multiplies: a struct of a <code>bool</code> and a <code>u8</code> can be in <code>2 × 256</code> distinct states.</p>
-</blockquote>
 <h2 id="the-three-shapes-of-struct"><a class="header" href="#the-three-shapes-of-struct">The three shapes of struct</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -1799,9 +1769,6 @@ println!("{}", a.token); // error[E0382]: borrow of moved value: `a.token`
 }
 <span class="boring">}</span></code></pre>
 <p>The compiler insists you write <code>struct Session&lt;'a&gt; { token: &amp;'a str }</code>, tying the struct’s validity to the borrowed data. That is correct and sometimes what you want, but it infects every use site with a lifetime parameter. The default, idiomatic choice for an owning data type is owned fields (<code>String</code>, <code>Vec&lt;T&gt;</code>, <code>Box&lt;T&gt;</code>) so the instance owns all its data and outlives nothing external. We treat the <code>&lt;'a&gt;</code> machinery properly in <a href="#4-lifetimes-as-regions">lifetimes</a>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Semantics of Programming Languages</em>, taken purely as intuition: the lifetime parameter <code>'a</code> is a label for “the stretch of program during which the borrowed data is guaranteed to be alive.” Writing <code>Session&lt;'a&gt;</code> says <em>this struct must not outlive the thing it points at</em> — if the <code>String</code> you borrowed from is dropped, any <code>Session&lt;'a&gt;</code> still holding a reference to it would be dangling, so the compiler forbids it. Owned fields are the simple case where the struct points at nothing external, so no such label is needed.</p>
-</blockquote>
 <h2 id="impl-behaviour-detached-from-data"><a class="header" href="#impl-behaviour-detached-from-data"><code>impl</code>: behaviour, detached from data</a></h2>
 <p>Here is the deepest break from Java and Swift: <strong>data and behaviour are declared separately.</strong> The struct definition lists fields and nothing else; methods live in an <code>impl</code> block.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -1863,9 +1830,6 @@ impl Rect {
 <p>So <code>area(&amp;self)</code> borrows shared, <code>scale(&amp;mut self)</code> borrows exclusively (and therefore requires the caller’s binding be <code>mut</code> and not otherwise borrowed), and <code>into_pair(self)</code> <em>consumes</em> the <code>Rect</code>: after <code>r.into_pair()</code>, <code>r</code> is moved and gone. By-value <code>self</code> is rare and deliberate — it is for transformations where the old value should not survive (note the <code>into_</code> naming convention signalling consumption). All the borrow-checker rules carry over unchanged: you cannot call <code>&amp;mut self</code> while a shared borrow of the instance is live, because that would violate aliasing-XOR-mutation (at most one mutable borrow, or any number of shared ones, never both).</p>
 <blockquote>
 <p><strong>🔧 In practice →</strong> the receiver choice is a real API-design decision you make constantly. A method that <em>reports</em> something takes <code>&amp;self</code> (<code>config.is_valid()</code>, <code>cart.total()</code>) so callers keep using the value. A method that <em>updates in place</em> takes <code>&amp;mut self</code> (<code>cart.add_item(x)</code>, <code>buffer.clear()</code>). And <code>self</code> by value is how you build deliberate “this object is now consumed” conversions: a <code>Request</code> that you finalise into a <code>PreparedRequest</code>, or a file handle’s <code>into_raw_fd()</code> that hands off ownership so you can’t accidentally use the old wrapper afterwards. Picking <code>self</code> over <code>&amp;mut self</code> is you telling every caller “after this call, the old value is gone” — and the compiler enforces it for free.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From <em>Concurrent and Distributed Systems</em>, as intuition only: <code>&amp;mut self</code> is the compile-time analogue of grabbing an exclusive lock on the instance for the duration of the call — but there is no actual lock and no runtime cost, because the type system checks the “no other access while I’m writing” rule <em>before the program ever runs</em>. <code>&amp;self</code> is the shared-read case (many readers, no writer). This is exactly the discipline that makes data races impossible, which is why <a href="#13-fearless-concurrency">fearless concurrency</a> works.</p>
 </blockquote>
 <h3 id="autoref--autoderef-at-the-call-site"><a class="header" href="#autoref--autoderef-at-the-call-site">Autoref / autoderef at the call site</a></h3>
 <p>You never write <code>(&amp;r).area()</code> or <code>(&amp;mut r).scale(2)</code>. Rust’s <strong>automatic referencing and dereferencing</strong> inserts the needed <code>&amp;</code>, <code>&amp;mut</code>, or <code>*</code> to make the receiver match the method signature:</p>
@@ -2048,9 +2012,6 @@ match first_word("  hello world") {
 <blockquote>
 <p><strong>🔧 In practice →</strong> You add a new payment method to an e-commerce backend — a <code>PaymentMethod::ApplePay</code> variant alongside <code>Card</code> and <code>BankTransfer</code>. Without exhaustive <code>match</code>, you’d grep for every place that handles payment methods and hope you found them all. With it, you just add the variant and recompile: every <code>match</code> that hasn’t been taught about <code>ApplePay</code> lights up red — the refund calculator, the receipt formatter, the fraud check. The compiler hands you a to-do list of exactly the sites that need updating, and you can’t ship until they’re all handled.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Foundations of CS link →</strong> This is the same machinery as OCaml’s “this pattern-matching is not exhaustive” warning you met in Foundations, promoted from a warning to a hard error. The intuition is simple: the compiler checks that your arms, taken together, cover every possible value of the type, with no value left unhandled. Because there is no value that falls through the bottom, a <code>match</code> always produces a result — which is what lets it safely be an expression.</p>
-</blockquote>
 <h3 id="binding-catch-alls-and-_"><a class="header" href="#binding-catch-alls-and-_">Binding, catch-alls, and <code>_</code></a></h3>
 <p>Arms can bind parts of the scrutinee to names (that is how <code>r</code>, <code>w</code>, and <code>h</code> above came into scope). To make a <code>match</code> exhaustive without enumerating everything, end with a catch-all:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -2175,9 +2136,6 @@ match x {
 help: you might want to use `let else` to handle the variant that isn't matched
 </code></pre>
 <p>The <code>let</code> form must always succeed because there is nowhere to put the failure. The compiler even points you at the fix: <code>let ... else</code>.</p>
-<blockquote>
-<p><strong>🎓 Plain-language insight →</strong> Refutability is just exhaustiveness seen from the other side. An irrefutable pattern is one that covers the <em>whole</em> type on its own — it can never fail to match, so it needs no second arm. <code>let PATTERN = EXPR;</code> is allowed only when <code>PATTERN</code> is irrefutable, because a plain <code>let</code> has nowhere to send a value that didn’t match. The moment a pattern <em>could</em> fail, the compiler insists you use a form that has a “didn’t match” branch (<code>if let</code>, <code>while let</code>, <code>let ... else</code>).</p>
-</blockquote>
 <h2 id="the-conditional-family-if-let-let--else-while-let-matches"><a class="header" href="#the-conditional-family-if-let-let--else-while-let-matches">The conditional family: <code>if let</code>, <code>let ... else</code>, <code>while let</code>, <code>matches!</code></a></h2>
 <p>When you care about <em>one</em> pattern and want to ignore the rest, a full <code>match</code> with a <code>_ =&gt; {}</code> arm is noise. The conditional forms are sugar over that pattern.</p>
 <p><strong><code>if let</code></strong> runs a block only when one refutable pattern matches, optionally with <code>else</code>. This is the direct counterpart of Swift’s <code>if let</code>:</p>
@@ -2321,9 +2279,6 @@ match code {
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> Monomorphisation happens after type-checking, during MIR-to-LLVM lowering. rustc collects the set of “mono items” reachable from <code>main</code> (or from <code>pub</code> API for libraries) and emits one LLVM function per distinct <code>(fn, type-args)</code> pair. Identical instantiations across crates are deduplicated at link time. This is also why generic functions usually must live in a crate’s source (or be marked <code>#[inline]</code>) to be usable downstream — there is nothing to call until a concrete type pins the template down.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Compiler Construction.</em> There are two ways a compiler can implement polymorphism. One is a <strong>uniform representation</strong>: everything is a pointer, one copy of the code, the actual type figured out at runtime (this is how Java and OCaml work). The other is <strong>specialisation/monomorphisation</strong>: one copy of the machine code per concrete type, with the type baked in at compile time. Rust commits to specialisation for generics, which is why a generic <code>Vec&lt;T&gt;</code> can store <code>T</code> <em>unboxed and inline</em> in a flat buffer — impossible under erasure, where every element would have to be a boxed pointer.</p>
 </blockquote>
 <p>Generics are not limited to functions. Structs, enums, and <code>impl</code> blocks all take type parameters:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -2500,9 +2455,6 @@ impl&lt;T&gt; Container for Vec&lt;T&gt; {
 <blockquote>
 <p><strong>🦀 From your toolbox →</strong> Decide by counting implementations. <strong>Generic parameter</strong> = the trait can be implemented <em>many times</em> for one type with different parameters (e.g. <code>Add&lt;i32&gt;</code> <em>and</em> <code>Add&lt;Duration&gt;</code> for one type — see below). <strong>Associated type</strong> = at most <em>one</em> implementation makes sense per type, and the type is a <em>consequence</em> of the impl, not a choice (the element type of an iterator, the output of indexing). Swift draws the same line: a protocol with an <code>associatedtype Element</code> (one per conformer, like <code>Sequence.Element</code>) versus a generic constraint the caller supplies. If you’ve used Swift’s <code>associatedtype</code>, this is the same mechanism.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Foundations of CS / type inference.</em> You can think of an associated type as a small <em>function on types</em>: given the iterator type, it hands back the element type, and there is exactly one answer. Because the answer is determined (one output per input), the compiler’s type inference can simply look it up and keep going. A generic parameter is the opposite — it’s an <em>unknown the compiler has to solve for</em> — which is why allowing two <code>Iterator&lt;u8&gt;</code> / <code>Iterator&lt;String&gt;</code> impls on one type would leave <code>Item</code> ambiguous and force you to annotate it everywhere.</p>
-</blockquote>
 <h2 id="operator-overloading-is-just-trait-implementation"><a class="header" href="#operator-overloading-is-just-trait-implementation">Operator overloading is just trait implementation</a></h2>
 <p>Rust has no special operator-overloading syntax. <code>+</code> <em>is</em> a call to <code>std::ops::Add::add</code>; <code>[]</code> is <code>Index::index</code>; <code>*</code> (deref) is <code>Deref::deref</code>. Overload an operator by implementing the corresponding trait — and notice it uses an associated type for its <code>Output</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -2539,9 +2491,6 @@ impl Add for V2 {
 </code></pre>
 <blockquote>
 <p><strong>⚠️ Pitfall →</strong> This bites everyone eventually: “I want to add a method to <code>Vec</code>” or “I want <code>serde::Serialize</code> for <code>chrono::DateTime</code>” and both are foreign. The idiomatic fix is the <strong>newtype pattern</strong>: wrap the foreign type in a local one-field tuple struct, <code>struct Wrapper(Vec&lt;i32&gt;)</code>, and implement the trait on <code>Wrapper</code>. The wrapper is local, so the orphan rule is satisfied, and it compiles to nothing (single-field structs are layout-transparent). The <code>#[derive(...)]</code> or a <code>Deref</code> impl restores ergonomic access to the inner value.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Databases.</em> The win from coherence is the same one you get from a <em>uniqueness constraint</em> on a key: because there is provably at most one <code>impl</code> per (trait, type) pair, looking up “which <code>Add</code> for <code>V2</code>?” is an unambiguous lookup with exactly one row, decided entirely at compile time. Java sidesteps the question a cruder way — it ties an implementation to the class definition, so you simply <em>can’t</em> retro-fit an interface onto a type you don’t own. That keeps things unambiguous too, but it is strictly less expressive than Rust’s “implement it elsewhere, but only once” rule.</p>
 </blockquote>
 <h2 id="conditional-and-blanket-impls"><a class="header" href="#conditional-and-blanket-impls">Conditional and blanket impls</a></h2>
 <p>Trait bounds on <code>impl</code> blocks let you add methods <em>conditionally</em>, depending on what the inner type can do:</p>
@@ -2614,9 +2563,6 @@ struct Money { cents: i64, currency: Currency }
 <span class="boring">}</span></code></pre>
 <p>Now <code>map.insert(price, qty)</code> works (<code>Hash + Eq</code>), <code>assert_eq!(a, b)</code> prints a readable diff (<code>Debug + PartialEq</code>), and <code>prices.sort()</code> orders them (<code>Ord</code>). The moment your equality needs custom logic — say two <code>Money</code> values are equal only after normalising currency — you drop <code>PartialEq</code> from the derive list and hand-write that one impl, keeping the rest derived.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Foundations of CS.</em> In OCaml you got structural equality (<code>=</code>) and polymorphic comparison built into the language for free, applied to any value whether or not it made sense. Rust refuses implicit structural operations — but <code>derive</code> recovers the convenience <em>opt-in and explicitly</em>, per trait, so you always know (and the compiler always knows) precisely which capabilities a type has. No surprise comparison on a record that happens to contain a function.</p>
-</blockquote>
 <h2 id="marker-traits-capabilities-with-no-methods"><a class="header" href="#marker-traits-capabilities-with-no-methods">Marker traits: capabilities with no methods</a></h2>
 <p>Some traits have <em>zero</em> methods; they exist purely to tag a type with a compile-time property the compiler reasons about. You have already met <code>Copy</code>. The two that matter most arrive in <a href="#13-fearless-concurrency">fearless concurrency</a>:</p>
 <ul>
@@ -2624,9 +2570,6 @@ struct Money { cents: i64, currency: Currency }
 <li><strong><code>Sync</code></strong> — <code>&amp;T</code> may be <em>shared</em> across threads (equivalently, <code>&amp;T: Send</code>).</li>
 </ul>
 <p>These are <strong>auto traits</strong>: the compiler <em>derives them automatically and structurally</em> — a struct is <code>Send</code> iff all its fields are <code>Send</code>. You rarely write them by hand. Their entire purpose is to let the type system prove data-race freedom statically: a bound like <code>T: Send</code> on <code>thread::spawn</code> is what <em>makes</em> concurrency fearless, by rejecting at compile time any attempt to ship a non-thread-safe value (like <code>Rc&lt;T&gt;</code>) across a thread boundary.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems.</em> The whole problem you study there — data races, where two threads touch the same memory and at least one writes — Rust pushes into the type system. <code>Send</code> and <code>Sync</code> are the tags that say “this value is safe to move to / share with another thread”. A function like <code>thread::spawn</code> requires its closure to be <code>Send</code>, so the compiler simply refuses to compile code that would hand a thread-unsafe value (like <code>Rc&lt;T&gt;</code>) to another thread. The races you’d otherwise have to find with careful reasoning are rejected before the program runs.</p>
-</blockquote>
 <h2 id="mental-model-recap-8"><a class="header" href="#mental-model-recap-8">Mental-model recap</a></h2>
 <ul>
 <li><strong>Generics monomorphise.</strong> rustc stamps a specialised copy per concrete type — like a C++ template, <em>not</em> like Java erasure. Zero runtime cost, paid in code size; types survive to runtime so <code>Vec&lt;T&gt;</code> stores <code>T</code> unboxed.</li>
@@ -2696,9 +2639,6 @@ impl&lt;T: Debug&gt;   Loud for T { /* uppercased Debug   */ }
 </blockquote>
 <blockquote>
 <p><strong>🦀 From your toolbox →</strong> In Java, every object header carries a hidden class pointer used both for dynamic dispatch and for <code>instanceof</code> — the type info travels <em>inside</em> the object. Swift does much the same for classes, and a class with overridable methods has a per-instance vtable pointer. Rust flips this: the object stays thin and the vtable rides alongside the <em>reference</em>. A Java reference is one word and self-describing (it can always find its own class); a Rust <code>&amp;dyn Draw</code> is two words, but a plain <code>&amp;Button</code> carries no type info at all — it’s just an address. (If you’ve seen C++, the closest light touch is that a class with a virtual method grows a hidden pointer inside every object; Rust never does that.) Rust also has no object header and no built-in <code>instanceof</code>; <code>dyn Any</code> (<a href="#17-advanced-traits--types">Chapter 17</a>) bolts on downcasting explicitly. The analogy breaks hardest here: <strong>Rust separates “the value” from “the trait view of the value,”</strong> which is why the same <code>Button</code> can sit behind a <code>&amp;dyn Draw</code> and a <code>&amp;dyn Debug</code> at once with no extra storage in the <code>Button</code>.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the dispatch-table mechanism from Compiler Construction with one choice flipped: in a typical class-layout pass the vtable pointer is emitted as a <em>field of the object</em>. Rust passes the table <em>alongside</em> the value instead of embedding it. Concretely: when you write <code>&amp;button as &amp;dyn Draw</code>, the compiler bundles the address of the button with a pointer to a small static table of that type’s <code>Draw</code> method addresses, and method calls jump through that table. Same dispatch idea, different place to keep the table.</p>
 </blockquote>
 <h2 id="static-vs-dynamic-dispatch-the-explicit-tradeoff"><a class="header" href="#static-vs-dynamic-dispatch-the-explicit-tradeoff">Static vs dynamic dispatch: the explicit tradeoff</a></h2>
 <p>You now have two ways to write “operate on anything that implements <code>Draw</code>”:</p>
@@ -2793,9 +2733,6 @@ c.repaint();
 }
 <span class="boring">}</span></code></pre>
 <p><code>where Self: Sized</code> tells the compiler “this method does not exist for the unsized <code>dyn Widget</code>,” so it does not block vtable construction; you can still call it on a concrete <code>Button</code>. Note <code>clone_box</code> returns a <em>boxed trait object</em>, not <code>Self</code> — the idiomatic way to “clone a trait object” precisely because returning <code>Self</code> is forbidden.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Think of this as a plain representability constraint (the intuition behind type-checking in Semantics of Programming Languages, stated without the formalism). A vtable is a finite list of function addresses, and each entry has to be <em>one</em> address that works over a thin <code>self</code>. A generic method would need a different address for every type you might instantiate it with — infinitely many, so there’s no single slot to put. A method returning <code>Self</code> by value would need the caller to set aside room for a result whose size it can’t know once the concrete type is erased. Both have no uniform representation, so the compiler refuses to build the table at all rather than letting you make a call the machine couldn’t carry out. The guarantee you get back: a <code>&amp;dyn Trait</code> <em>always</em> has a valid vtable entry for every method it exposes.</p>
-</blockquote>
 <h2 id="is-rust-object-oriented"><a class="header" href="#is-rust-object-oriented">Is Rust object-oriented?</a></h2>
 <p>Score it against the usual triad:</p>
 <ul>
@@ -2939,9 +2876,6 @@ impl Open {
 }
 <span class="boring">}</span></code></pre>
 <p>Once you call <code>close</code>, the <code>Open</code> value is <em>moved away</em> and gone — <code>send</code> on it won’t even compile, so “write after close” is impossible to express. Builder APIs use the same trick to enforce “you must set the URL before calling <code>.build()</code>”. This is the high-value reason to reach for typestate: turning a class of runtime misuse into a compile error, with zero runtime cost.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Foundations of Computer Science (the OCaml course) gives the intuition: there, the only way to obtain a value of a given type is to build it with one of that type’s constructors. Here it’s the same discipline, enforced by privacy. The only route to a <code>Post</code> (the published one) is the chain <code>DraftPost → PendingReviewPost → Post</code>, because the constructors are private and the transition methods are the only doors between the types. Holding a <code>PendingReviewPost</code> is itself evidence that a review was requested — you couldn’t have got one any other way. So the reachable states of the FSM become exactly the types you can construct, and the legal transitions become the functions between them; an illegal transition is simply a call that doesn’t typecheck. The same idea generalises to a <code>PhantomData&lt;State&gt;</code> marker when you want one struct parameterised by a state type rather than three distinct structs.</p>
 </blockquote>
 <p>The lesson is not “never use trait objects.” It is: <strong>when the legal transitions are known at compile time and you want misuse to be a compile error, prefer typestate; reach for <code>dyn</code> when the set of types is open or genuinely runtime-chosen.</strong> The trait-object state pattern earns its keep when downstream code must add new states the library cannot foresee — the same extensibility argument as <code>Canvas</code>.</p>
 <h2 id="the-decision-guide-impl-trait-vs-dyn-trait-vs-generic-bound"><a class="header" href="#the-decision-guide-impl-trait-vs-dyn-trait-vs-generic-bound">The decision guide: <code>impl Trait</code> vs <code>dyn Trait</code> vs generic bound</a></h2>
@@ -3203,9 +3137,6 @@ for entry in log_lines {
 <span class="boring">}</span></code></pre>
 <p>Reach for <code>entry</code> whenever the shape is “look it up; if it’s there update it, if not seed a default” — counters, multimaps, memoisation caches, dedup-with-tally. The naive <code>if map.contains_key(k) { ... } else { ... }</code> does two lookups and fights the borrow checker; <code>entry</code> does one of each.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Concurrent and Distributed Systems.</em> The reason <code>entry</code> “plays nicely with the borrow checker” is the same reason you prefer a single atomic update over a separate read-then-write: it collapses two steps into one. <code>get</code>-then-<code>insert</code> reads the map, then comes back later to write it — two separate touches the borrow checker has to reconcile across a gap, just as a lock-read-then-lock-write leaves a window where another thread could interleave. <code>entry</code> holds one mutable handle for the whole read-modify-write, which is both easier to prove sound and a single hash probe instead of two.</p>
-</blockquote>
 <h3 id="eq-hash-and-the-hashing-function"><a class="header" href="#eq-hash-and-the-hashing-function"><code>Eq</code>, <code>Hash</code>, and the hashing function</a></h3>
 <p>A type may be a <code>HashMap</code> key only if it implements both <code>Hash</code> and <code>Eq</code> (<a href="#8-generics--traits">traits</a>), and the two must agree: <code>a == b</code> must imply <code>hash(a) == hash(b)</code>. For your own structs, <code>#[derive(Hash, Eq, PartialEq)]</code> gives the field-wise implementations, which is almost always what you want. Floating-point types are <em>not</em> <code>Eq</code> (because of <code>NaN</code>), so <code>f64</code> cannot be a key without a wrapper.</p>
 <p>By default <code>HashMap</code> uses <strong>SipHash 1-3</strong>, a keyed hash seeded with per-process randomness. This is a deliberate choice: it is not the fastest hash, but it resists <em>hash-flooding</em> DoS attacks, where an adversary who can predict your hash function feeds you keys that all collide into one bucket, degrading the table to O(n) per operation. The randomised seed is also why iteration order varies between runs. If you have profiled and the hash is your bottleneck — and your keys are not attacker-controlled — you can swap the hasher by parameterising the map (<code>HashMap&lt;K, V, S&gt;</code> where <code>S: BuildHasher</code>); crates like <code>fxhash</code> or <code>ahash</code> provide faster, non-DoS-resistant hashers as drop-in replacements.</p>
@@ -3328,9 +3259,6 @@ panic = "abort"
 </code></pre>
 <p><code>abort</code> produces smaller binaries and is mandatory in some contexts (e.g. a panic crossing an <code>extern "C"</code> boundary is UB unless aborting — see <a href="#16-unsafe-rust-ffi--the-memory-model">unsafe and FFI</a>). With unwinding, a panic in a spawned thread kills only that thread; the parent observes it via the <code>JoinHandle</code> (<a href="#13-fearless-concurrency">fearless concurrency</a>).</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Unwinding-and-running-destructors is the same scope-exit cleanup story you meet in <em>Operating Systems</em> when you reason about who frees a resource and when. The intent here is narrow, though: Rust unwinding is a best-effort cleanup on the way to thread death, <em>not</em> a recover-and-continue mechanism. <code>std::panic::catch_unwind</code> exists, but it is for FFI boundaries and thread-pool isolation, not for <code>try</code>/<code>catch</code>-style logic — do not reach for it the way you would reach for a <code>catch</code> block in Java or Swift.</p>
-</blockquote>
 <p><code>unwrap</code> and <code>expect</code> (below) are the most common ways <code>panic!</code> shows up in real code. The rule for when a panic is <em>correct</em> is the subject of the final section.</p>
 <h2 id="track-two-resultt-e-for-recoverable-failure"><a class="header" href="#track-two-resultt-e-for-recoverable-failure">Track two: <code>Result&lt;T, E&gt;</code> for recoverable failure</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -3416,9 +3344,6 @@ fn read_to_string(path: &amp;str) -&gt; Result&lt;String, std::io::Error&gt; {
 }
 <span class="boring">}</span></code></pre>
 <p>Without <code>?</code> this is a staircase of <code>match</code>es that buries the one line that actually does work. With it, the error path is invisible until it fires — which is exactly when you want to think about it.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Think of <code>?</code> as the early-return rewrite you would do by hand, made into syntax: the compiler expands <code>v?</code> into either “the value inside <code>v</code>” or “return the error now.” That is the same kind of mechanical source-to-source transformation a compiler performs in <em>Compiler Construction</em> when it lowers a high-level construct into simpler control flow. Rust gives this one pattern — short-circuit on failure — its own operator because it is so pervasive.</p>
 </blockquote>
 <h3 id="-is-not-just-early-return--it-calls-fromfrom"><a class="header" href="#-is-not-just-early-return--it-calls-fromfrom"><code>?</code> is not <em>just</em> early-return — it calls <code>From::from</code></a></h3>
 <p>The one detail that makes <code>?</code> compose across error types: on the <code>Err</code> path, the error is passed through <code>From::from</code> before being returned. So <code>e1?</code> actually desugars (roughly) to:</p>
@@ -3554,9 +3479,6 @@ impl std::error::Error for ConfigError {
 }
 <span class="boring">}</span></code></pre>
 <p>Each <code>?</code> quietly converts a different upstream error into your one declared type. Callers match on <code>ConfigError</code> and never see the plumbing. (For the <code>parse()?</code> line to compile you would add <code>impl From&lt;std::num::ParseIntError&gt; for ConfigError</code> mapping it into a suitable variant.)</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the same algebraic-data-type-plus-pattern-matching style you met in <em>Foundations of Computer Science</em> with OCaml variants: an error is a value of a sum type, and handling it is an exhaustive <code>match</code>. The compiler’s exhaustiveness check on <code>match self</code> in your <code>Display</code> impl is the same coverage guarantee that flags a forgotten case — add a fourth variant and forget to handle it, and you get a compile error, not a silent fall-through.</p>
 </blockquote>
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>Box&lt;dyn Error&gt;</code> is a fat pointer — data pointer plus vtable pointer — exactly the trait-object layout from <a href="#9-trait-objects-dynamic-dispatch--oop">trait objects and OOP</a>. It heap-allocates and dynamically dispatches <code>Display</code>/<code>Debug</code>/<code>source</code>. A concrete enum like <code>ConfigError</code> is stack-sized (the largest variant plus a tag), monomorphised, statically dispatched, and exhaustively matchable by callers. The trade-off: <code>Box&lt;dyn Error&gt;</code> is maximally flexible and ergonomic but erases the type, so callers cannot match on <em>which</em> error; a concrete enum is recoverable-by-variant but couples callers to your error taxonomy. Libraries lean concrete; applications lean boxed.</p>
@@ -4006,9 +3928,6 @@ fn sum_iter(v: &amp;[i32]) -&gt; i32 {
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> The <code>Map</code>/<code>Filter</code> structs are stack values holding the inner iterator and a closure (itself a zero-field struct if it captures nothing). After monomorphisation the call graph <code>Sum::sum → Filter::next → Map::next → Iter::next</code> is fully concrete; inlining flattens it. The standard-library benchmark — searching the full text of <em>Sherlock Holmes</em> for a word — shows the <code>for</code>-loop and iterator versions within noise of each other (~19.2M vs ~19.6M ns/iter). What you don’t use you don’t pay for; what you do use you couldn’t hand-code better. The iterator form often gets <em>better</em> codegen than a manual index loop because <code>v.iter()</code> carries the no-out-of-bounds invariant in the type, letting the optimiser drop bounds checks the index version may keep.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Course link →</strong> This is the classic <em>Compiler Construction</em> tradeoff between monomorphisation (the compiler stamps out a separate specialised copy of the code per concrete type) and dynamic dispatch (one shared copy that looks up the right code through a vtable at runtime, like Java’s erased generics). For iterator chains Rust always picks monomorphisation. The cost is binary size — one specialised loop per distinct chain type — and the payoff is that the high-level pipeline and the low-level hand loop compile to the same machine code after inlining and bounds-check elimination. The abstraction genuinely vanishes once you turn the optimiser on.</p>
-</blockquote>
 <h2 id="idiom-pipelines-replace-index-loops"><a class="header" href="#idiom-pipelines-replace-index-loops">Idiom: pipelines replace index loops</a></h2>
 <p>Given the zero-cost guarantee, the community idiom is unambiguous: prefer the iterator pipeline over a <code>for</code>-with-index loop. It is no slower, it eliminates the off-by-one and out-of-bounds failure modes that index arithmetic invites, and it reads as a declarative description of the transformation. Reach for an explicit <code>for</code> loop only when the body has complex control flow (early <code>return</code>, <code>break</code> with a value, <code>continue</code> across multiple conditions) that does not map cleanly onto adapters.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -4070,9 +3989,6 @@ let out: Vec&lt;_&gt; = items.iter()
 <li>and aliasing-XOR-mutability says you cannot have both at once.</li>
 </ul>
 <p>The single-threaded rule that prevents iterator invalidation and use-after-free is <em>structurally the same</em> rule that prevents data races. The only missing piece is teaching the type system <em>which</em> types may cross a thread boundary at all, and which references may be shared across one. That is exactly what <code>Send</code> and <code>Sync</code> encode, and we get to them at the end.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> In Concurrent &amp; Distributed Systems a data race is undefined behaviour at the memory-model level, and the standard mitigations (locks, message passing) are <em>disciplines</em> the programmer must apply correctly and can always forget. Rust’s twist is to move that discipline from your head into the type checker: instead of you remembering to lock, the compiler refuses to compile any program that could race. The aliasing-XOR-mutability rule is the single idea doing all the work, and data-race freedom falls out of it as a consequence.</p>
-</blockquote>
 <h2 id="threads-spawn-joinhandle-and-why-static"><a class="header" href="#threads-spawn-joinhandle-and-why-static">Threads: <code>spawn</code>, <code>JoinHandle</code>, and why <code>'static</code></a></h2>
 <p>Rust’s standard library uses a 1:1 threading model — one OS thread per <code>std::thread</code>, the same processes-and-threads picture from Computer Architecture &amp; Operating Systems. You create one by handing <code>thread::spawn</code> a closure:</p>
 <pre class="playground"><code class="language-rust">use std::thread;
@@ -4217,9 +4133,6 @@ tx.send(job).unwrap();   // ownership of the job leaves; handler returns immedia
 <span class="boring">}</span></code></pre>
 <p>Because <code>send</code> <em>moves</em> the job, there is zero shared mutable state between handler and worker, so no lock and no possibility of the handler accidentally mutating a job the worker is already processing. This is the pattern behind work queues, log/metrics pipelines, and actor-style event loops.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the CSP channel from Concurrent &amp; Distributed Systems made concrete: a <code>Sender</code>/<code>Receiver</code> pair is exactly a typed channel, <code>send</code> is the output <code>c!v</code> and <code>recv</code> is the input <code>c?x</code>. The <code>mpsc</code> restriction — many writers, one reader — matches the actor model, where many threads can post to an actor’s mailbox but only the actor reads it. Because the message is <em>moved</em> rather than copied or shared, there is no aliasing between sender and receiver after the handover, which is precisely the no-shared-state property actors rely on to stay race-free.</p>
-</blockquote>
 <h2 id="shared-state-mutext-owns-its-data"><a class="header" href="#shared-state-mutext-owns-its-data">Shared state: <code>Mutex&lt;T&gt;</code> owns its data</a></h2>
 <p>Message passing models single ownership flowing through pipes. Sometimes you genuinely want <strong>multiple threads touching one piece of state</strong> — a shared counter, a cache. That is multiple ownership plus mutation, and it is where the lock-versus-data separation in C and Java does its damage.</p>
 <p>Rust’s answer is <code>Mutex&lt;T&gt;</code>, and the design decision that makes it different is in the type itself: <strong>the mutex <em>contains</em> the data.</strong> You do not have a <code>Mutex</code> over here and an <code>i32</code> over there bound by a comment. You have a <code>Mutex&lt;i32&gt;</code>, and the only way to reach the <code>i32</code> is through the lock.</p>
@@ -4332,9 +4245,6 @@ fn main() {
 </ul>
 <p>This is how the data-race-freedom guarantee is actually carried. <code>spawn</code>’s <code>F: Send</code> bound says “the captured state must be safe to move to another thread,” and the compiler checks it the obvious way: <code>F</code> is <code>Send</code> because each of its fields is, all the way down to primitives which are <code>Send</code> by definition. When you wrote <code>Rc&lt;Mutex&lt;i32&gt;&gt;</code>, that check <em>failed</em> at the <code>Rc</code> field: <code>Rc</code> is not <code>Send</code>, so the closure capturing it is not <code>Send</code>, so the program does not compile. The error is concrete — the compiler points at the exact field that breaks the chain.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> The promise here is the same kind of “well-typed programs don’t do the bad thing” property you meet informally in Semantics of Programming Languages: a program written entirely in safe Rust cannot have a data race, and <code>Send</code>/<code>Sync</code> are the type-level conditions that make that hold. They are auto-derived, so you almost never write them yourself — the compiler infers them from a type’s fields, the same way type inference (Foundations of CS) spares you from spelling out most types. Implementing them by hand requires <code>unsafe</code> (see <a href="#16-unsafe-rust-ffi--the-memory-model">chapter 16</a>): that is you stepping outside the part of the language the compiler can check, and personally promising the safety the compiler can no longer verify for you.</p>
-</blockquote>
-<blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>Send</code>/<code>Sync</code> are zero-cost: marker traits compile to nothing, carry no data, and have no vtable. They exist only during type-checking. After monomorphisation (Compiler Construction) they vanish entirely — there is no runtime representation of “this <code>Vec</code> is <code>Send</code>.” The guarantee is paid for once, at compile time, and the generated machine code is identical to what an equivalent correct C program would emit.</p>
 </blockquote>
 <h2 id="beyond-the-standard-library-scoped-threads-and-rayon"><a class="header" href="#beyond-the-standard-library-scoped-threads-and-rayon">Beyond the standard library: scoped threads and rayon</a></h2>
@@ -4381,9 +4291,6 @@ fn main() {
 <h1 id="14-asynchronous-rust"><a class="header" href="#14-asynchronous-rust">14. Asynchronous Rust</a></h1>
 <p>In <a href="#13-fearless-concurrency">Fearless Concurrency</a> you got <em>preemptive</em> concurrency: <code>std::thread::spawn</code> hands the OS a stack and a closure, and the kernel scheduler decides — at arbitrary instruction boundaries, driven by a timer interrupt — when to suspend one thread and resume another. Correct and, in Rust, statically race-free, but with a fixed cost: each thread carries its own kernel stack (megabytes of reserved virtual address space plus a kernel control block), and every switch crosses into the kernel and trashes the cache working set (CompArch/OS: TLB, cache). Spawn ten thousand of them to hold ten thousand mostly-idle sockets and you pay for ten thousand stacks to do almost nothing.</p>
 <p>Async is the <em>cooperative</em> alternative. One OS thread, or a small pool, runs an in-process scheduler multiplexing thousands of logical tasks. A task yields only at points <em>you</em> marked, and the whole machine is built so the compiler still proves memory- and data-race-safety statically. This is the tool for <strong>I/O-bound, high-connection-count</strong> work — the multithreaded web server in the <a href="#21-capstones-a-cli-tool--a-multithreaded-web-server">capstones</a> chapter, or any network service holding thousands of slow, mostly-waiting TCP connections (Computer Networking). It is <em>not</em> a speedup for CPU-bound work; for that, use threads, or both together.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the cooperative-vs-preemptive scheduling distinction from Concurrent and Distributed Systems, lifted into a language feature. OS threads are preemptively scheduled by the kernel; async tasks are cooperatively scheduled by a user-space runtime. Cooperative scheduling has lower switching cost (no syscall, no kernel stack) but demands that tasks <em>voluntarily</em> yield — a task that never yields starves all others sharing its thread, exactly the failure mode of cooperative kernels of the 1990s.</p>
-</blockquote>
 <h2 id="the-core-mechanism-asyncawait-compiles-to-a-state-machine"><a class="header" href="#the-core-mechanism-asyncawait-compiles-to-a-state-machine">The core mechanism: <code>async</code>/<code>.await</code> compiles to a state machine</a></h2>
 <p>The single most important fact in this chapter, and what makes Rust’s async model different from almost every other language’s: an <code>async fn</code> or <code>async</code> block does not <em>run</em> anything. It compiles to an anonymous struct — a <strong>state machine</strong> — implementing the <code>Future</code> trait. Calling the function just <em>constructs</em> that struct. Nothing executes until something polls it.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -4419,9 +4326,6 @@ enum FetchLen&lt;'a&gt; {
 }
 <span class="boring">}</span></code></pre>
 <p>Each <code>.await</code> is a possible suspension point. The compiler chops the linear body into segments delimited by <code>.await</code>, figures out exactly which local variables are still needed when execution is paused at each suspension point, and stores precisely those in the corresponding variant. The variant you are currently “in” <em>is</em> the saved progress: it records where you stopped and everything you need to pick up from there.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> From Compiler Construction: this body-chopping is a code transformation rustc applies, and deciding which locals each variant must store is the same “which variables are still live at this point?” dataflow analysis you saw used for register allocation — here run over <code>.await</code> boundaries instead of basic blocks. The payoff is that rustc lays out a <em>flat enum</em> whose largest variant bounds the whole future’s size, so there is no separate allocation per suspension point.</p>
-</blockquote>
 <h3 id="the-future-trait"><a class="header" href="#the-future-trait">The <code>Future</code> trait</a></h3>
 <p>A future is anything implementing this:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -4560,9 +4464,6 @@ async fn race() {
 <li>A <strong>thread</strong> is an OS-scheduled execution resource; the runtime runs a pool and multiplexes many tasks onto few threads.</li>
 </ul>
 <p>This is an <strong>M:N model</strong>: M tasks scheduled onto N OS threads (N ≈ core count). Work-stealing lets an idle worker steal tasks from a busy worker’s queue, balancing load transparently. A task can migrate between threads at <code>.await</code> points — precisely why spawned futures must be <code>Send</code>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Multiplexing many lightweight tasks onto a few OS threads (the M:N model) is the user-level / green-threads scheduling design from Concurrent and Distributed Systems. The classic green-thread pitfall — one blocking syscall stalls the whole scheduler thread — is dodged because async futures <em>never</em> make a blocking syscall at an <code>.await</code>; they register a waker and yield. For genuinely blocking work, <code>spawn_blocking</code> moves it to a dedicated thread pool so it can’t stall the cooperative scheduler.</p>
-</blockquote>
 <h2 id="the-starvation-trap-only-await-yields"><a class="header" href="#the-starvation-trap-only-await-yields">The starvation trap: only <code>.await</code> yields</a></h2>
 <p>Cooperative scheduling has a sharp edge. <strong>A task yields control <em>only</em> at an <code>.await</code> point.</strong> Everything between <code>.await</code>s runs to completion with no preemption. So a future doing a long CPU-bound stretch — or worse, calling a <em>blocking</em> synchronous API like <code>std::thread::sleep</code> or a synchronous file read — without awaiting will <strong>starve</strong> every other task sharing its thread. The runtime cannot preempt it; there is no timer interrupt in user space.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -4833,9 +4734,6 @@ let t = Tree::Branch(
 <blockquote>
 <p><strong>🔧 In practice →</strong> You hit this the first time you model a real recursive shape — a JSON value, an expression tree for a small interpreter, a linked list. Say you’re writing a tiny calculator and parse <code>2 * (3 + 4)</code> into an AST: <code>enum Expr { Num(f64), Add(Box&lt;Expr&gt;, Box&lt;Expr&gt;), Mul(Box&lt;Expr&gt;, Box&lt;Expr&gt;) }</code>. The <code>Box</code> on each operand is what lets <code>Mul</code> hold an <code>Add</code> hold two <code>Num</code>s without the type being infinitely large, and <code>Box::new</code> is where each subtree gets its own heap slot. Drop the root and the whole tree frees itself bottom-up.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Foundations of Computer Science: the OCaml <code>type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree</code> you wrote there is your <code>Box</code>ed enum — OCaml’s runtime just does the boxing silently. Compiler Construction: the inability to size a recursive non-indirected type is exactly why every real compiler stores recursive ADTs as pointers in its intermediate representation. Rust makes that indirection a visible, named choice in the source instead of a runtime default.</p>
-</blockquote>
 <h2 id="deref-and-deref-coercion-making-a-wrapper-transparent"><a class="header" href="#deref-and-deref-coercion-making-a-wrapper-transparent"><code>Deref</code> and deref coercion: making a wrapper transparent</a></h2>
 <p>What makes <code>Box&lt;T&gt;</code> feel like a <code>T</code> rather than an opaque struct? The <code>Deref</code> trait. Implementing it lets you customise the unary <code>*</code> operator.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -4910,9 +4808,6 @@ fn main() {
 drop(c);                      // closes now
 // c is moved-out; not dropped again at scope end
 <span class="boring">}</span></code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Programming in C and C++: this is RAII and the rule of “the destructor runs once, deterministically, at scope exit”. The delta from C++ is that the <em>move</em> is type-checked — in C++ a moved-from object is left in a valid-but-unspecified state and its destructor still runs; in Rust the moved-from binding is statically dead and has no destructor call at all. There is no “valid but unspecified” leftover object to reason about.</p>
-</blockquote>
 <h2 id="rct-shared-ownership-by-reference-counting"><a class="header" href="#rct-shared-ownership-by-reference-counting"><code>Rc&lt;T&gt;</code>: shared ownership by reference counting</a></h2>
 <p>Single ownership is the common case, but sometimes a value is genuinely owned by several places at once — a node referenced by many edges in a graph, an immutable config shared across subsystems. You cannot express this with <code>Box</code> (one owner) or <code>&amp;</code> (a borrow needs a single owner to outlive it, forcing lifetime gymnastics). <code>Rc&lt;T&gt;</code> — <em>reference counted</em> — keeps a count of owners and frees the data when the count hits zero.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -4929,9 +4824,6 @@ println!("count = {}", Rc::strong_count(&amp;a)); // 3
 <p>There is no manual decrement — <code>Rc</code>’s own <code>Drop</code> impl decrements as each handle leaves scope. When <code>strong_count</code> reaches 0, the inner value is dropped and the heap freed.</p>
 <blockquote>
 <p><strong>🦀 From your toolbox →</strong> This <em>is</em> Swift’s ARC and Python’s reference counting, with the bookkeeping made visible. In Swift you never write the retain/release calls; in Python the interpreter bumps the count on every assignment. <code>Rc</code> makes you say <code>Rc::clone</code> to bump it, which is the point — sharing becomes a deliberate, greppable act. One crucial difference from both: <strong><code>Rc</code>’s count is non-atomic</strong>, so the compiler forbids moving it across threads (<code>Rc</code> is not <code>Send</code>/<code>Sync</code>). Swift’s ARC and Python’s GIL-protected count are always thread-safe-ish, paying that cost everywhere. Rust splits the choice: <code>Rc&lt;T&gt;</code> for single-threaded (a cheap increment), <code>Arc&lt;T&gt;</code> for cross-thread (an atomic increment). The API is identical; only the synchronisation cost differs.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Concurrent and Distributed Systems: an atomic increment forces every core to agree on the new count, which under contention bounces a cache line between CPUs. <code>Rc</code> exists so single-threaded code does not pay that tax. We return to <code>Arc&lt;T&gt;</code> — the thread-safe twin — in <a href="#13-fearless-concurrency">fearless concurrency</a>, where <code>Send + Sync</code> are the bounds that decide which one you may use.</p>
 </blockquote>
 <p>The critical limitation: <code>Rc&lt;T&gt;</code> gives you <strong>shared, immutable</strong> access. <code>Rc&lt;T&gt;</code> derefs to <code>&amp;T</code>, never <code>&amp;mut T</code>. If you could get <code>&amp;mut T</code> out of one of several <code>Rc</code> handles, you would have a mutable reference aliased by other handles — a data race in the making, exactly the situation the borrow rules forbid. To mutate shared data you must combine <code>Rc</code> with interior mutability, which is the next piece.</p>
 <h2 id="interior-mutability-refcellt-and-the-runtime-borrow-check"><a class="header" href="#interior-mutability-refcellt-and-the-runtime-borrow-check">Interior mutability: <code>RefCell&lt;T&gt;</code> and the runtime borrow check</a></h2>
@@ -5020,9 +4912,6 @@ let owner_b = Rc::clone(&amp;shared);
 println!("{}", shared.borrow()); // 15 — all three see the same cell
 <span class="boring">}</span></code></pre>
 <p><code>Rc</code> provides the shared ownership; <code>RefCell</code> provides the mutability the <code>Rc</code> alone would deny you; the runtime borrow check inside <code>RefCell</code> keeps the aliasing rule intact even though three handles point at the same data. Read the type inside-out: “a reference-counted, shared handle to a runtime-borrow-checked mutable <code>T</code>.”</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> Type safety, in plain terms: <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> is a worked example of <em>trading a compile-time guarantee for a run-time check without losing safety</em>. The compiler normally proves “no aliased mutation” before the program runs; here that same fact is checked again at each <code>borrow</code>/<code>borrow_mut</code>, and the program aborts with a panic if the check fails. Nothing about safety is lost — still no undefined behaviour, still no data race — only the <em>moment</em> of checking (run time, not compile time) and the <em>failure mode</em> (a clean panic instead of a compile error) change.</p>
-</blockquote>
 <h2 id="reference-cycles-leak--and-weakt-breaks-them"><a class="header" href="#reference-cycles-leak--and-weakt-breaks-them">Reference cycles leak — and <code>Weak&lt;T&gt;</code> breaks them</a></h2>
 <p>Here is the one guarantee Rust does <strong>not</strong> make: it does not promise the absence of memory leaks. A leak is memory-<em>safe</em> (no dangling, no UB), so it is outside the ownership system’s mandate. <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> gives you the rope to hang yourself: build a cycle of <code>Rc</code>s pointing at each other and the strong counts never reach zero, so the destructors never run.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -5310,9 +5199,6 @@ puts(owned.as_ptr());                                 // &amp;owned keeps it ali
 <p>This is the part with no C analogue, and the reason Rust’s optimiser can be more aggressive than C’s. Rust guarantees a live <code>&amp;mut T</code> is the <em>unique</em> path to its referent — no other live reference or pointer may read or write that memory while the <code>&amp;mut</code> is usable. rustc tells LLVM this by tagging <code>&amp;mut</code> parameters <code>noalias</code> (and <code>&amp;T</code> <code>readonly</code>), the hint C’s <code>restrict</code> gives but applied <em>automatically and pervasively</em>. The optimiser then keeps values in registers and reorders loads/stores across calls, trusting nothing else can observe or clobber that location.</p>
 <p>The catch for <code>unsafe</code> authors: this guarantee holds for <em>raw-pointer code too</em>. If you create a <code>&amp;mut</code> and a raw pointer to the same place and write through both while the <code>&amp;mut</code> is live, you have violated <code>noalias</code> — UB — even though no <code>&amp;mut</code>/<code>&amp;mut</code> pair ever existed. This is why <code>&amp;raw mut x</code> exists: it takes a pointer without ever forming the conflicting reference.</p>
 <p>There is an ongoing research effort to write down precisely <em>the rules raw pointers must obey to coexist with references</em>. <strong>Stacked Borrows</strong> (Jung et al.) modelled borrows as a per-location stack of permission tags, each access checking and popping the stack; its successor <strong>Tree Borrows</strong> generalises this to a tree to admit more valid patterns. Neither is yet <em>the</em> official, normative spec — but <strong>Miri implements them</strong>, so they are the de-facto rulebook your unsafe code is tested against today.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> The mental picture from Semantics of Programming Languages is useful here, stated plainly: Stacked/Tree Borrows is a step-by-step machine that tracks, for each memory location, which pointers are currently allowed to touch it, and <em>gets stuck</em> the moment an access breaks the rules — that “stuck” state is exactly UB. It is the runtime side of the same aliasing discipline the borrow checker enforces at compile time. <code>&amp;mut</code>-as-<code>noalias</code> — “while this mutable reference is live, nothing else may read or write here” — is that discipline pushed all the way down to the machine.</p>
-</blockquote>
 <h2 id="tooling-how-to-actually-trust-your-unsafe-code"><a class="header" href="#tooling-how-to-actually-trust-your-unsafe-code">Tooling: how to actually trust your unsafe code</a></h2>
 <p>The borrow checker is <em>static</em> and now stopped helping, so you need dynamic tools that run your program and watch for violations:</p>
 <ul>
@@ -5372,9 +5258,6 @@ puts(owned.as_ptr());                                 // &amp;owned keeps it ali
 <p>The rule of thumb: <strong>associated type when the implementor determines the type as a function of <code>Self</code>; generic parameter when the caller chooses it.</strong> <code>Iterator::Item</code> is fixed by the iterator. <code>Add&lt;Rhs&gt;</code> (below) is parameterised because you genuinely want <code>f32 + f32</code> <em>and</em> <code>f32 + &amp;f32</code>.</p>
 <blockquote>
 <p><strong>🦀 From your toolbox →</strong> Think of a Java interface where the result type is <em>fixed per implementing class</em> rather than chosen by each caller. If you declared <code>interface Iterator&lt;Item&gt;</code>, the same class could implement both <code>Iterator&lt;String&gt;</code> and <code>Iterator&lt;Integer&gt;</code>, and at each call site you’d have to say which one you meant. Rust’s associated type behaves like an interface that builds the element type <em>into</em> the implementation — one class, one element type, no annotation needed at the call site. Swift’s <code>protocol Iterator { associatedtype Element; ... }</code> is the direct cousin: an <code>associatedtype</code> is exactly this “output type the conformer fills in.” OCaml’s nearest echo is a module signature with an abstract <code>type t</code> that each module fills in with a concrete type — but you wire OCaml modules together by hand, whereas Rust picks the impl for you during trait resolution, so the analogy stops there.</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> The intuition worth keeping: an associated type is a <em>type-level lookup</em> — given the implementor, the compiler reads off one fixed answer for <code>Self::Item</code>. The rule that there is only ever one <code>impl Iterator for Counter</code> (coherence) is what makes that lookup yield a single answer instead of several, which is precisely why <code>counter.next()</code> needs no hint about which iterator you meant.</p>
 </blockquote>
 <h3 id="associated-constants"><a class="header" href="#associated-constants">Associated constants</a></h3>
 <p>The same idea extends to constants. A trait may declare a <code>const</code> that each impl supplies, available as <code>Self::NAME</code>:</p>
@@ -5538,9 +5421,6 @@ let u = UserId(42);
 <blockquote>
 <p><strong>⚙️ Under the hood →</strong> A single-field tuple struct has <em>identical layout</em> to its field; the wrapper is erased. <code>Meters(3.0)</code> is one <code>f64</code> in a register. This is why the pattern is free — newtypes are a compile-time fiction. If you want the wrapper to forward the inner type’s methods, implement <code>Deref</code> (<a href="#15-smart-pointers--interior-mutability">smart pointers</a>); if you want only a subset, write just those.</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Semantics of Programming Languages.</em> The plain idea: you are deliberately drawing an abstraction boundary on top of a representation that is byte-for-byte identical, and asking the type checker to police it. Because the only way to make a <code>Validated</code> is to go through <code>validate</code>, holding one is itself evidence that the check ran at construction time — the type <em>is</em> the proof, and nothing downstream has to re-verify it.</p>
-</blockquote>
 <h2 id="type-aliases-vs-newtypes-same-bits-opposite-meaning"><a class="header" href="#type-aliases-vs-newtypes-same-bits-opposite-meaning">Type aliases vs newtypes: same bits, opposite meaning</a></h2>
 <p>A <code>type</code> alias is <em>not</em> a new type — it is a synonym, fully transparent to the type checker.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -5606,9 +5486,6 @@ announce(&amp;42);                      // T = i32, sized, also fine
 <p><code>?Sized</code> is the <em>only</em> <code>?Trait</code> relaxation in the language — it exists solely because <code>Sized</code> is the one bound applied by default.</p>
 <blockquote>
 <p><strong>🦀 From your toolbox →</strong> In Java, Swift, and Python you never think about this because objects always live behind a reference and the runtime tracks their layout; the “pointer” is implicit and uniform. The closest hands-on touch is C: if you want to hand around a chunk of bytes whose length isn’t fixed, you carry a pointer <em>plus</em> a separate length (<code>{char* ptr; size_t len}</code>) by hand, and it’s on you to keep them in sync. A Rust <code>&amp;[T]</code> <em>is</em> exactly that pair, except the compiler bundles and tracks the length for you so you can’t desync them or read past the end. <code>&amp;dyn Trait</code> is the same trick with a method-table pointer instead of a length. The bridge from a plain C pointer breaks down because a C pointer is always just an address — there’s no language-level idea of “this pointee has no fixed size.”</p>
-</blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Operating Systems / Computer Architecture.</em> <code>Sized</code> is the type-system shadow of a very concrete question from those courses: how many bytes does this value take in a stack frame? A <code>str</code> or <code>[T]</code> has no fixed answer until runtime, so it cannot be a plain stack local — you store it elsewhere and keep a pointer-plus-length to it, exactly the layout you’d hand-roll for variable-length data. Rust lifts that bookkeeping into the type checker, so getting it wrong is a compile error rather than a read off the end of a buffer.</p>
 </blockquote>
 <h2 id="function-pointers-vs-closures"><a class="header" href="#function-pointers-vs-closures">Function pointers vs closures</a></h2>
 <p>You can pass a <em>named function</em> where a value is expected; it coerces to the type <code>fn(...) -&gt; ...</code> — the <strong>function pointer</strong> (lowercase <code>fn</code>, distinct from the <code>Fn</code> closure traits).</p>
@@ -5723,9 +5600,6 @@ struct Id&lt;T&gt; { raw: u64, _marker: PhantomData&lt;T&gt; }   // an Id&lt;Use
 <h2 id="what-a-macro-operates-on-token-trees"><a class="header" href="#what-a-macro-operates-on-token-trees">What a macro operates on: token trees</a></h2>
 <p>Before parsing into an AST, <code>rustc</code> lexes source into a flat token stream, then groups it into <strong>token trees</strong>: a token tree is either a single token (<code>identifier</code>, literal, punctuation) or a <em>delimited group</em> — anything balanced inside <code>()</code>, <code>[]</code>, or <code>{}</code>, recursively. So <code>vec![1, 2, 3]</code> is the macro name <code>vec</code>, the bang <code>!</code>, and one bracket-delimited group containing the trees <code>1</code> <code>,</code> <code>2</code> <code>,</code> <code>3</code>.</p>
 <p>Macros run on this layer. A declarative macro pattern-matches over token trees; a procedural macro receives a <code>proc_macro::TokenStream</code> (a sequence of token trees) and returns one. Crucially, <strong>the input need not be valid Rust</strong> — <code>sql!(SELECT * FROM posts)</code> lexes into legal token trees even though <code>SELECT * FROM posts</code> is not a Rust expression. The only hard constraint is that delimiters balance. This is the source of macros’ expressive power and their cost: the tokens carry no types yet.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is precisely the lexer/parser boundary from Compiler Construction. Lexing produces tokens; macro expansion is an extra <em>tree-rewriting pass</em> slipped in between tokenisation and full parsing/name-resolution. A declarative macro is a small set of pattern → replacement rules over the token-tree grammar; a procedural macro is just a plain function from tokens to tokens — i.e. a hook for you to write an extra compiler pass in safe Rust and have <code>rustc</code> dynamically load and run it.</p>
-</blockquote>
 <h2 id="family-one-macro_rules-declarative"><a class="header" href="#family-one-macro_rules-declarative">Family one: <code>macro_rules!</code> (declarative)</a></h2>
 <p>A declarative macro is defined with <code>macro_rules!</code> and reads like a <code>match</code> whose scrutinee is <em>source structure</em> rather than a runtime value. Each arm has a <strong>matcher</strong> (the pattern over token trees) and a <strong>transcriber</strong> (the replacement tokens). Here is a small but real one — a <code>HashMap</code> literal, the kind of thing the standard library pointedly does <em>not</em> give you:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -5835,9 +5709,6 @@ println!("{} {}", tmp, r);
 <li><strong>Function-like macros</strong> — <code>#[proc_macro]</code> — invoked as <code>name!(...)</code>; like <code>macro_rules!</code> but with arbitrary parsing logic.</li>
 </ol>
 <p>A structural constraint: proc-macros <strong>must live in their own crate</strong> with <code>proc-macro = true</code> set in <code>Cargo.toml</code>, because the crate is compiled for the <em>host</em> (the compiler) rather than the target, and loaded as a dynamic library by <code>rustc</code>. The convention is that a library crate <code>foo</code> ships its derive macros in a sibling crate <code>foo_derive</code>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> A proc-macro is a user-supplied compiler pass, dynamically linked into <code>rustc</code> — exactly the kind of “extra stage between lexing and the rest of the front end” you’d add in Compiler Construction, except you write it in safe Rust and the compiler loads it for you. Because it runs <em>inside</em> the compiler as ordinary code, it can do absolutely anything a program can — read files, hit the network, loop forever — and it will re-run on every build, which is why the community treats proc-macros as a sharp tool and audits them.</p>
-</blockquote>
 <h3 id="the-syn--quote-toolchain"><a class="header" href="#the-syn--quote-toolchain">The <code>syn</code> / <code>quote</code> toolchain</a></h3>
 <p>The <code>proc_macro</code> crate gives you <code>TokenStream</code>, but parsing raw tokens into a usable Rust AST by hand is the full parser problem you’d rather not redo. Two ecosystem crates make proc-macros tractable:</p>
 <ul>
@@ -5984,9 +5855,6 @@ mod billing {
         └── post
 </code></pre>
 <p>The vocabulary mirrors a filesystem and is worth fixing: <code>invoices</code> and <code>ledger</code> are <strong>siblings</strong> (defined in the same parent); <code>invoices</code> is a <strong>child</strong> of <code>billing</code>; <code>billing</code> is the <strong>parent</strong> of <code>invoices</code>. The whole tree is rooted at <code>crate</code>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> In <em>Foundations of Computer Science</em> you used OCaml modules to bundle a type with the operations over it (the classic <code>Stack</code> / <code>Queue</code> ADT presentation). A Rust module serves the identical <em>organisational</em> role, but the encapsulation mechanism is the mirror image: OCaml hides a representation by <em>omitting</em> it from an <code>.mli</code> signature (you list what to export), whereas Rust hides items by <em>default privacy</em> and selectively <em>exposes</em> them with <code>pub</code> (everything is private until you annotate it). Same goal — abstraction boundaries the compiler enforces — opposite default.</p>
-</blockquote>
 <h2 id="modules-are-not-files"><a class="header" href="#modules-are-not-files">Modules are not files</a></h2>
 <p>This is where intuition from Python and C alike can mislead you. In Python, the file <em>is</em> the module, one-to-one; in C, <code>#include "foo.h"</code> is <em>textual substitution</em> — the file’s bytes get pasted into whoever includes it. In Rust, <strong>the module tree is logical and exists independently of how it is spread across files.</strong> The line</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -6096,9 +5964,6 @@ impl Money {
 <span class="boring">}</span></code></pre>
 <p>A caller in another module <em>cannot</em> write <code>Money { cents: -1 }</code> to sneak in a bad value, and you stay free to change the representation later (split into <code>dollars</code> + <code>cents</code>, switch to a bigint) without breaking a single line of their code. Reach for a private field whenever “the only valid way to build/modify this is through my functions.”</p>
 </blockquote>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the same encapsulation guarantee you reasoned about informally in <em>Further Java</em>. The plain-language version of the property the compiler maintains: a client outside the module can never <em>observe</em> or <em>depend on</em> a private field, so you may change <code>balance_cents</code> — its type, its layout, even split it into two fields — and every program that previously compiled against your module still compiles and behaves the same. The boundary is checked once, at compile time, not policed at runtime.</p>
-</blockquote>
 <h3 id="finer-grained-visibility"><a class="header" href="#finer-grained-visibility">Finer-grained visibility</a></h3>
 <p><code>pub</code> means “public to anyone who can reach the path,” including other crates. Often you want narrower scopes. Rust offers a small ladder:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -6205,9 +6070,6 @@ let n = rand::thread_rng().gen_range(1..=100);
 <span class="boring">}</span></code></pre>
 <p>The standard library <code>std</code> is special only in that it ships with the toolchain, so it needs no <code>Cargo.toml</code> entry — but it is otherwise an ordinary external crate: you still write <code>use std::collections::HashMap;</code>, an absolute path rooted at the crate <code>std</code>.</p>
 <p><strong>The prelude</strong> is why you never <code>use std::option::Option;</code>. The standard library defines a small set of ubiquitous items — <code>Option</code>, <code>Result</code>, <code>Vec</code>, <code>String</code>, <code>Box</code>, <code>Clone</code>, <code>Iterator</code>, <code>drop</code>, and so on — in <code>std::prelude</code>, and the compiler glob-imports it into <em>every</em> module automatically: the prelude pattern applied by the language itself. Crates can ship their own opt-in prelude (<code>use some_crate::prelude::*;</code>) for the same purpose — one glob bringing the crate’s most-used traits into scope, which matters because trait methods are only callable when the trait is in scope (see <a href="#8-generics--traits">generics &amp; traits</a>).</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> The automatic prelude is the language pre-loading the set of names every module starts with. Rather than each module beginning with an empty slate of available names, the compiler arranges for the prelude’s items to already be in scope everywhere — which is why bare <code>Option</code> resolves without any <code>use</code>. A crate prelude is the same idea at library scale: a curated bundle of names you opt into so the common case needs no explicit imports.</p>
-</blockquote>
 <h2 id="workspaces-many-crates-one-build"><a class="header" href="#workspaces-many-crates-one-build">Workspaces: many crates, one build</a></h2>
 <p>A single library crate is the right granularity for a long time. You split into multiple crates when you have a concrete reason:</p>
 <ul>
@@ -6245,9 +6107,6 @@ cargo test -p domain     # test only `domain`
 <p><strong>⚙️ Under the hood →</strong> The single shared <code>target/</code> is the load-bearing design choice. If each member had its own <code>target/</code>, then <code>app</code> depending on <code>domain</code> would force a <em>separate</em> compilation of <code>domain</code> into <code>app</code>’s target — every dependent re-compiling every dependency. One shared output directory means <code>domain</code> is built <strong>once</strong> and its artifact reused by all dependents, which is exactly the build-graph deduplication that makes large workspaces tractable.</p>
 </blockquote>
 <p>The shared <strong><code>Cargo.lock</code></strong> is the other half: every member resolves against <em>one</em> unified dependency graph, so if both <code>domain</code> and <code>storage</code> depend on <code>rand</code>, they get the <em>same</em> resolved version, recorded once, downloaded once. The members are therefore mutually compatible — you cannot accidentally link two copies of a shared dependency at incompatible versions (Cargo resolves to as few versions as semver allows). A frequent surprise on the flip side: a dependency declared in <code>domain/Cargo.toml</code> is <strong>not</strong> usable from <code>storage</code> — each member lists its own <code>[dependencies]</code>. The lockfile unifies <em>versions</em>, not <em>visibility</em>.</p>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> A workspace’s build is a DAG of crates: each crate is a node that can be compiled only after the crates it depends on are built. That is the dependency-ordered compilation you saw in <em>Compiler Construction</em> — Cargo topologically sorts the graph and schedules the nodes, building independent branches in parallel. The single <code>target/</code> acts as a cache over that graph: a node is recompiled only when its inputs (its own source, or an upstream artifact) have changed.</p>
-</blockquote>
 <h2 id="mental-model-recap-19"><a class="header" href="#mental-model-recap-19">Mental-model recap</a></h2>
 <ul>
 <li><strong>Crate = compilation unit</strong> (one module tree → one binary or one library). <strong>Package = Cargo unit</strong> (a <code>Cargo.toml</code> bundling ≤1 library + N binaries). <strong>Module = in-crate namespace and the privacy boundary.</strong> Keep the three distinct.</li>
@@ -6402,9 +6261,6 @@ fn config_round_trips() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt;
 <p><strong>Parallel by default.</strong> Tests run concurrently on a thread pool. This is fast but it imposes a discipline: tests must not share mutable external state — no two tests writing the same file, mutating the same env var, or binding the same fixed port — or they race. The fix is either to make each test self-contained (unique temp paths, ephemeral ports) or to serialise:</p>
 <pre><code class="language-bash">cargo test -- --test-threads=1   # one at a time; deterministic, slower
 </code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is exactly the <em>Concurrent &amp; Distributed Systems</em> shared-mutable-state hazard. The test runner gives you N threads with no implicit synchronisation; two tests touching <code>./fixture.db</code> is a data race at the filesystem level even though the Rust borrow checker, which only reasons about in-process memory, says nothing about it. The idiomatic resolution mirrors the course’s advice: eliminate the sharing (give each test its own resource) rather than reach for a global lock. A global lock reintroduces serialisation and can deadlock if a test panics while holding it.</p>
-</blockquote>
 <p><strong>Output capture.</strong> By default the runner captures <code>stdout</code>/<code>stderr</code> of <em>passing</em> tests and shows them only for failures (so a green run is quiet). To see prints from passing tests too:</p>
 <pre><code class="language-bash">cargo test -- --show-output      # show captured stdout of passing tests
 cargo test -- --nocapture        # don't capture at all (interleaves with parallel runs)
@@ -6546,9 +6402,6 @@ strip = "symbols"   # drop symbols from the binary
 <li><strong><code>codegen-units</code></strong> — rustc splits a crate into N units compiled in parallel; fewer units means better cross-function optimisation but less parallelism. <code>release</code> defaults to <code>16</code>; setting <code>1</code> squeezes out more performance at the cost of compile time.</li>
 <li><strong><code>panic = "abort"</code></strong> — replaces stack-unwinding with immediate <code>abort</code>, removing landing-pad code and unwind tables. Smaller and slightly faster, but <code>std::panic::catch_unwind</code> no longer works and <code>#[should_panic]</code>/the test harness rely on unwinding, so tests force unwinding regardless.</li>
 </ul>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> <em>Compiler Construction</em>: <code>codegen-units</code> and <code>lto</code> are knobs on exactly the inlining/specialisation trade-off you studied. Monomorphisation (covered in <a href="#8-generics--traits">generics &amp; traits</a>) generates a concrete copy per type instantiation; with separate compilation, the copies in a dependency crate are opaque to your crate’s optimiser. <code>lto = "thin"</code> re-opens those boundaries at link time so the inliner can act across them — the price is that more code is in scope for the optimiser, hence the slower link.</p>
-</blockquote>
 <h3 id="features-and-conditional-compilation"><a class="header" href="#features-and-conditional-compilation">Features and conditional compilation</a></h3>
 <p><code>#[cfg(...)]</code> compiles code conditionally on a flag, target attribute, or <em>feature</em>. Features are named, optional capabilities declared in <code>Cargo.toml</code> that let downstream users opt into functionality (and the dependencies it pulls in):</p>
 <pre><code class="language-toml">[features]
@@ -6730,9 +6583,6 @@ fn main() {
 }</code></pre>
 <p>Add it with <code>cargo add clap --features derive</code>. <code>Cli::parse()</code> reads <code>env::args_os()</code>, validates, and on failure prints a usage message to stderr and exits with code 2 — the conventional “usage error” code. The <code>value_delimiter = ','</code> attribute even reproduces our <code>parse_fields</code> for free. The derive macro is ordinary Rust code generated at compile time (see <a href="#18-macros--metaprogramming">chapter 18</a>) and compiled like anything else: there is no reflection at runtime. Contrast Java, where annotation-driven frameworks like Spring or Jackson read annotations via reflection while the program is running; <code>clap</code> has done all of that work before <code>main</code> ever starts.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> <code>clap</code>’s derive is a hands-on Compiler Construction exercise. The <code>#[derive(Parser)]</code> macro reads the struct’s tokens as input and <em>writes out</em> a parser as output — a source-to-source translation running inside <code>rustc</code>. The struct is effectively a tiny grammar; the generated code is the recogniser. You wrote argument and grammar parsers by hand in that course; here the macro writes one for you, and the compiler then type-checks it against the very struct that described the grammar.</p>
-</blockquote>
-<blockquote>
 <p><strong>🔧 In practice →</strong> You’re shipping a backup CLI and a teammate asks for <code>backup --dest ./snap --exclude '*.tmp' --exclude node_modules --dry-run -vvv</code>. With a hand-rolled loop you now own <code>--help</code>, repeated <code>--exclude</code>, the count-the-<code>v</code>s verbosity flag, and “did they pass a value?” checks — a day of fiddly bugs. With <code>clap</code> it’s a struct:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -6880,9 +6730,6 @@ fn main() {
         handle(stream);
     }
 }</code></pre>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the Berkeley sockets model from Computer Networking, named in Rust types: <code>bind</code> is <code>bind(2)</code>, <code>incoming()</code> wraps <code>accept(2)</code>, and a <code>TcpStream</code> is a connected socket file descriptor. The difference from a C socket program is that the descriptor is <em>owned</em>: when <code>stream</code> is dropped at the end of the loop body, Rust calls <code>close(2)</code> for you — no leaked descriptors, no double-close. It is the same scope-tied cleanup as the file-handle locking above, now applied to a kernel resource: the destructor that runs at the end of the block closes the socket, the way Swift’s <code>deinit</code> or a C++ destructor frees what it owns.</p>
-</blockquote>
 <h3 id="step-2-parse-a-request-route-respond"><a class="header" href="#step-2-parse-a-request-route-respond">Step 2: parse a request, route, respond</a></h3>
 <p>An HTTP request begins with a request line: <code>GET /path HTTP/1.1\r\n</code>, followed by headers and a blank line. For a minimal server we read just the first line, route on it, and write back a status line, a <code>Content-Length</code> header, a blank line, and a body. <code>TcpStream</code> implements <code>Read</code> and <code>Write</code>; wrapping it in a <code>BufReader</code> gives us <code>.lines()</code>.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -7036,9 +6883,6 @@ while let Ok(job) = receiver.lock().unwrap().recv() {
 <span class="boring">}</span></code></pre>
 <p>the guard’s lifetime extends across the entire <code>while let</code> body (a <code>while let</code> holds its scrutinee’s temporaries for the loop body), so a worker holds the mutex <em>while executing the job</em>, and the pool degrades to one-at-a-time — the very serialisation we set out to kill. The borrow checker won’t flag this; it is a correctness bug hiding in a lifetime rule. The <code>match</code>/<code>break</code> form drops the guard at the <code>;</code>, then runs the job unlocked.</p>
 <blockquote>
-<p><strong>🎓 Tripos link →</strong> This is the message-passing model from Concurrent &amp; Distributed Systems realised with ownership. The channel <code>send</code> <em>moves</em> the <code>Job</code> from main to worker — there is no shared mutable job, so no data race on it; transferring ownership <em>is</em> the synchronisation. The <code>Arc&lt;Mutex&lt;Receiver&gt;&gt;</code> is the one genuinely shared resource, and the <code>Mutex</code> serialises access to <em>dequeueing</em> (taking a job off the queue, which must happen one worker at a time) while leaving job <em>execution</em> fully parallel. Holding the lock only across <code>recv</code> is the course’s “keep the critical section as small as possible” rule — here it comes down to exactly where you put a semicolon.</p>
-</blockquote>
-<blockquote>
 <p><strong>⚙️ Under the hood →</strong> <code>Arc&lt;T&gt;</code> is a pointer to a heap allocation carrying <code>T</code> plus two atomic counters (strong/weak). <code>Arc::clone</code> is an atomic increment, not a deep copy — all four workers point at the <em>same</em> <code>Mutex&lt;Receiver&gt;</code>. <code>Rc</code> would be faster (non-atomic refcount) but is <code>!Send</code>, so it cannot cross the <code>thread::spawn</code> boundary; the compiler rejects it. That <code>!Send</code>-ness is the type system encoding “this refcount is not safe to touch from two threads,” the data-race-freedom proof from <a href="#13-fearless-concurrency">chapter 13</a> discharged structurally.</p>
 </blockquote>
 <h3 id="step-6-graceful-shutdown-via-drop"><a class="header" href="#step-6-graceful-shutdown-via-drop">Step 6: graceful shutdown via <code>Drop</code></a></h3>
@@ -7132,7 +6976,7 @@ Then answer: <em>why</em> did the chapter pick <code>FnOnce</code> over <code>Fn
 <p>This book is the official <em>Rust Programming Language</em> (21 chapters) reassembled by conceptual dependency rather than beginner ramp. Two consequences follow, and this appendix indexes both:</p>
 <ol>
 <li><strong>Where is the “for everyone” version?</strong> Every module below names the official chapter(s) it derives from, so when you want the canonical, slower, beginner-pitched treatment of a topic you can jump straight to it. Read the official book as the <em>reference manual</em>; read this one as the <em>theory</em>.</li>
-<li><strong>What did I already learn that this leans on?</strong> Each module names the Cambridge Tripos course(s) whose machinery it reuses, so you can revisit your own notes for the deeper framing. These are study anchors, not prerequisites: the 🎓 <em>Tripos link</em> callouts inside each module make the connection precise.</li>
+<li><strong>What did I already learn that this leans on?</strong> Each module names the Cambridge Tripos course(s) whose machinery it reuses, so you can revisit your own notes for the deeper framing. These are study anchors, not prerequisites.</li>
 </ol>
 <p>A word on the chapter column: the official book is not a partition we re-shuffled one-to-one. We <strong>merged</strong> topics it splits (pattern matching, traits), <strong>compressed</strong> topics it stretches (the ch. 1–3 on-ramp), and <strong>gathered</strong> the three faces of the memory model (ownership, lifetimes, smart pointers) that it scatters across hundreds of pages. So several rows cite the same official chapter, and a few official chapters are deliberately dissolved across multiple modules. The “moved and why” notes below explain each non-trivial deviation.</p>
 <h2 id="the-table"><a class="header" href="#the-table">The table</a></h2>
@@ -7167,9 +7011,6 @@ Then answer: <em>why</em> did the chapter pick <code>FnOnce</code> over <code>Fn
 </tbody>
 </table>
 </div>
-<blockquote>
-<p><strong>🎓 Tripos link →</strong> If you read the right-hand column top-to-bottom, it is roughly a dependency-sorted tour of your own degree: OCaml’s type discipline and C/C++’s memory model dominate the early rows; Compiler Construction underwrites the ownership and trait machinery; Concurrent &amp; Distributed Systems and Operating Systems carry the back half. The thesis of <a href="#0-orientation-the-thesis-of-rust">module 00</a> — <em>a strict OCaml-style type system bolted onto a C++ memory model</em> — is literally visible as the shape of this table.</p>
-</blockquote>
 <h2 id="if-you-came-from-the-official-book-heres-what-moved-and-why"><a class="header" href="#if-you-came-from-the-official-book-heres-what-moved-and-why">If you came from the official book, here’s what moved and why</a></h2>
 <p>If you have read, or are cross-referencing, the official book, these are the structural deviations worth knowing about so a row above doesn’t surprise you:</p>
 <ul>
